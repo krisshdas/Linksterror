@@ -20,6 +20,7 @@ let originalUrl = '';
 let adPageNumber = 1;
 let timerCompleted = false;
 let isChecking = false;
+let autoShowTimer = null;
 
 // Initialize ad page
 function initAdPage(pageNumber) {
@@ -51,18 +52,18 @@ function initAdPage(pageNumber) {
 
 // Add click listeners to all ads
 function addAdClickListeners() {
-    const adElements = document.querySelectorAll('.ad-header, .ad-banner, .ad-footer, .pop-ad');
-    
-    adElements.forEach(element => {
-        element.addEventListener('click', (e) => {
-            // Check if the click is actually on an ad element, not just the container
-            if (e.target.tagName === 'IFRAME' || e.target.tagName === 'A' || e.target.tagName === 'IMG') {
-                if (!adClicked) {
-                    adClicked = true;
-                    trackAdClick(adPageNumber);
-                }
+    // Track any click on the page
+    document.addEventListener('click', (e) => {
+        // Check if the click is inside an ad container
+        const adContainer = e.target.closest('.ad-header, .ad-banner, .ad-footer, .pop-ad');
+        if (adContainer) {
+            // Mark ad as clicked
+            if (!adClicked) {
+                adClicked = true;
+                trackAdClick(adPageNumber);
+                console.log('Ad clicked');
             }
-        });
+        }
     });
 }
 
@@ -86,10 +87,21 @@ function startCountdown() {
             showAdCheckButton();
         }
     }, 1667); // ~1000ms * 1.667 = 1667ms to make 15 seconds feel like 25 seconds
+    
+    // Set up auto-show timer for 25 seconds (real time)
+    autoShowTimer = setTimeout(() => {
+        showAdCheckButton();
+    }, 25000); // 25 seconds in milliseconds
 }
 
-// Show ad check button when timer completes
+// Show ad check button when timer completes or after 25 seconds
 function showAdCheckButton() {
+    // Clear auto-show timer if it exists
+    if (autoShowTimer) {
+        clearTimeout(autoShowTimer);
+        autoShowTimer = null;
+    }
+    
     const adCheckBtn = document.getElementById('adCheckBtn');
     const instructions = document.getElementById('instructions');
     
@@ -172,6 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Clear any running timers
             if (countdownInterval) clearInterval(countdownInterval);
+            if (autoShowTimer) clearTimeout(autoShowTimer);
             
             // Redirect based on current page
             if (adPageNumber === 1) {
