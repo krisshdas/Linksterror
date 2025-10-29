@@ -42,7 +42,7 @@ function initAdPage(pageNumber) {
     // Load ads from Firebase first
     loadAdsFromFirebase(pageNumber);
     
-    // Start countdown (slower to feel like 25 seconds)
+    // Start countdown (25 seconds)
     startCountdown();
     
     // Track ad view
@@ -155,9 +155,9 @@ function addAdClickListeners() {
     });
 }
 
-// Start countdown timer (slower to feel like 25 seconds)
+// Start countdown timer (25 seconds)
 function startCountdown() {
-    let seconds = 15;
+    let seconds = 25;
     const countdownElement = document.getElementById('countdown');
     const progressBar = document.getElementById('progressBar');
     
@@ -166,7 +166,7 @@ function startCountdown() {
         countdownElement.textContent = seconds;
         
         // Update progress bar
-        const progressPercent = ((15 - seconds) / 15) * 100;
+        const progressPercent = ((25 - seconds) / 25) * 100;
         progressBar.style.width = (100 - progressPercent) + '%';
         
         if (seconds <= 0) {
@@ -174,7 +174,7 @@ function startCountdown() {
             timerCompleted = true;
             showAdCheckButton();
         }
-    }, 1667); // ~1000ms * 1.667 = 1667ms to make 15 seconds feel like 25 seconds
+    }, 1000); // 1000ms = 1 second, so 25 seconds total
 }
 
 // Show ad check button when timer completes
@@ -204,30 +204,18 @@ document.addEventListener('DOMContentLoaded', () => {
         adCheckBtn.addEventListener('click', () => {
             if (isChecking) return;
             
-            if (!adClicked) {
-                // Show warning if ad hasn't been clicked
-                const warning = document.createElement('div');
-                warning.className = 'warning-message';
-                warning.textContent = 'Please click on an advertisement first!';
-                document.body.appendChild(warning);
-                
-                setTimeout(() => {
-                    warning.remove();
-                }, 3000);
-            } else {
-                // Ad has been clicked, show loading for 3 seconds
-                isChecking = true;
-                adCheckBtn.disabled = true;
-                adCheckBtn.classList.add('checking');
-                adCheckBtn.innerHTML = `
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <span>Checking...</span>
-                `;
-                
-                setTimeout(() => {
-                    unlockDownloadButton();
-                }, 3000);
-            }
+            // Show loading for 3 seconds
+            isChecking = true;
+            adCheckBtn.disabled = true;
+            adCheckBtn.classList.add('checking');
+            adCheckBtn.innerHTML = `
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Checking...</span>
+            `;
+            
+            setTimeout(() => {
+                unlockDownloadButton();
+            }, 3000);
         });
     }
 });
@@ -357,4 +345,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-                                 }
+}
