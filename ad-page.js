@@ -42,6 +42,9 @@ function initAdPage(pageNumber) {
         return;
     }
     
+    // Load ads from Firebase first
+    loadAdsFromFirebase(pageNumber);
+    
     // Start countdown (slower to feel like 25 seconds)
     startCountdown();
     
@@ -50,6 +53,46 @@ function initAdPage(pageNumber) {
     
     // Add click listeners to all ads
     addAdClickListeners();
+}
+
+// Load ads from Firebase for the current page
+function loadAdsFromFirebase(pageNumber) {
+    database.ref('ads/config/ad' + pageNumber).once('value')
+        .then((snapshot) => {
+            const adConfig = snapshot.val() || {};
+            
+            // Load header ad
+            if (adConfig.header) {
+                document.getElementById('headerAd').innerHTML = adConfig.header;
+            }
+            
+            // Load side ads
+            if (adConfig.side1) {
+                document.getElementById('sideAd1').innerHTML = adConfig.side1;
+            }
+            if (adConfig.side2) {
+                document.getElementById('sideAd2').innerHTML = adConfig.side2;
+            }
+            if (adConfig.side3) {
+                document.getElementById('sideAd3').innerHTML = adConfig.side3;
+            }
+            if (adConfig.side4) {
+                document.getElementById('sideAd4').innerHTML = adConfig.side4;
+            }
+            
+            // Load bottom ad
+            if (adConfig.bottom) {
+                document.getElementById('bottomAd').innerHTML = adConfig.bottom;
+            }
+            
+            // Load pop ad
+            if (adConfig.popup) {
+                document.getElementById('popAd').innerHTML = adConfig.popup;
+            }
+        })
+        .catch((error) => {
+            console.error('Error loading ads from Firebase:', error);
+        });
 }
 
 // Add click listeners to all ads
