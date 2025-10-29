@@ -134,23 +134,27 @@ function executeAdScript(elementId, scriptContent) {
     });
 }
 
-// Add click listeners to all ads
+// Add click listeners to all ads - FIXED VERSION
 function addAdClickListeners() {
-    // Track any click on the page
-    document.addEventListener('click', (e) => {
-        // Check if the click is on an actual ad element (iframe, a, img)
-        if (e.target.tagName === 'IFRAME' || e.target.tagName === 'A' || e.target.tagName === 'IMG') {
-            // Check if the clicked element is inside an ad container
-            const adContainer = e.target.closest('.ad-header, .ad-banner, .ad-footer, .pop-ad');
-            if (adContainer) {
-                // Mark ad as clicked
-                if (!adClicked) {
-                    adClicked = true;
-                    trackAdClick(adPageNumber);
-                    console.log('Ad clicked on page', adPageNumber);
+    // Get all ad containers
+    const adContainers = document.querySelectorAll('.ad-header, .ad-banner, .ad-footer, .pop-ad');
+    
+    // Add click listener to each ad container
+    adContainers.forEach(container => {
+        container.addEventListener('click', (e) => {
+            // Check if the click is on an actual ad element (iframe, a, img)
+            if (e.target.tagName === 'IFRAME' || e.target.tagName === 'A' || e.target.tagName === 'IMG') {
+                // Check if the clicked element is a direct child of the container
+                if (container.contains(e.target)) {
+                    // Mark ad as clicked
+                    if (!adClicked) {
+                        adClicked = true;
+                        trackAdClick(adPageNumber);
+                        console.log('Ad clicked on page', adPageNumber);
+                    }
                 }
             }
-        }
+        });
     });
 }
 
@@ -369,4 +373,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-    }
+}
