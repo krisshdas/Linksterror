@@ -48,7 +48,7 @@ body {
     height: 100%;
     background: linear-gradient(90deg, #28a745, #ffc107, #dc3545);
     width: 100%;
-    transition: width 1s linear;
+    transition: width 1.667s linear; /* Slower to feel like 25 seconds */
 }
 
 .timer {
@@ -131,7 +131,7 @@ body {
     justify-content: center;
     background: rgba(255, 255, 255, 0.1);
     min-height: 60px;
-    margin-bottom: 80px; /* Space for continue button */
+    margin-bottom: 80px; /* Space for download button */
 }
 
 .pop-ad {
@@ -142,8 +142,8 @@ body {
     overflow: hidden;
 }
 
-/* Continue Button */
-.continue-container {
+/* Download Button */
+.download-container {
     position: fixed;
     bottom: 0;
     left: 0;
@@ -151,42 +151,81 @@ body {
     background: rgba(0, 0, 0, 0.8);
     padding: 15px;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
     z-index: 1000;
 }
 
-.continue-btn {
+.instructions {
+    color: white;
+    margin-bottom: 10px;
+    text-align: center;
+    display: none;
+}
+
+.download-btn {
     padding: 15px 30px;
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    background: #6c757d;
     color: white;
     border: none;
     border-radius: 50px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    display: flex;
+    display: none;
     align-items: center;
     gap: 10px;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
     width: 90%;
     max-width: 300px;
     justify-content: center;
 }
 
-.continue-btn:hover:not(:disabled) {
+.download-btn.locked {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.download-btn.unlocked {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.download-btn:hover.locked {
+    background: #6c757d;
+}
+
+.download-btn:hover.unlocked {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
 }
 
-.continue-btn:disabled {
-    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-    cursor: not-allowed;
-    box-shadow: none;
+.download-btn i {
+    font-size: 18px;
 }
 
-.continue-btn i {
-    font-size: 18px;
+/* Button Message */
+.button-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 8px;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 /* Loading Animation */
@@ -223,7 +262,7 @@ body {
         font-size: 14px;
     }
     
-    .continue-btn {
+    .download-btn {
         padding: 12px 20px;
         font-size: 14px;
     }
