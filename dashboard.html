@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Link Shortener</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-link"></i>
+                <h1>Link Shortener</h1>
+            </div>
+            
+            <div class="profile-container">
+                <div class="profile-icon" id="profileIcon">
+                    <i class="fas fa-user"></i>
+                    <span class="admin-badge" id="adminBadge" style="display: none;">👑</span>
+                </div>
+                
+                <div class="profile-menu" id="profileMenu">
+                    <div class="profile-header">
+                        <div class="profile-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="profile-info">
+                            <h3 id="userName">User Name</h3>
+                            <p id="userEmail">user@example.com</p>
+                        </div>
+                    </div>
+                    
+                    <div class="menu-items">
+                        <a href="#" class="menu-item active" data-page="dashboard">
+                            <i class="fas fa-home"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="#" class="menu-item" data-page="links">
+                            <i class="fas fa-link"></i>
+                            <span>My Links</span>
+                        </a>
+                        <a href="ads.html" class="menu-item" id="adsMenuItem" style="display: none;">
+                            <i class="fas fa-ad"></i>
+                            <span>Manage Ads</span>
+                        </a>
+                        <a href="#" class="menu-item" data-page="analytics">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Analytics</span>
+                        </a>
+                        <a href="#" class="menu-item logout" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <main>
+            <div class="page" id="dashboardPage">
+                <div class="page-header">
+                    <h2>Dashboard</h2>
+                    <p>Create and manage your short links</p>
+                </div>
+                
+                <div class="shorten-container">
+                    <div class="shorten-card">
+                        <h3>Shorten Your Link</h3>
+                        <div class="input-group">
+                            <input type="text" id="longUrl" placeholder="Enter your long URL here">
+                            <button id="shortenBtn">Shorten</button>
+                        </div>
+                        <div class="result-container" id="resultContainer" style="display: none;">
+                            <p>Your shortened link:</p>
+                            <div class="result-link">
+                                <input type="text" id="shortUrl" readonly>
+                                <button id="copyBtn"><i class="fas fa-copy"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-link"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalLinks">0</h3>
+                            <p>Total Links</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-mouse-pointer"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalClicks">0</h3>
+                            <p>Total Clicks</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="clickRate">0%</h3>
+                            <p>Click Rate</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="page" id="linksPage" style="display: none;">
+                <div class="page-header">
+                    <h2>My Links</h2>
+                    <p>Manage all your shortened links</p>
+                </div>
+                
+                <div class="links-container">
+                    <div class="links-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Original URL</th>
+                                    <th>Short URL</th>
+                                    <th>Clicks</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="linksTableBody">
+                                <!-- Links will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="page" id="analyticsPage" style="display: none;">
+                <div class="page-header">
+                    <h2>Analytics</h2>
+                    <p>Track your link performance</p>
+                </div>
+                
+                <div class="analytics-container">
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <h3>Today's Clicks</h3>
+                            <p id="todayClicks">0</p>
+                        </div>
+                        <div class="stat-box">
+                            <h3>This Week</h3>
+                            <p id="weekClicks">0</p>
+                        </div>
+                        <div class="stat-box">
+                            <h3>This Month</h3>
+                            <p id="monthClicks">0</p>
+                        </div>
+                        <div class="stat-box">
+                            <h3>All Time</h3>
+                            <p id="allTimeClicks">0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="top-links">
+                        <h3>Top Performing Links</h3>
+                        <div class="top-links-list" id="topLinksList">
+                            <!-- Top links will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="notification" class="notification">
+        <div class="notification-content">
+            <i class="notification-icon"></i>
+            <span class="notification-message"></span>
+        </div>
+        <div class="notification-progress"></div>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>

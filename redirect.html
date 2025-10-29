@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting...</title>
+    <link rel="stylesheet" href="redirect.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="loading-screen" id="loadingScreen">
+            <div class="loader">
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+            </div>
+            <h2>Redirecting you to your destination</h2>
+            <p>Please wait while we prepare your link...</p>
+        </div>
+        
+        <div class="ad-container" id="adContainer" style="display: none;">
+            <div class="ad-header">
+                <div class="progress-bar">
+                    <div class="progress" id="progress"></div>
+                </div>
+                <div class="skip-ad" id="skipAd">Skip Ad</div>
+            </div>
+            <div class="ad-content" id="adContent">
+                <!-- Ad content will be loaded here -->
+            </div>
+            <div class="ad-footer">
+                <p>You will be redirected in <span id="countdown">5</span> seconds</p>
+            </div>
+        </div>
+        
+        <div class="error-container" id="errorContainer" style="display: none;">
+            <div class="error-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h2 id="errorTitle">Link Not Found</h2>
+            <p id="errorMessage">The link you're looking for doesn't exist or has been removed.</p>
+            <a href="login.html" class="home-btn">Go to Login</a>
+        </div>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <script src="redirect.js"></script>
+</body>
+</html>
