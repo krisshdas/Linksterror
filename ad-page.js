@@ -63,36 +63,75 @@ function loadAdsFromFirebase(pageNumber) {
             
             // Load header ad
             if (adConfig.header) {
-                document.getElementById('headerAd').innerHTML = adConfig.header;
+                executeAdScript('headerAd', adConfig.header);
             }
             
             // Load side ads
             if (adConfig.side1) {
-                document.getElementById('sideAd1').innerHTML = adConfig.side1;
+                executeAdScript('sideAd1', adConfig.side1);
             }
             if (adConfig.side2) {
-                document.getElementById('sideAd2').innerHTML = adConfig.side2;
+                executeAdScript('sideAd2', adConfig.side2);
             }
             if (adConfig.side3) {
-                document.getElementById('sideAd3').innerHTML = adConfig.side3;
+                executeAdScript('sideAd3', adConfig.side3);
             }
             if (adConfig.side4) {
-                document.getElementById('sideAd4').innerHTML = adConfig.side4;
+                executeAdScript('sideAd4', adConfig.side4);
             }
             
             // Load bottom ad
             if (adConfig.bottom) {
-                document.getElementById('bottomAd').innerHTML = adConfig.bottom;
+                executeAdScript('bottomAd', adConfig.bottom);
             }
             
             // Load pop ad
             if (adConfig.popup) {
-                document.getElementById('popAd').innerHTML = adConfig.popup;
+                executeAdScript('popAd', adConfig.popup);
             }
         })
         .catch((error) => {
             console.error('Error loading ads from Firebase:', error);
         });
+}
+
+// Execute ad script properly
+function executeAdScript(elementId, scriptContent) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    // Clear the element first
+    element.innerHTML = '';
+    
+    // Create a temporary div to parse the script
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = scriptContent;
+    
+    // Find all script tags in the content
+    const scripts = tempDiv.querySelectorAll('script');
+    
+    // Extract and execute each script
+    scripts.forEach(script => {
+        const newScript = document.createElement('script');
+        
+        // Copy all attributes from the original script
+        Array.from(script.attributes).forEach(attr => {
+            newScript.setAttribute(attr.name, attr.value);
+        });
+        
+        // Copy the script content
+        newScript.textContent = script.textContent;
+        
+        // Append to the element
+        element.appendChild(newScript);
+    });
+    
+    // Add non-script content
+    Array.from(tempDiv.childNodes).forEach(node => {
+        if (node.nodeType !== Node.ELEMENT_NODE || node.tagName !== 'SCRIPT') {
+            element.appendChild(node.cloneNode(true));
+        }
+    });
 }
 
 // Add click listeners to all ads
