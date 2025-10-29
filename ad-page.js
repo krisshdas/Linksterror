@@ -20,8 +20,6 @@ let originalUrl = '';
 let adPageNumber = 1;
 let timerCompleted = false;
 let isChecking = false;
-let autoShowTimer = null;
-let forceDownload = false;
 
 // Initialize ad page
 function initAdPage(pageNumber) {
@@ -31,7 +29,6 @@ function initAdPage(pageNumber) {
     adClicked = false;
     timerCompleted = false;
     isChecking = false;
-    forceDownload = false;
     
     // Get the original URL from session storage
     originalUrl = sessionStorage.getItem('originalUrl') || '';
@@ -175,25 +172,13 @@ function startCountdown() {
         if (seconds <= 0) {
             clearInterval(countdownInterval);
             timerCompleted = true;
+            showAdCheckButton();
         }
     }, 1667); // ~1000ms * 1.667 = 1667ms to make 15 seconds feel like 25 seconds
-    
-    // Set up auto-show timer for 25 seconds (real time)
-    autoShowTimer = setTimeout(() => {
-        forceDownload = true; // Force download without requiring ad click
-        showAdCheckButton();
-        console.log('25 seconds elapsed, forcing download button');
-    }, 25000); // 25 seconds in milliseconds
 }
 
-// Show ad check button when timer completes or after 25 seconds
+// Show ad check button when timer completes
 function showAdCheckButton() {
-    // Clear auto-show timer if it exists
-    if (autoShowTimer) {
-        clearTimeout(autoShowTimer);
-        autoShowTimer = null;
-    }
-    
     const adCheckBtn = document.getElementById('adCheckBtn');
     const instructions = document.getElementById('instructions');
     
@@ -219,8 +204,8 @@ document.addEventListener('DOMContentLoaded', () => {
         adCheckBtn.addEventListener('click', () => {
             if (isChecking) return;
             
-            if (!adClicked && !forceDownload) {
-                // Show warning if ad hasn't been clicked and not forced
+            if (!adClicked) {
+                // Show warning if ad hasn't been clicked
                 const warning = document.createElement('div');
                 warning.className = 'warning-message';
                 warning.textContent = 'Please click on an advertisement first!';
@@ -230,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     warning.remove();
                 }, 3000);
             } else {
-                // Ad has been clicked or forced, show loading for 3 seconds
+                // Ad has been clicked, show loading for 3 seconds
                 isChecking = true;
                 adCheckBtn.disabled = true;
                 adCheckBtn.classList.add('checking');
@@ -257,7 +242,7 @@ function unlockDownloadButton() {
         adCheckBtn.style.display = 'none';
         downloadBtn.style.display = 'flex';
         downloadBtn.disabled = false;
-        downloadBtn.classList.remove('locked');
+        downloadBtn.classList.remove('left');
         downloadBtn.classList.add('unlocked');
         downloadBtn.innerHTML = `
             <i class="fas fa-unlock"></i>
@@ -276,7 +261,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Clear any running timers
             if (countdownInterval) clearInterval(countdownInterval);
-            if (autoShowTimer) clearTimeout(autoShowTimer);
             
             // Redirect based on current page
             if (adPageNumber === 1) {
@@ -373,4 +357,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-}
+                                 }
