@@ -3,134 +3,378 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advertisement - Page 1</title>
-    <link rel="stylesheet" href="ad-page.css">
+    <title>Manage Ads | Link Shortener</title>
+    <link rel="stylesheet" href="ads-page.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="ad-container">
-        <!-- Cooldown Timer -->
-        <div class="cooldown-bar">
-            <div class="progress">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
-            <div class="timer">
-                <i class="fas fa-clock"></i>
-                <span id="countdown">15</span>s
-            </div>
-        </div>
-        
-        <!-- Header Ad (728x90) -->
-        <div class="ad-header" id="headerAd">
-            <script type="text/javascript">
-                atOptions = {
-                    'key' : 'a613a5730088d6b2192f8e5087590be5',
-                    'format' : 'iframe',
-                    'height' : 90,
-                    'width' : 728,
-                    'params' : {}
-                };
-            </script>
-            <script type="text/javascript" src="//www.highperformanceformat.com/a613a5730088d6b2192f8e5087590be5/invoke.js"></script>
-        </div>
-        
-        <!-- Main Content -->
-        <div class="ad-content">
-            <div class="ad-left">
-                <!-- Side Ad 1 (300x250) - Highest Value -->
-                <div class="ad-banner high-value" id="sideAd1">
-                    <script type="text/javascript">
-                        atOptions = {
-                            'key' : 'f0fcf291e1d265a945dbd45c1674505d',
-                            'format' : 'iframe',
-                            'height' : 250,
-                            'width' : 300,
-                            'params' : {}
-                        };
-                    </script>
-                    <script type="text/javascript" src="//www.highperformanceformat.com/f0fcf291e1d265a945dbd45c1674505d/invoke.js"></script>
-                </div>
-                
-                <!-- Side Ad 2 (160x300) -->
-                <div class="ad-banner" id="sideAd2">
-                    <script type="text/javascript">
-                        atOptions = {
-                            'key' : '42de855a41965e9fad85dcd0c22092f5',
-                            'format' : 'iframe',
-                            'height' : 300,
-                            'width' : 160,
-                            'params' : {}
-                        };
-                    </script>
-                    <script type="text/javascript" src="//www.highperformanceformat.com/42de855a41965e9fad85dcd0c22092f5/invoke.js"></script>
-                </div>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-link"></i>
+                <h1>Link Shortener</h1>
             </div>
             
-            <div class="ad-center">
-                <h2>Please check out our sponsors</h2>
-                <p>Click on any advertisement to continue to your destination</p>
-                <div class="loading-animation">
-                    <div class="loader"></div>
-                </div>
-                
-                <!-- Pop Ad -->
-                <div class="pop-ad" id="popAd">
-                    <script async="async" data-cfasync="false" src="//pl27948945.effectivegatecpm.com/f26c57292f848e1a99e38572ea936821/invoke.js"></script>
-                    <div id="container-f26c57292f848e1a99e38572ea936821"></div>
-                </div>
+            <div class="back-btn">
+                <a href="dashboard.html">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Dashboard</span>
+                </a>
+            </div>
+        </header>
+        
+        <main>
+            <div class="page-header">
+                <h2>Manage Ads</h2>
+                <p>Configure advertisements for your links</p>
             </div>
             
-            <div class="ad-right">
-                <!-- Side Ad 3 (468x60) -->
-                <div class="ad-banner" id="sideAd3">
-                    <script type="text/javascript">
-                        atOptions = {
-                            'key' : '0763125bdb9b7f5c9a782af3cf9091f6',
-                            'format' : 'iframe',
-                            'height' : 60,
-                            'width' : 468,
-                            'params' : {}
-                        };
-                    </script>
-                    <script type="text/javascript" src="//www.highperformanceformat.com/0763125bdb9b7f5c9a782af3cf9091f6/invoke.js"></script>
-                </div>
-                
-                <!-- Side Ad 4 (320x50) -->
-                <div class="ad-banner" id="sideAd4">
-                    <script type="text/javascript">
-                        atOptions = {
-                            'key' : 'a9cdfc2f050735d7c17d6d5650e26bfe',
-                            'format' : 'iframe',
-                            'height' : 50,
-                            'width' : 320,
-                            'params' : {}
-                        };
-                    </script>
-                    <script type="text/javascript" src="//www.highperformanceformat.com/a9cdfc2f050735d7c17d6d5650e26bfe/invoke.js"></script>
+            <div class="ads-container">
+                <div class="ads-config">
+                    <h3>Ad Configuration</h3>
+                    <p>Set up the 5 ad pages that users will see before reaching their destination</p>
+                    
+                    <div class="ad-tabs">
+                        <button class="tab-btn active" data-tab="ad1">Ad Page 1</button>
+                        <button class="tab-btn" data-tab="ad2">Ad Page 2</button>
+                        <button class="tab-btn" data-tab="ad3">Ad Page 3</button>
+                        <button class="tab-btn" data-tab="ad4">Ad Page 4</button>
+                        <button class="tab-btn" data-tab="ad5">Ad Page 5</button>
+                    </div>
+                    
+                    <div class="tab-content">
+                        <!-- Ad Page 1 -->
+                        <div class="tab-pane active" id="ad1">
+                            <h4>Ad Page 1 Configuration</h4>
+                            
+                            <div class="ad-section">
+                                <h5>Header Banner (728x90)</h5>
+                                <textarea id="ad1-header" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 728x90 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 1 (300x250) - High Value</h5>
+                                <textarea id="ad1-side1" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 300x250 banner (highest value)</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 2 (160x300)</h5>
+                                <textarea id="ad1-side2" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 160x300 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 3 (468x60)</h5>
+                                <textarea id="ad1-side3" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 468x60 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 4 (320x50)</h5>
+                                <textarea id="ad1-side4" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 320x50 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Bottom Banner</h5>
+                                <textarea id="ad1-bottom" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: Bottom banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Pop-up Ad</h5>
+                                <textarea id="ad1-popup" placeholder="Paste Adsterra pop-up code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: Pop-up ad</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Ad Page 2 -->
+                        <div class="tab-pane" id="ad2">
+                            <h4>Ad Page 2 Configuration</h4>
+                            
+                            <div class="ad-section">
+                                <h5>Header Banner (728x90)</h5>
+                                <textarea id="ad2-header" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 728x90 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 1 (300x250) - High Value</h5>
+                                <textarea id="ad2-side1" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 300x250 banner (highest value)</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 2 (160x300)</h5>
+                                <textarea id="ad2-side2" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 160x300 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 3 (468x60)</h5>
+                                <textarea id="ad2-side3" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 468x60 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 4 (320x50)</h5>
+                                <textarea id="ad2-side4" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 320x50 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Bottom Banner</h5>
+                                <textarea id="ad2-bottom" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: Bottom banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Pop-up Ad</h5>
+                                <textarea id="ad2-popup" placeholder="Paste Adsterra pop-up code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: Pop-up ad</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Ad Page 3 -->
+                        <div class="tab-pane" id="ad3">
+                            <h4>Ad Page 3 Configuration</h4>
+                            
+                            <div class="ad-section">
+                                <h5>Header Banner (728x90)</h5>
+                                <textarea id="ad3-header" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 728x90 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 1 (300x250) - High Value</h5>
+                                <textarea id="ad3-side1" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 300x250 banner (highest value)</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 2 (160x300)</h5>
+                                <textarea id="ad3-side2" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 160x300 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 3 (468x60)</h5>
+                                <textarea id="ad3-side3" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 468x60 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 4 (320x50)</h5>
+                                <textarea id="ad3-side4" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 320x50 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Bottom Banner</h5>
+                                <textarea id="ad3-bottom" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: Bottom banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Pop-up Ad</h5>
+                                <textarea id="ad3-popup" placeholder="Paste Adsterra pop-up code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: Pop-up ad</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Ad Page 4 -->
+                        <div class="tab-pane" id="ad4">
+                            <h4>Ad Page 4 Configuration</h4>
+                            
+                            <div class="ad-section">
+                                <h5>Header Banner (728x90)</h5>
+                                <textarea id="ad4-header" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 728x90 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 1 (300x250) - High Value</h5>
+                                <textarea id="ad4-side1" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 300x250 banner (highest value)</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 2 (160x300)</h5>
+                                <textarea id="ad4-side2" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 160x300 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 3 (468x60)</h5>
+                                <textarea id="ad4-side3" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 468x60 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 4 (320x50)</h5>
+                                <textarea id="ad4-side4" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 320x50 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Bottom Banner</h5>
+                                <textarea id="ad4-bottom" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: Bottom banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Pop-up Ad</h5>
+                                <textarea id="ad4-popup" placeholder="Paste Adsterra pop-up code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: Pop-up ad</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Ad Page 5 -->
+                        <div class="tab-pane" id="ad5">
+                            <h4>Ad Page 5 Configuration</h4>
+                            
+                            <div class="ad-section">
+                                <h5>Header Banner (728x90)</h5>
+                                <textarea id="ad5-header" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 728x90 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 1 (300x250) - High Value</h5>
+                                <textarea id="ad5-side1" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 300x250 banner (highest value)</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 2 (160x300)</h5>
+                                <textarea id="ad5-side2" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 160x300 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 3 (468x60)</h5>
+                                <textarea id="ad5-side3" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 468x60 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 4 (320x50)</h5>
+                                <textarea id="ad5-side4" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: 320x50 banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Bottom Banner</h5>
+                                <textarea id="ad5-bottom" placeholder="Paste Adsterra banner code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: Bottom banner</small>
+                                </div>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Pop-up Ad</h5>
+                                <textarea id="ad5-popup" placeholder="Paste Adsterra pop-up code here"></textarea>
+                                <div class="ad-preview">
+                                    <small>Preview: Pop-up ad</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="save-btn" id="saveBtn">
+                            <i class="fas fa-save"></i>
+                            Save Configuration
+                        </button>
+                        <button class="test-btn" id="testBtn">
+                            <i class="fas fa-play"></i>
+                            Test Ad Pages
+                        </button>
+                    </div>
                 </div>
             </div>
+        </main>
+    </div>
+    
+    <div id="notification" class="notification">
+        <div class="notification-content">
+            <i class="notification-icon"></i>
+            <span class="notification-message"></span>
         </div>
-        
-        <!-- Bottom Ad -->
-        <div class="ad-footer" id="bottomAd">
-            <script type='text/javascript' src='//pl27948950.effectivegatecpm.com/35/be/75/35be75afe8ab12dd29a7d8208b3e9100.js'></script>
-        </div>
-        
-        <!-- Continue Button -->
-        <div class="continue-container">
-            <button class="continue-btn" id="continueBtn" disabled>
-                <i class="fas fa-lock"></i>
-                <span>Click an ad to unlock</span>
-            </button>
-        </div>
+        <div class="notification-progress"></div>
     </div>
     
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
     <script src="ad-page.js"></script>
-    <script>
-        // Initialize ad page
-        initAdPage(1);
-    </script>
 </body>
 </html>
