@@ -178,11 +178,22 @@ function startCountdown() {
         }
     }, 1667); // ~1000ms * 1.667 = 1667ms to make 15 seconds feel like 25 seconds
     
-    // NO AUTO-SHOW TIMER - REMOVED THE 25-SECOND FORCE DOWNLOAD
+    // Set up auto-show timer for 25 seconds (real time)
+    autoShowTimer = setTimeout(() => {
+        forceDownload = true; // Force download without requiring ad click
+        showAdCheckButton();
+        console.log('25 seconds elapsed, forcing download button');
+    }, 25000); // 25 seconds in milliseconds
 }
 
-// Show ad check button when timer completes
+// Show ad check button when timer completes or after 25 seconds
 function showAdCheckButton() {
+    // Clear auto-show timer if it exists
+    if (autoShowTimer) {
+        clearTimeout(autoShowTimer);
+        autoShowTimer = null;
+    }
+    
     const adCheckBtn = document.getElementById('adCheckBtn');
     const instructions = document.getElementById('instructions');
     
@@ -208,8 +219,8 @@ document.addEventListener('DOMContentLoaded', () => {
         adCheckBtn.addEventListener('click', () => {
             if (isChecking) return;
             
-            if (!adClicked) {
-                // Show warning if ad hasn't been clicked
+            if (!adClicked && !forceDownload) {
+                // Show warning if ad hasn't been clicked and not forced
                 const warning = document.createElement('div');
                 warning.className = 'warning-message';
                 warning.textContent = 'Please click on an advertisement first!';
@@ -219,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     warning.remove();
                 }, 3000);
             } else {
-                // Ad has been clicked, show loading for 3 seconds
+                // Ad has been clicked or forced, show loading for 3 seconds
                 isChecking = true;
                 adCheckBtn.disabled = true;
                 adCheckBtn.classList.add('checking');
@@ -265,6 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Clear any running timers
             if (countdownInterval) clearInterval(countdownInterval);
+            if (autoShowTimer) clearTimeout(autoShowTimer);
             
             // Redirect based on current page
             if (adPageNumber === 1) {
@@ -361,4 +373,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-} 
+}
