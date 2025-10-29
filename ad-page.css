@@ -1,4 +1,146 @@
-/* Add these styles to your existing ad-page.css */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    overflow-y: auto; /* Allow vertical scrolling */
+}
+
+.ad-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Cooldown Timer */
+.cooldown-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 10px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.progress {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-right: 15px;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #ffc107, #dc3545);
+    width: 100%;
+    transition: width 1.667s linear; /* Slower to feel like 25 seconds */
+}
+
+.timer {
+    color: white;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.timer i {
+    margin-right: 5px;
+}
+
+/* Ad Sections */
+.ad-header {
+    margin-top: 50px;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    min-height: 100px;
+    overflow: hidden;
+}
+
+.ad-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 20px;
+}
+
+.ad-left, .ad-right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
+.ad-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    padding: 20px 0;
+}
+
+.ad-center h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.ad-center p {
+    font-size: 16px;
+    margin-bottom: 20px;
+    opacity: 0.8;
+}
+
+.ad-banner {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    min-height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    width: 100%;
+}
+
+.high-value {
+    border: 2px solid #28a745;
+    box-shadow: 0 0 15px rgba(40, 167, 69, 0.3);
+}
+
+.ad-footer {
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    min-height: 60px;
+    margin-bottom: 80px; /* Space for buttons */
+}
+
+.pop-ad {
+    margin: 20px 0;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
 
 /* Ad Check Button */
 .ad-check-container {
@@ -55,11 +197,6 @@
 
 .ad-check-btn i {
     font-size: 18px;
-}
-
-.ad-check-timer {
-    font-size: 14px;
-    margin-left: 5px;
 }
 
 /* Download Button */
@@ -140,4 +277,55 @@
     to {
         opacity: 1;
     }
-} 
+}
+
+/* Loading Animation */
+.loading-animation {
+    margin-top: 20px;
+}
+
+.loader {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-top: 5px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .ad-header {
+        overflow-x: auto;
+        justify-content: flex-start;
+    }
+    
+    .ad-center h2 {
+        font-size: 20px;
+    }
+    
+    .ad-center p {
+        font-size: 14px;
+    }
+    
+    .ad-check-btn, .download-btn {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+}
+
+/* Ensure ads are clickable */
+.ad-banner, .ad-header, .ad-footer, .pop-ad {
+    cursor: pointer;
+}
+
+/* Ad container styling */
+iframe {
+    max-width: 100%;
+    height: auto;
+}
