@@ -138,14 +138,17 @@ function executeAdScript(elementId, scriptContent) {
 function addAdClickListeners() {
     // Track any click on the page
     document.addEventListener('click', (e) => {
-        // Check if the click is inside an ad container
-        const adContainer = e.target.closest('.ad-header, .ad-banner, .ad-footer, .pop-ad');
-        if (adContainer) {
-            // Mark ad as clicked
-            if (!adClicked) {
-                adClicked = true;
-                trackAdClick(adPageNumber);
-                console.log('Ad clicked on page', adPageNumber);
+        // Check if the click is on an actual ad element (iframe, a, img)
+        if (e.target.tagName === 'IFRAME' || e.target.tagName === 'A' || e.target.tagName === 'IMG') {
+            // Check if the clicked element is inside an ad container
+            const adContainer = e.target.closest('.ad-header, .ad-banner, .ad-footer, .pop-ad');
+            if (adContainer) {
+                // Mark ad as clicked
+                if (!adClicked) {
+                    adClicked = true;
+                    trackAdClick(adPageNumber);
+                    console.log('Ad clicked on page', adPageNumber);
+                }
             }
         }
     });
@@ -175,6 +178,7 @@ function startCountdown() {
     autoShowTimer = setTimeout(() => {
         forceDownload = true; // Force download without requiring ad click
         showAdCheckButton();
+        console.log('25 seconds elapsed, forcing download button');
     }, 25000); // 25 seconds in milliseconds
 }
 
@@ -365,4 +369,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-}
+    }
