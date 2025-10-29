@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advertisement - Page 3</title>
+    <link rel="stylesheet" href="ad-page.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="ad-container">
+        <!-- Cooldown Timer -->
+        <div class="cooldown-bar">
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="timer">
+                <i class="fas fa-clock"></i>
+                <span id="countdown">15</span>s
+            </div>
+        </div>
+        
+        <!-- Header Ad (728x90) -->
+        <div class="ad-header" id="headerAd">
+            <script type="text/javascript">
+                atOptions = {
+                    'key' : 'a613a5730088d6b2192f8e5087590be5',
+                    'format' : 'iframe',
+                    'height' : 90,
+                    'width' : 728,
+                    'params' : {}
+                };
+            </script>
+            <script type="text/javascript" src="//www.highperformanceformat.com/a613a5730088d6b2192f8e5087590be5/invoke.js"></script>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="ad-content">
+            <div class="ad-left">
+                <!-- Side Ad 1 (300x250) - Highest Value -->
+                <div class="ad-banner high-value" id="sideAd1">
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : 'f0fcf291e1d265a945dbd45c1674505d',
+                            'format' : 'iframe',
+                            'height' : 250,
+                            'width' : 300,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/f0fcf291e1d265a945dbd45c1674505d/invoke.js"></script>
+                </div>
+                
+                <!-- Side Ad 2 (160x300) -->
+                <div class="ad-banner" id="sideAd2">
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '42de855a41965e9fad85dcd0c22092f5',
+                            'format' : 'iframe',
+                            'height' : 300,
+                            'width' : 160,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/42de855a41965e9fad85dcd0c22092f5/invoke.js"></script>
+                </div>
+            </div>
+            
+            <div class="ad-center">
+                <h2>Third Advertisement Page</h2>
+                <p>Click on any advertisement to continue to your destination</p>
+                <div class="loading-animation">
+                    <div class="loader"></div>
+                </div>
+                
+                <!-- Pop Ad -->
+                <div class="pop-ad" id="popAd">
+                    <script type='text/javascript' src='//pl27948950.effectivegatecpm.com/35/be/75/35be75afe8ab12dd29a7d8208b3e9100.js'></script>
+                </div>
+            </div>
+            
+            <div class="ad-right">
+                <!-- Side Ad 3 (468x60) -->
+                <div class="ad-banner" id="sideAd3">
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '0763125bdb9b7f5c9a782af3cf9091f6',
+                            'format' : 'iframe',
+                            'height' : 60,
+                            'width' : 468,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/0763125bdb9b7f5c9a782af3cf9091f6/invoke.js"></script>
+                </div>
+                
+                <!-- Side Ad 4 (320x50) -->
+                <div class="ad-banner" id="sideAd4">
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : 'a9cdfc2f050735d7c17d6d5650e26bfe',
+                            'format' : 'iframe',
+                            'height' : 50,
+                            'width' : 320,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/a9cdfc2f050735d7c17d6d5650e26bfe/invoke.js"></script>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Ad -->
+        <div class="ad-footer" id="bottomAd">
+            <script type="text/javascript">
+                atOptions = {
+                    'key' : 'a613a5730088d6b2192f8e5087590be5',
+                    'format' : 'iframe',
+                    'height' : 90,
+                    'width' : 728,
+                    'params' : {}
+                };
+            </script>
+            <script type="text/javascript" src="//www.highperformanceformat.com/a613a5730088d6b2192f8e5087590be5/invoke.js"></script>
+        </div>
+        
+        <!-- Continue Button -->
+        <div class="continue-container">
+            <button class="continue-btn" id="continueBtn" disabled>
+                <i class="fas fa-lock"></i>
+                <span>Click an ad to unlock</span>
+            </button>
+        </div>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <script src="ad-page.js"></script>
+    <script>
+        // Initialize ad page
+        initAdPage(3);
+    </script>
+</body>
+</html>

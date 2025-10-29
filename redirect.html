@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting...</title>
+    
+    <!-- Open Graph meta tags for social media previews -->
+    <meta property="og:title" content="Check out this link!">
+    <meta property="og:description" content="I'm sharing something interesting with you. Click to continue...">
+    <meta property="og:image" content="https://i.imgur.com/3Q5hZ8x.png">
+    <meta property="og:url" content="https://link-shortner-2898c.firebaseapp.com">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Link Shortener">
+    
+    <!-- Twitter Card meta tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Check out this link!">
+    <meta name="twitter:description" content="I'm sharing something interesting with you. Click to continue...">
+    <meta name="twitter:image" content="https://i.imgur.com/3Q5hZ8x.png">
+    <meta name="twitter:site" content="@LinkShortener">
+    
+    <!-- Additional meta tags -->
+    <meta name="description" content="Redirecting to your destination...">
+    <meta name="keywords" content="link shortener, redirect, url shortener">
+    <meta name="author" content="Link Shortener">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>">
+    
+    <link rel="stylesheet" href="redirect.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="loading-screen" id="loadingScreen">
+            <div class="loader">
+                <div class="circle"></div>
+                <div class="circle"></div>
+                <div class="circle"></div>
+            </div>
+            <h2>Redirecting you to your destination</h2>
+            <p>Please wait while we prepare your link...</p>
+        </div>
+        
+        <div class="error-container" id="errorContainer" style="display: none;">
+            <div class="error-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h2 id="errorTitle">Link Not Found</h2>
+            <p id="errorMessage">The link you're looking for doesn't exist or has been removed.</p>
+            <a href="login.html" class="home-btn">Go to Login</a>
+        </div>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <script src="redirect.js"></script>
+</body>
+</html>

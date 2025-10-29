@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Ads | Link Shortener</title>
+    <link rel="stylesheet" href="ads.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-link"></i>
+                <h1>Link Shortener</h1>
+            </div>
+            
+            <div class="back-btn">
+                <a href="dashboard.html">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Dashboard</span>
+                </a>
+            </div>
+        </header>
+        
+        <main>
+            <div class="page-header">
+                <h2>Manage Ads</h2>
+                <p>Configure advertisements for your links</p>
+            </div>
+            
+            <div class="ads-container">
+                <div class="ads-config">
+                    <h3>Ad Configuration</h3>
+                    <p>Set up the 5 ad pages that users will see before reaching their destination</p>
+                    
+                    <div class="ad-tabs">
+                        <button class="tab-btn active" data-tab="ad1">Ad Page 1</button>
+                        <button class="tab-btn" data-tab="ad2">Ad Page 2</button>
+                        <button class="tab-btn" data-tab="ad3">Ad Page 3</button>
+                        <button class="tab-btn" data-tab="ad4">Ad Page 4</button>
+                        <button class="tab-btn" data-tab="ad5">Ad Page 5</button>
+                    </div>
+                    
+                    <div class="tab-content">
+                        <!-- Ad Page 1 -->
+                        <div class="tab-pane active" id="ad1">
+                            <h4>Ad Page 1 Configuration</h4>
+                            
+                            <div class="ad-section">
+                                <h5>Header Banner (728x90)</h5>
+                                <textarea id="ad1-header" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 1 (300x250)</h5>
+                                <textarea id="ad1-side1" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 2 (300x250)</h5>
+                                <textarea id="ad1-side2" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Bottom Banner (320x50)</h5>
+                                <textarea id="ad1-bottom" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Pop-under Code</h5>
+                                <textarea id="ad1-popup" placeholder="Paste Adsterra pop-under code here"></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Ad Page 2 -->
+                        <div class="tab-pane" id="ad2">
+                            <h4>Ad Page 2 Configuration</h4>
+                            
+                            <div class="ad-section">
+                                <h5>Header Banner (728x90)</h5>
+                                <textarea id="ad2-header" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 1 (300x250)</h5>
+                                <textarea id="ad2-side1" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 2 (300x250)</h5>
+                                <textarea id="ad2-side2" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Bottom Banner (320x50)</h5>
+                                <textarea id="ad2-bottom" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Pop-under Code</h5>
+                                <textarea id="ad2-popup" placeholder="Paste Adsterra pop-under code here"></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Ad Page 3 -->
+                        <div class="tab-pane" id="ad3">
+                            <h4>Ad Page 3 Configuration</h4>
+                            
+                            <div class="ad-section">
+                                <h5>Header Banner (728x90)</h5>
+                                <textarea id="ad3-header" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 1 (300x250)</h5>
+                                <textarea id="ad3-side1" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 2 (300x250)</h5>
+                                <textarea id="ad3-side2" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Bottom Banner (320x50)</h5>
+                                <textarea id="ad3-bottom" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Pop-under Code</h5>
+                                <textarea id="ad3-popup" placeholder="Paste Adsterra pop-under code here"></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Ad Page 4 -->
+                        <div class="tab-pane" id="ad4">
+                            <h4>Ad Page 4 Configuration</h4>
+                            
+                            <div class="ad-section">
+                                <h5>Header Banner (728x90)</h5>
+                                <textarea id="ad4-header" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 1 (300x250)</h5>
+                                <textarea id="ad4-side1" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 2 (300x250)</h5>
+                                <textarea id="ad4-side2" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Bottom Banner (320x50)</h5>
+                                <textarea id="ad4-bottom" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Pop-under Code</h5>
+                                <textarea id="ad4-popup" placeholder="Paste Adsterra pop-under code here"></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Ad Page 5 -->
+                        <div class="tab-pane" id="ad5">
+                            <h4>Ad Page 5 Configuration</h4>
+                            
+                            <div class="ad-section">
+                                <h5>Header Banner (728x90)</h5>
+                                <textarea id="ad5-header" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 1 (300x250)</h5>
+                                <textarea id="ad5-side1" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Side Banner 2 (300x250)</h5>
+                                <textarea id="ad5-side2" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Bottom Banner (320x50)</h5>
+                                <textarea id="ad5-bottom" placeholder="Paste Adsterra banner code here"></textarea>
+                            </div>
+                            
+                            <div class="ad-section">
+                                <h5>Pop-under Code</h5>
+                                <textarea id="ad5-popup" placeholder="Paste Adsterra pop-under code here"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="save-btn" id="saveBtn">Save Configuration</button>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="notification" class="notification">
+        <div class="notification-content">
+            <i class="notification-icon"></i>
+            <span class="notification-message"></span>
+        </div>
+        <div class="notification-progress"></div>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <script src="ads.js"></script>
+</body>
+</html>
