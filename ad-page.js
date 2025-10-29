@@ -19,10 +19,19 @@ let countdownInterval;
 let originalUrl = '';
 let adPageNumber = 1;
 let timerCompleted = false;
+let adCheckTimer = null;
+let adCheckSeconds = 15;
+let warningShown = false;
 
 // Initialize ad page
 function initAdPage(pageNumber) {
     adPageNumber = pageNumber;
+    
+    // Reset variables for new page
+    adClicked = false;
+    timerCompleted = false;
+    adCheckSeconds = 15;
+    warningShown = false;
     
     // Get the original URL from session storage
     originalUrl = sessionStorage.getItem('originalUrl') || '';
@@ -48,11 +57,13 @@ function addAdClickListeners() {
     const adElements = document.querySelectorAll('.ad-header, .ad-banner, .ad-footer, .pop-ad');
     
     adElements.forEach(element => {
-        element.addEventListener('click', () => {
-            if (!adClicked) {
-                adClicked = true;
-                unlockDownloadButton();
-                trackAdClick(adPageNumber);
+        element.addEventListener('click', (e) => {
+            // Check if the click is actually on an ad element, not just the container
+            if (e.target.tagName === 'IFRAME' || e.target.tagName === 'A' || e.target.tagName === 'IMG') {
+                if (!adClicked) {
+                    adClicked = true;
+                    trackAdClick(adPageNumber);
+                }
             }
         });
     });
@@ -75,18 +86,18 @@ function startCountdown() {
         if (seconds <= 0) {
             clearInterval(countdownInterval);
             timerCompleted = true;
-            showDownloadButton();
+            showAdCheckButton();
         }
     }, 1667); // ~1000ms * 1.667 = 1667ms to make 15 seconds feel like 25 seconds
 }
 
-// Show download button when timer completes
-function showDownloadButton() {
-    const downloadBtn = document.getElementById('downloadBtn');
+// Show ad check button when timer completes
+function showAdCheckButton() {
+    const adCheckBtn = document.getElementById('adCheckBtn');
     const instructions = document.getElementById('instructions');
     
-    if (downloadBtn && instructions) {
-        downloadBtn.style.display = 'flex';
+    if (adCheckBtn && instructions) {
+        adCheckBtn.style.display = 'flex';
         instructions.style.display = 'block';
         
         // Scroll to bottom to show button
@@ -99,11 +110,72 @@ function showDownloadButton() {
     }
 }
 
-// Unlock download button when ad is clicked
+// Start ad check timer
+function startAdCheckTimer() {
+    const adCheckBtn = document.getElementById('adCheckBtn');
+    const adCheckTimerElement = document.getElementById('adCheckTimer');
+    
+    if (!adCheckBtn || !adCheckTimerElement) return;
+    
+    // Disable button and show timer
+    adCheckBtn.disabled = true;
+    adCheckBtn.classList.add('checking');
+    
+    adCheckTimer = setInterval(() => {
+        adCheckSeconds--;
+        adCheckTimerElement.textContent = adCheckSeconds;
+        
+        if (adCheckSeconds <= 0) {
+            clearInterval(adCheckTimer);
+            unlockDownloadButton();
+        }
+    }, 1000);
+}
+
+// Handle ad check button click
+document.addEventListener('DOMContentLoaded', () => {
+    const adCheckBtn = document.getElementById('adCheckBtn');
+    
+    if (adCheckBtn) {
+        adCheckBtn.addEventListener('click', () => {
+            if (adCheckBtn.disabled) return;
+            
+            if (!adClicked) {
+                // Show warning if ad hasn't been clicked
+                if (!warningShown) {
+                    warningShown = true;
+                    adCheckSeconds += 10; // Add 10 more seconds
+                    
+                    const warning = document.createElement('div');
+                    warning.className = 'warning-message';
+                    warning.textContent = 'Please click on an advertisement first! Timer extended by 10 seconds.';
+                    document.body.appendChild(warning);
+                    
+                    setTimeout(() => {
+                        warning.remove();
+                    }, 5000);
+                    
+                    // Restart timer with additional 10 seconds
+                    if (adCheckTimer) clearInterval(adCheckTimer);
+                    startAdCheckTimer();
+                }
+            } else {
+                // Ad has been clicked, start the check timer
+                startAdCheckTimer();
+            }
+        });
+    }
+});
+
+// Unlock download button when ad check is complete
 function unlockDownloadButton() {
     const downloadBtn = document.getElementById('downloadBtn');
+    const adCheckBtn = document.getElementById('adCheckBtn');
     
-    if (downloadBtn) {
+    if (downloadBtn && adCheckBtn) {
+        // Hide ad check button and show download button
+        adCheckBtn.style.display = 'none';
+        downloadBtn.style.display = 'flex';
         downloadBtn.disabled = false;
         downloadBtn.classList.remove('locked');
         downloadBtn.classList.add('unlocked');
@@ -120,28 +192,19 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (downloadBtn) {
         downloadBtn.addEventListener('click', () => {
-            if (downloadBtn.disabled) {
-                // Show message if button is locked
-                const message = document.createElement('div');
-                message.className = 'button-message';
-                message.textContent = 'Please click on an advertisement first!';
-                document.body.appendChild(message);
-                
-                setTimeout(() => {
-                    message.remove();
-                }, 3000);
+            if (downloadBtn.disabled) return;
+            
+            // Clear any running timers
+            if (countdownInterval) clearInterval(countdownInterval);
+            if (adCheckTimer) clearInterval(adCheckTimer);
+            
+            // Check if this is the last ad page
+            if (adPageNumber === 5) {
+                // Redirect to original URL
+                window.location.href = originalUrl;
             } else {
-                // Button is unlocked, proceed to next page
-                clearInterval(countdownInterval);
-                
-                // Check if this is the last ad page
-                if (adPageNumber === 5) {
-                    // Redirect to original URL
-                    window.location.href = originalUrl;
-                } else {
-                    // Go to next ad page
-                    window.location.href = `ad${adPageNumber + 1}.html`;
-                }
+                // Go to next ad page
+                window.location.href = `ad${adPageNumber + 1}.html`;
             }
         });
     }
