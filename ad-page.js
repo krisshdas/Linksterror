@@ -134,78 +134,90 @@ function executeAdScript(elementId, scriptContent) {
     });
 }
 
-// Add click listeners to all ads (enhanced for mobile)
+// Add click listeners to all ads (mobile-optimized)
 function addAdClickListeners() {
     // Get all ad containers
     const adContainers = document.querySelectorAll('.ad-header, .ad-banner, .ad-footer, .pop-ad, .hardcoded-ad');
     
     // Add both click and touch event listeners to each ad container
     adContainers.forEach(container => {
-        // Handle click events (for desktop)
-        container.addEventListener('click', (e) => {
-            handleAdInteraction(e, container);
-        });
-        
-        // Handle touch events (for mobile)
-        container.addEventListener('touchstart', (e) => {
-            // Mark the touch start time
-            container.dataset.touchStartTime = Date.now();
-        }, { passive: true });
-        
-        container.addEventListener('touchend', (e) => {
-            // Calculate touch duration
-            const touchDuration = Date.now() - (container.dataset.touchStartTime || 0);
+        // Function to handle ad interaction
+        const handleAdInteraction = (e) => {
+            // Check if the interaction is on an actual ad element (iframe, a, img)
+            const target = e.target;
             
-            // Only consider it a valid interaction if it's a quick tap (less than 500ms)
-            if (touchDuration < 500) {
-                handleAdInteraction(e, container);
+            if (target.tagName === 'IFRAME' || target.tagName === 'A' || target.tagName === 'IMG' || 
+                target.tagName === 'DIV' || target.tagName === 'SCRIPT') {
+                // Check if the clicked element is a direct child of the container
+                if (container.contains(target)) {
+                    // Mark ad as clicked
+                    if (!adClicked) {
+                        adClicked = true;
+                        trackAdClick(adPageNumber);
+                        console.log('Ad clicked on page', adPageNumber);
+                        
+                        // Visual feedback for ad click
+                        showAdClickFeedback();
+                        
+                        // Show check indicator
+                        const indicatorId = container.id + 'Indicator';
+                        const indicator = document.getElementById(indicatorId);
+                        if (indicator) {
+                            indicator.classList.add('show');
+                        }
+                    }
+                }
             }
-        }, { passive: true });
+        };
         
-        // Prevent context menu on long press (mobile)
-        container.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
+        // Add click event for desktop
+        container.addEventListener('click', handleAdInteraction);
+        
+        // Add touch events for mobile
+        container.addEventListener('touchstart', handleAdInteraction, { passive: true });
+        
+        // For iframes, we need special handling since they don't propagate events
+        const iframes = container.querySelectorAll('iframe');
+        iframes.forEach(iframe => {
+            // Add a transparent overlay to capture clicks
+            const overlay = document.createElement('div');
+            overlay.style.position = 'absolute';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.zIndex = '5';
+            overlay.style.cursor = 'pointer';
+            
+            // When overlay is clicked, mark as ad clicked and remove overlay
+            overlay.addEventListener('click', () => {
+                if (!adClicked) {
+                    adClicked = true;
+                    trackAdClick(adPageNumber);
+                    console.log('Ad clicked on page', adPageNumber);
+                    showAdClickFeedback();
+                    
+                    // Show check indicator
+                    const indicatorId = container.id + 'Indicator';
+                    const indicator = document.getElementById(indicatorId);
+                    if (indicator) {
+                        indicator.classList.add('show');
+                    }
+                }
+                // Remove overlay after click to allow interaction with actual ad
+                setTimeout(() => {
+                    overlay.remove();
+                }, 100);
+            });
+            
+            // Make sure container has position relative for overlay positioning
+            if (getComputedStyle(container).position === 'static') {
+                container.style.position = 'relative';
+            }
+            
+            container.appendChild(overlay);
         });
     });
-}
-
-// Handle ad interaction (both click and touch)
-function handleAdInteraction(e, container) {
-    // Check if the interaction is on an actual ad element
-    const target = e.target;
-    
-    // Check if the target is an iframe, a, img, or a child of these elements
-    let isAdElement = false;
-    
-    if (target.tagName === 'IFRAME' || target.tagName === 'A' || target.tagName === 'IMG') {
-        isAdElement = true;
-    } else {
-        // Check if the target is inside an iframe, a, or img
-        const parentAdElement = target.closest('iframe, a, img');
-        if (parentAdElement) {
-            isAdElement = true;
-        }
-    }
-    
-    // Check if the clicked element is a direct child of the container
-    if (container.contains(target) && isAdElement) {
-        // Mark ad as clicked
-        if (!adClicked) {
-            adClicked = true;
-            trackAdClick(adPageNumber);
-            console.log('Ad clicked on page', adPageNumber);
-            
-            // Visual feedback for ad click
-            showAdClickFeedback();
-            
-            // Show interaction indicator
-            const indicatorId = container.id + 'Indicator';
-            const indicator = document.getElementById(indicatorId);
-            if (indicator) {
-                indicator.classList.add('show');
-            }
-        }
-    }
 }
 
 // Show visual feedback when an ad is clicked
@@ -465,4 +477,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-}
+                    }
