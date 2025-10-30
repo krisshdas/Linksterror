@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advertisement - Page 2</title>
+    <title>Advertisement - Page 1</title>
     <link rel="stylesheet" href="ad-page.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -33,31 +33,10 @@
         <!-- Header Ad (728x90) -->
         <div class="ad-header" id="headerAd">
             <!-- Ad will be loaded from Firebase -->
-            <div class="ad-interaction-indicator" id="headerAdIndicator">
-                <i class="fas fa-check"></i>
-            </div>
         </div>
         
         <!-- Main Content -->
         <div class="ad-content">
-            <div class="ad-left">
-                <!-- Side Ad 1 (300x250) - Highest Value -->
-                <div class="ad-banner high-value" id="sideAd1">
-                    <!-- Ad will be loaded from Firebase -->
-                    <div class="ad-interaction-indicator" id="sideAd1Indicator">
-                        <i class="fas fa-check"></i>
-                    </div>
-                </div>
-                
-                <!-- Side Ad 2 (160x300) -->
-                <div class="ad-banner" id="sideAd2">
-                    <!-- Ad will be loaded from Firebase -->
-                    <div class="ad-interaction-indicator" id="sideAd2Indicator">
-                        <i class="fas fa-check"></i>
-                    </div>
-                </div>
-            </div>
-            
             <div class="ad-center">
                 <h2>Please check out our sponsors</h2>
                 <p>Click on any advertisement to continue to your destination</p>
@@ -68,15 +47,24 @@
                 <!-- Pop Ad -->
                 <div class="pop-ad" id="popAd">
                     <!-- Ad will be loaded from Firebase -->
-                    <div class="ad-interaction-indicator" id="popAdIndicator">
-                        <i class="fas fa-check"></i>
-                    </div>
                 </div>
                 
                 <!-- Ad Stats -->
                 <div class="ad-stats">
-                    <span>Ads Viewed: <span id="adsViewed">0</span>/6</span>
+                    <span>Ads Processed: <span id="adsViewed">0</span>/6</span>
                     <span>Time Remaining: <span id="timeRemaining">15</span>s</span>
+                </div>
+            </div>
+            
+            <div class="ad-left">
+                <!-- Side Ad 1 (300x250) - Highest Value -->
+                <div class="ad-banner high-value" id="sideAd1">
+                    <!-- Ad will be loaded from Firebase -->
+                </div>
+                
+                <!-- Side Ad 2 (160x300) -->
+                <div class="ad-banner" id="sideAd2">
+                    <!-- Ad will be loaded from Firebase -->
                 </div>
             </div>
             
@@ -84,17 +72,11 @@
                 <!-- Side Ad 3 (468x60) -->
                 <div class="ad-banner" id="sideAd3">
                     <!-- Ad will be loaded from Firebase -->
-                    <div class="ad-interaction-indicator" id="sideAd3Indicator">
-                        <i class="fas fa-check"></i>
-                    </div>
                 </div>
                 
                 <!-- Side Ad 4 (320x50) -->
                 <div class="ad-banner" id="sideAd4">
                     <!-- Ad will be loaded from Firebase -->
-                    <div class="ad-interaction-indicator" id="sideAd4Indicator">
-                        <i class="fas fa-check"></i>
-                    </div>
                 </div>
             </div>
         </div>
@@ -102,9 +84,6 @@
         <!-- Bottom Ad -->
         <div class="ad-footer" id="bottomAd">
             <!-- Ad will be loaded from Firebase -->
-            <div class="ad-interaction-indicator" id="bottomAdIndicator">
-                <i class="fas fa-check"></i>
-            </div>
         </div>
         
         <!-- Page Divider -->
@@ -244,7 +223,7 @@
     <script src="ad-page.js"></script>
     <script>
         // Initialize ad page
-        initAdPage(2);
+        initAdPage(1);
     </script>
 </body>
-                </html>
+</html>
