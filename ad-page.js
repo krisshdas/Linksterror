@@ -236,7 +236,7 @@ function showAdCheckButton() {
         instructions.style.display = 'block';
         
         // Update instructions based on ads clicked
-        instructions.querySelector('p').textContent = `Click the "Check Ads" button below to verify you've viewed the advertisements (${fakeAdsClicked}/${totalAds} processed)`;
+        instructions.querySelector('p').textContent = `Click the "Check Ads" button below to verify`;
         
         // Scroll to bottom to show button
         setTimeout(() => {
