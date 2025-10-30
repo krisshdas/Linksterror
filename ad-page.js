@@ -14,7 +14,8 @@ firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
 // Global variables
-let adClicked = false;
+let clickedAds = new Set(); // Track which ads have been clicked
+let totalAds = 6; // Total number of ads to click
 let countdownInterval;
 let checkButtonTimer;
 let originalUrl = '';
@@ -22,18 +23,19 @@ let adPageNumber = 1;
 let timerCompleted = false;
 let isChecking = false;
 let checkButtonTimerCompleted = false;
-let adClickDetectionAttempts = 0;
 
 // Initialize ad page
 function initAdPage(pageNumber) {
     adPageNumber = pageNumber;
     
     // Reset variables for new page
-    adClicked = false;
+    clickedAds.clear();
     timerCompleted = false;
     isChecking = false;
     checkButtonTimerCompleted = false;
-    adClickDetectionAttempts = 0;
+    
+    // Update ad counter display
+    updateAdCounter();
     
     // Get the original URL from session storage
     originalUrl = sessionStorage.getItem('originalUrl') || '';
@@ -57,6 +59,14 @@ function initAdPage(pageNumber) {
     setTimeout(() => {
         addAdClickListeners();
     }, 2000); // Delay to ensure ads are loaded
+}
+
+// Update ad counter display
+function updateAdCounter() {
+    const adsViewedElement = document.getElementById('adsViewed');
+    if (adsViewedElement) {
+        adsViewedElement.textContent = clickedAds.size;
+    }
 }
 
 // Load ads from Firebase for the current page
@@ -142,39 +152,18 @@ function executeAdScript(elementId, scriptContent) {
 function addAdClickListeners() {
     console.log("Setting up ad click listeners...");
     
-    // Method 1: Monitor all clicks on the page
-    document.addEventListener('click', function(event) {
-        // Check if the click is on or inside an ad container
-        const target = event.target;
-        const adContainers = document.querySelectorAll('.ad-header, .ad-banner, .ad-footer, .pop-ad, .hardcoded-ad');
-        
-        for (let container of adContainers) {
-            if (container.contains(target)) {
-                // Check if it's a click on an actual ad element
-                if (isAdElement(target)) {
-                    handleAdClick(container);
-                    break;
-                }
-            }
-        }
-    }, true); // Use capture phase to catch all clicks
+    // Get all ad containers
+    const adContainers = document.querySelectorAll('.ad-header, .ad-banner, .ad-footer, .pop-ad, .hardcoded-ad');
     
-    // Method 2: Special handling for iframes
-    const iframes = document.querySelectorAll('iframe');
-    iframes.forEach(iframe => {
-        // Create a wrapper div for the iframe
-        const wrapper = document.createElement('div');
-        wrapper.style.position = 'relative';
-        wrapper.style.display = 'inline-block';
+    adContainers.forEach((container, index) => {
+        // Make sure container has position relative for overlay positioning
+        if (getComputedStyle(container).position === 'static') {
+            container.style.position = 'relative';
+        }
         
-        // Insert wrapper before iframe
-        iframe.parentNode.insertBefore(wrapper, iframe);
-        
-        // Move iframe into wrapper
-        wrapper.appendChild(iframe);
-        
-        // Create transparent overlay
+        // Create a transparent overlay that covers the entire ad
         const overlay = document.createElement('div');
+        overlay.className = 'ad-overlay';
         overlay.style.position = 'absolute';
         overlay.style.top = '0';
         overlay.style.left = '0';
@@ -182,109 +171,91 @@ function addAdClickListeners() {
         overlay.style.height = '100%';
         overlay.style.zIndex = '10';
         overlay.style.cursor = 'pointer';
+        overlay.style.backgroundColor = 'transparent';
         
         // Add click event to overlay
         overlay.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             
-            // Find the parent ad container
-            let parentContainer = overlay.closest('.ad-header, .ad-banner, .ad-footer, .pop-ad, .hardcoded-ad');
-            if (parentContainer) {
-                handleAdClick(parentContainer);
+            // Mark this ad as clicked
+            if (!clickedAds.has(container.id)) {
+                clickedAds.add(container.id);
+                updateAdCounter();
+                
+                // Show visual feedback
+                showAdClickFeedback(container);
+                
+                // Show check indicator
+                const indicatorId = container.id + 'Indicator';
+                const indicator = document.getElementById(indicatorId);
+                if (indicator) {
+                    indicator.classList.add('show');
+                }
+                
+                // Track the click
+                trackAdClick(adPageNumber);
+                console.log(`Ad clicked: ${container.id}. Total clicked: ${clickedAds.size}/${totalAds}`);
+                
+                // Check if all ads have been clicked
+                if (clickedAds.size >= totalAds) {
+                    console.log("All ads clicked! Ready to proceed.");
+                }
             }
         });
         
-        // Add overlay to wrapper
-        wrapper.appendChild(overlay);
+        // Add touch events for mobile
+        overlay.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Mark this ad as clicked
+            if (!clickedAds.has(container.id)) {
+                clickedAds.add(container.id);
+                updateAdCounter();
+                
+                // Show visual feedback
+                showAdClickFeedback(container);
+                
+                // Show check indicator
+                const indicatorId = container.id + 'Indicator';
+                const indicator = document.getElementById(indicatorId);
+                if (indicator) {
+                    indicator.classList.add('show');
+                }
+                
+                // Track the click
+                trackAdClick(adPageNumber);
+                console.log(`Ad clicked: ${container.id}. Total clicked: ${clickedAds.size}/${totalAds}`);
+                
+                // Check if all ads have been clicked
+                if (clickedAds.size >= totalAds) {
+                    console.log("All ads clicked! Ready to proceed.");
+                }
+            }
+        }, { passive: false });
         
-        // Remove overlay after a short delay to allow interaction with the actual ad
+        // Add overlay to container
+        container.appendChild(overlay);
+        
+        // Make the overlay disappear after 2 seconds to allow interaction with the actual ad
         setTimeout(() => {
             overlay.style.opacity = '0';
             overlay.style.pointerEvents = 'none';
-        }, 1000);
+        }, 2000);
     });
-    
-    // Method 3: Monitor window focus changes (for when ads open in new tabs)
-    let windowFocus = true;
-    window.addEventListener('blur', function() {
-        windowFocus = false;
-    });
-    
-    window.addEventListener('focus', function() {
-        if (!windowFocus) {
-            // Window regained focus, likely from clicking an ad
-            windowFocus = true;
-            if (!adClicked) {
-                adClicked = true;
-                trackAdClick(adPageNumber);
-                showAdClickFeedback();
-                console.log('Ad clicked detected via window focus change');
-            }
-        }
-    });
-}
-
-// Check if an element is part of an ad
-function isAdElement(element) {
-    const tagName = element.tagName.toLowerCase();
-    
-    // Check for common ad elements
-    if (tagName === 'iframe' || tagName === 'a' || tagName === 'img') {
-        return true;
-    }
-    
-    // Check for elements with ad-related attributes
-    if (element.id && (
-        element.id.includes('ad') || 
-        element.id.includes('banner') || 
-        element.id.includes('container')
-    )) {
-        return true;
-    }
-    
-    // Check for elements with ad-related classes
-    if (element.className && (
-        element.className.includes('ad') || 
-        element.className.includes('banner')
-    )) {
-        return true;
-    }
-    
-    // Check if element is inside an ad container
-    const parent = element.closest('.ad-header, .ad-banner, .ad-footer, .pop-ad, .hardcoded-ad');
-    return parent !== null;
-}
-
-// Handle ad click
-function handleAdClick(container) {
-    if (!adClicked) {
-        adClicked = true;
-        trackAdClick(adPageNumber);
-        console.log('Ad clicked on page', adPageNumber);
-        
-        // Visual feedback for ad click
-        showAdClickFeedback();
-        
-        // Show check indicator
-        const indicatorId = container.id + 'Indicator';
-        const indicator = document.getElementById(indicatorId);
-        if (indicator) {
-            indicator.classList.add('show');
-        }
-    }
 }
 
 // Show visual feedback when an ad is clicked
-function showAdClickFeedback() {
+function showAdClickFeedback(container) {
     const feedback = document.createElement('div');
     feedback.className = 'ad-click-feedback';
-    feedback.innerHTML = '<i class="fas fa-check-circle"></i> Ad clicked successfully!';
+    feedback.innerHTML = `<i class="fas fa-check-circle"></i> Ad clicked! (${clickedAds.size}/${totalAds})`;
     document.body.appendChild(feedback);
     
     setTimeout(() => {
         feedback.remove();
-    }, 3000);
+    }, 2000);
 }
 
 // Start countdown timer (slower to feel like 25 seconds)
@@ -321,8 +292,8 @@ function startCheckButtonTimer() {
             clearInterval(checkButtonTimer);
             checkButtonTimerCompleted = true;
             
-            // Force unlock download button if no ad was clicked
-            if (!adClicked) {
+            // Force unlock download button if not all ads were clicked
+            if (clickedAds.size < totalAds) {
                 unlockDownloadButton();
                 showTimerCompletedMessage();
             }
@@ -330,11 +301,11 @@ function startCheckButtonTimer() {
     }, 1000); // Normal 1-second interval for the 30-second timer
 }
 
-// Show message when timer completes without ad click
+// Show message when timer completes without all ads clicked
 function showTimerCompletedMessage() {
     const message = document.createElement('div');
     message.className = 'timer-completed-message';
-    message.innerHTML = '<i class="fas fa-clock"></i> Time\'s up! You can now proceed to the next page.';
+    message.innerHTML = `<i class="fas fa-clock"></i> Time's up! You clicked ${clickedAds.size}/${totalAds} ads. You can now proceed.`;
     document.body.appendChild(message);
     
     setTimeout(() => {
@@ -350,6 +321,9 @@ function showAdCheckButton() {
     if (adCheckBtn && instructions) {
         adCheckBtn.style.display = 'flex';
         instructions.style.display = 'block';
+        
+        // Update instructions based on ads clicked
+        instructions.querySelector('p').textContent = `Click the "Check Ads" button below to verify you've viewed the advertisements (${clickedAds.size}/${totalAds} clicked)`;
         
         // Scroll to bottom to show button
         setTimeout(() => {
@@ -369,18 +343,19 @@ document.addEventListener('DOMContentLoaded', () => {
         adCheckBtn.addEventListener('click', () => {
             if (isChecking) return;
             
-            if (!adClicked) {
-                // Show warning if ad hasn't been clicked
+            // Check if all ads have been clicked
+            if (clickedAds.size < totalAds) {
+                // Show warning if not all ads have been clicked
                 const warning = document.createElement('div');
                 warning.className = 'warning-message';
-                warning.textContent = 'Please click on an advertisement first!';
+                warning.textContent = `Please click on all advertisements first! (${clickedAds.size}/${totalAds} clicked)`;
                 document.body.appendChild(warning);
                 
                 setTimeout(() => {
                     warning.remove();
                 }, 3000);
             } else {
-                // Ad has been clicked, show loading for 3 seconds
+                // All ads have been clicked, show loading for 3 seconds
                 isChecking = true;
                 adCheckBtn.disabled = true;
                 adCheckBtn.classList.add('checking');
