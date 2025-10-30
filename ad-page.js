@@ -22,6 +22,7 @@ let adPageNumber = 1;
 let timerCompleted = false;
 let isChecking = false;
 let checkButtonTimerCompleted = false;
+let adClickDetectionAttempts = 0;
 
 // Initialize ad page
 function initAdPage(pageNumber) {
@@ -32,6 +33,7 @@ function initAdPage(pageNumber) {
     timerCompleted = false;
     isChecking = false;
     checkButtonTimerCompleted = false;
+    adClickDetectionAttempts = 0;
     
     // Get the original URL from session storage
     originalUrl = sessionStorage.getItem('originalUrl') || '';
@@ -52,7 +54,9 @@ function initAdPage(pageNumber) {
     trackAdView(pageNumber);
     
     // Add click listeners to all ads
-    addAdClickListeners();
+    setTimeout(() => {
+        addAdClickListeners();
+    }, 2000); // Delay to ensure ads are loaded
 }
 
 // Load ads from Firebase for the current page
@@ -136,88 +140,139 @@ function executeAdScript(elementId, scriptContent) {
 
 // Add click listeners to all ads (mobile-optimized)
 function addAdClickListeners() {
-    // Get all ad containers
-    const adContainers = document.querySelectorAll('.ad-header, .ad-banner, .ad-footer, .pop-ad, .hardcoded-ad');
+    console.log("Setting up ad click listeners...");
     
-    // Add both click and touch event listeners to each ad container
-    adContainers.forEach(container => {
-        // Function to handle ad interaction
-        const handleAdInteraction = (e) => {
-            // Check if the interaction is on an actual ad element (iframe, a, img)
-            const target = e.target;
-            
-            if (target.tagName === 'IFRAME' || target.tagName === 'A' || target.tagName === 'IMG' || 
-                target.tagName === 'DIV' || target.tagName === 'SCRIPT') {
-                // Check if the clicked element is a direct child of the container
-                if (container.contains(target)) {
-                    // Mark ad as clicked
-                    if (!adClicked) {
-                        adClicked = true;
-                        trackAdClick(adPageNumber);
-                        console.log('Ad clicked on page', adPageNumber);
-                        
-                        // Visual feedback for ad click
-                        showAdClickFeedback();
-                        
-                        // Show check indicator
-                        const indicatorId = container.id + 'Indicator';
-                        const indicator = document.getElementById(indicatorId);
-                        if (indicator) {
-                            indicator.classList.add('show');
-                        }
-                    }
+    // Method 1: Monitor all clicks on the page
+    document.addEventListener('click', function(event) {
+        // Check if the click is on or inside an ad container
+        const target = event.target;
+        const adContainers = document.querySelectorAll('.ad-header, .ad-banner, .ad-footer, .pop-ad, .hardcoded-ad');
+        
+        for (let container of adContainers) {
+            if (container.contains(target)) {
+                // Check if it's a click on an actual ad element
+                if (isAdElement(target)) {
+                    handleAdClick(container);
+                    break;
                 }
             }
-        };
+        }
+    }, true); // Use capture phase to catch all clicks
+    
+    // Method 2: Special handling for iframes
+    const iframes = document.querySelectorAll('iframe');
+    iframes.forEach(iframe => {
+        // Create a wrapper div for the iframe
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'relative';
+        wrapper.style.display = 'inline-block';
         
-        // Add click event for desktop
-        container.addEventListener('click', handleAdInteraction);
+        // Insert wrapper before iframe
+        iframe.parentNode.insertBefore(wrapper, iframe);
         
-        // Add touch events for mobile
-        container.addEventListener('touchstart', handleAdInteraction, { passive: true });
+        // Move iframe into wrapper
+        wrapper.appendChild(iframe);
         
-        // For iframes, we need special handling since they don't propagate events
-        const iframes = container.querySelectorAll('iframe');
-        iframes.forEach(iframe => {
-            // Add a transparent overlay to capture clicks
-            const overlay = document.createElement('div');
-            overlay.style.position = 'absolute';
-            overlay.style.top = '0';
-            overlay.style.left = '0';
-            overlay.style.width = '100%';
-            overlay.style.height = '100%';
-            overlay.style.zIndex = '5';
-            overlay.style.cursor = 'pointer';
+        // Create transparent overlay
+        const overlay = document.createElement('div');
+        overlay.style.position = 'absolute';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.zIndex = '10';
+        overlay.style.cursor = 'pointer';
+        
+        // Add click event to overlay
+        overlay.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             
-            // When overlay is clicked, mark as ad clicked and remove overlay
-            overlay.addEventListener('click', () => {
-                if (!adClicked) {
-                    adClicked = true;
-                    trackAdClick(adPageNumber);
-                    console.log('Ad clicked on page', adPageNumber);
-                    showAdClickFeedback();
-                    
-                    // Show check indicator
-                    const indicatorId = container.id + 'Indicator';
-                    const indicator = document.getElementById(indicatorId);
-                    if (indicator) {
-                        indicator.classList.add('show');
-                    }
-                }
-                // Remove overlay after click to allow interaction with actual ad
-                setTimeout(() => {
-                    overlay.remove();
-                }, 100);
-            });
-            
-            // Make sure container has position relative for overlay positioning
-            if (getComputedStyle(container).position === 'static') {
-                container.style.position = 'relative';
+            // Find the parent ad container
+            let parentContainer = overlay.closest('.ad-header, .ad-banner, .ad-footer, .pop-ad, .hardcoded-ad');
+            if (parentContainer) {
+                handleAdClick(parentContainer);
             }
-            
-            container.appendChild(overlay);
         });
+        
+        // Add overlay to wrapper
+        wrapper.appendChild(overlay);
+        
+        // Remove overlay after a short delay to allow interaction with the actual ad
+        setTimeout(() => {
+            overlay.style.opacity = '0';
+            overlay.style.pointerEvents = 'none';
+        }, 1000);
     });
+    
+    // Method 3: Monitor window focus changes (for when ads open in new tabs)
+    let windowFocus = true;
+    window.addEventListener('blur', function() {
+        windowFocus = false;
+    });
+    
+    window.addEventListener('focus', function() {
+        if (!windowFocus) {
+            // Window regained focus, likely from clicking an ad
+            windowFocus = true;
+            if (!adClicked) {
+                adClicked = true;
+                trackAdClick(adPageNumber);
+                showAdClickFeedback();
+                console.log('Ad clicked detected via window focus change');
+            }
+        }
+    });
+}
+
+// Check if an element is part of an ad
+function isAdElement(element) {
+    const tagName = element.tagName.toLowerCase();
+    
+    // Check for common ad elements
+    if (tagName === 'iframe' || tagName === 'a' || tagName === 'img') {
+        return true;
+    }
+    
+    // Check for elements with ad-related attributes
+    if (element.id && (
+        element.id.includes('ad') || 
+        element.id.includes('banner') || 
+        element.id.includes('container')
+    )) {
+        return true;
+    }
+    
+    // Check for elements with ad-related classes
+    if (element.className && (
+        element.className.includes('ad') || 
+        element.className.includes('banner')
+    )) {
+        return true;
+    }
+    
+    // Check if element is inside an ad container
+    const parent = element.closest('.ad-header, .ad-banner, .ad-footer, .pop-ad, .hardcoded-ad');
+    return parent !== null;
+}
+
+// Handle ad click
+function handleAdClick(container) {
+    if (!adClicked) {
+        adClicked = true;
+        trackAdClick(adPageNumber);
+        console.log('Ad clicked on page', adPageNumber);
+        
+        // Visual feedback for ad click
+        showAdClickFeedback();
+        
+        // Show check indicator
+        const indicatorId = container.id + 'Indicator';
+        const indicator = document.getElementById(indicatorId);
+        if (indicator) {
+            indicator.classList.add('show');
+        }
+    }
 }
 
 // Show visual feedback when an ad is clicked
@@ -477,4 +532,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-                    }
+            }
