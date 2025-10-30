@@ -6,8 +6,170 @@
     <title>Advertisement - Page 1</title>
     <link rel="stylesheet" href="ad-page.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Additional styles for the enhanced page */
+        .page-divider {
+            text-align: center;
+            margin: 30px 0;
+            position: relative;
+        }
+        
+        .page-divider h3 {
+            background-color: #f8f9fa;
+            display: inline-block;
+            padding: 0 20px;
+            color: #6c757d;
+            font-weight: normal;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .page-divider::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: #dee2e6;
+            z-index: 1;
+        }
+        
+        .hardcoded-ads {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .ad-section-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #495057;
+        }
+        
+        .hardcoded-ad-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .hardcoded-ad {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .ad-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        
+        .progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: #f1f1f1;
+            z-index: 1000;
+        }
+        
+        .progress-bar-fixed {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 0%;
+            transition: width 1s linear;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transform: translateX(150%);
+            transition: transform 0.3s ease-out;
+            z-index: 1001;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .ad-interaction-indicator {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: rgba(76, 175, 80, 0.7);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .ad-interaction-indicator.show {
+            opacity: 1;
+        }
+        
+        .ad-banner {
+            position: relative;
+        }
+        
+        .ad-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .loading-animation {
+            margin: 20px 0;
+        }
+        
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-bar-fixed" id="mainProgressBar"></div>
+    </div>
+    
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <span id="notificationText">Ad viewed successfully!</span>
+    </div>
+    
     <div class="ad-container">
         <!-- Cooldown Timer -->
         <div class="cooldown-bar">
@@ -23,6 +185,9 @@
         <!-- Header Ad (728x90) -->
         <div class="ad-header" id="headerAd">
             <!-- Ad will be loaded from Firebase -->
+            <div class="ad-interaction-indicator" id="headerAdIndicator">
+                <i class="fas fa-check"></i>
+            </div>
         </div>
         
         <!-- Main Content -->
@@ -31,11 +196,17 @@
                 <!-- Side Ad 1 (300x250) - Highest Value -->
                 <div class="ad-banner high-value" id="sideAd1">
                     <!-- Ad will be loaded from Firebase -->
+                    <div class="ad-interaction-indicator" id="sideAd1Indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
                 </div>
                 
                 <!-- Side Ad 2 (160x300) -->
                 <div class="ad-banner" id="sideAd2">
                     <!-- Ad will be loaded from Firebase -->
+                    <div class="ad-interaction-indicator" id="sideAd2Indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
                 </div>
             </div>
             
@@ -49,6 +220,15 @@
                 <!-- Pop Ad -->
                 <div class="pop-ad" id="popAd">
                     <!-- Ad will be loaded from Firebase -->
+                    <div class="ad-interaction-indicator" id="popAdIndicator">
+                        <i class="fas fa-check"></i>
+                    </div>
+                </div>
+                
+                <!-- Ad Stats -->
+                <div class="ad-stats">
+                    <span>Ads Viewed: <span id="adsViewed">0</span>/6</span>
+                    <span>Time Remaining: <span id="timeRemaining">15</span>s</span>
                 </div>
             </div>
             
@@ -56,11 +236,17 @@
                 <!-- Side Ad 3 (468x60) -->
                 <div class="ad-banner" id="sideAd3">
                     <!-- Ad will be loaded from Firebase -->
+                    <div class="ad-interaction-indicator" id="sideAd3Indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
                 </div>
                 
                 <!-- Side Ad 4 (320x50) -->
                 <div class="ad-banner" id="sideAd4">
                     <!-- Ad will be loaded from Firebase -->
+                    <div class="ad-interaction-indicator" id="sideAd4Indicator">
+                        <i class="fas fa-check"></i>
+                    </div>
                 </div>
             </div>
         </div>
@@ -68,6 +254,121 @@
         <!-- Bottom Ad -->
         <div class="ad-footer" id="bottomAd">
             <!-- Ad will be loaded from Firebase -->
+            <div class="ad-interaction-indicator" id="bottomAdIndicator">
+                <i class="fas fa-check"></i>
+            </div>
+        </div>
+        
+        <!-- Page Divider -->
+        <div class="page-divider">
+            <h3>Additional Advertisements</h3>
+        </div>
+        
+        <!-- Hardcoded Ads Section -->
+        <div class="hardcoded-ads">
+            <h3 class="ad-section-title">More Offers From Our Partners</h3>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 1: 728x90 -->
+                <div class="hardcoded-ad">
+                    <div class="ad-label">728x90 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : 'a613a5730088d6b2192f8e5087590be5',
+                            'format' : 'iframe',
+                            'height' : 90,
+                            'width' : 728,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/a613a5730088d6b2192f8e5087590be5/invoke.js"></script>
+                </div>
+                
+                <!-- Ad 2: 300x250 -->
+                <div class="hardcoded-ad">
+                    <div class="ad-label">300x250 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : 'f0fcf291e1d265a945dbd45c1674505d',
+                            'format' : 'iframe',
+                            'height' : 250,
+                            'width' : 300,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/f0fcf291e1d265a945dbd45c1674505d/invoke.js"></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 3: 320x50 -->
+                <div class="hardcoded-ad">
+                    <div class="ad-label">320x50 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : 'a9cdfc2f050735d7c17d6d5650e26bfe',
+                            'format' : 'iframe',
+                            'height' : 50,
+                            'width' : 320,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/a9cdfc2f050735d7c17d6d5650e26bfe/invoke.js"></script>
+                </div>
+                
+                <!-- Ad 4: 468x60 -->
+                <div class="hardcoded-ad">
+                    <div class="ad-label">468x60 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '0763125bdb9b7f5c9a782af3cf9091f6',
+                            'format' : 'iframe',
+                            'height' : 60,
+                            'width' : 468,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/0763125bdb9b7f5c9a782af3cf9091f6/invoke.js"></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 5: 160x300 -->
+                <div class="hardcoded-ad">
+                    <div class="ad-label">160x300 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '42de855a41965e9fad85dcd0c22092f5',
+                            'format' : 'iframe',
+                            'height' : 300,
+                            'width' : 160,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/42de855a41965e9fad85dcd0c22092f5/invoke.js"></script>
+                </div>
+                
+                <!-- Ad 6: Container Ad -->
+                <div class="hardcoded-ad">
+                    <div class="ad-label">Container Ad</div>
+                    <script async="async" data-cfasync="false" src="//pl27948945.effectivegatecpm.com/f26c57292f848e1a99e38572ea936821/invoke.js"></script>
+                    <div id="container-f26c57292f848e1a99e38572ea936821"></div>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 7: JS Ad 1 -->
+                <div class="hardcoded-ad">
+                    <div class="ad-label">JavaScript Ad 1</div>
+                    <script type='text/javascript' src='//pl27948950.effectivegatecpm.com/35/be/75/35be75afe8ab12dd29a7d8208b3e9100.js'></script>
+                </div>
+                
+                <!-- Ad 8: JS Ad 2 -->
+                <div class="hardcoded-ad">
+                    <div class="ad-label">JavaScript Ad 2</div>
+                    <script type='text/javascript' src='//pl27948942.effectivegatecpm.com/15/1c/ad/151cad0ed76c7dabc9c1971a00af5235.js'></script>
+                </div>
+            </div>
         </div>
         
         <!-- Ad Check Button -->
@@ -92,9 +393,150 @@
     
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
-    <script src="ad-page.js"></script>
     <script>
+        // Enhanced ad page functionality
+        let adsViewed = 0;
+        let totalAds = 6;
+        let countdownTime = 15;
+        let countdownInterval;
+        let progressInterval;
+        let adsChecked = false;
+        
         // Initialize ad page
+        function initAdPage(pageNumber) {
+            // Start countdown timer
+            startCountdown();
+            
+            // Start progress bar
+            startProgressBar();
+            
+            // Load ads from Firebase
+            loadAdsFromFirebase();
+            
+            // Add click event listeners to ads
+            addAdClickListeners();
+            
+            // Add event listener to check button
+            document.getElementById('adCheckBtn').addEventListener('click', checkAds);
+            
+            // Add event listener to download button
+            document.getElementById('downloadBtn').addEventListener('click', startDownload);
+        }
+        
+        function startCountdown() {
+            countdownInterval = setInterval(() => {
+                countdownTime--;
+                document.getElementById('countdown').textContent = countdownTime;
+                document.getElementById('timeRemaining').textContent = countdownTime;
+                
+                if (countdownTime <= 0) {
+                    clearInterval(countdownInterval);
+                    showNotification('Time is up! Please check the ads to continue.');
+                }
+            }, 1000);
+        }
+        
+        function startProgressBar() {
+            let progress = 0;
+            progressInterval = setInterval(() => {
+                progress += 100 / 15; // Complete in 15 seconds
+                document.getElementById('progressBar').style.width = progress + '%';
+                document.getElementById('mainProgressBar').style.width = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                }
+            }, 1000);
+        }
+        
+        function loadAdsFromFirebase() {
+            // This would typically load ads from Firebase
+            // For now, we'll just add placeholder content
+            const adElements = [
+                'headerAd', 'sideAd1', 'sideAd2', 'sideAd3', 'sideAd4', 'popAd', 'bottomAd'
+            ];
+            
+            adElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    // Add placeholder content
+                    element.innerHTML = `
+                        <div style="background-color: #f8f9fa; height: 100%; display: flex; align-items: center; justify-content: center; color: #6c757d; border: 1px dashed #dee2e6;">
+                            <div style="text-align: center;">
+                                <i class="fas fa-ad fa-3x mb-2"></i>
+                                <p>Advertisement ${id}</p>
+                            </div>
+                        </div>
+                        <div class="ad-interaction-indicator" id="${id}Indicator">
+                            <i class="fas fa-check"></i>
+                        </div>
+                    `;
+                }
+            });
+        }
+        
+        function addAdClickListeners() {
+            const adElements = [
+                'headerAd', 'sideAd1', 'sideAd2', 'sideAd3', 'sideAd4', 'popAd', 'bottomAd'
+            ];
+            
+            adElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('click', () => {
+                        if (!element.dataset.viewed) {
+                            element.dataset.viewed = 'true';
+                            adsViewed++;
+                            document.getElementById('adsViewed').textContent = adsViewed;
+                            
+                            // Show check indicator
+                            const indicator = document.getElementById(id + 'Indicator');
+                            if (indicator) {
+                                indicator.classList.add('show');
+                            }
+                            
+                            showNotification('Ad viewed successfully!');
+                        }
+                    });
+                }
+            });
+        }
+        
+        function checkAds() {
+            if (adsViewed >= 3) { // Require at least 3 ads to be viewed
+                adsChecked = true;
+                document.getElementById('downloadBtn').disabled = false;
+                document.getElementById('downloadBtn').classList.remove('locked');
+                document.getElementById('downloadBtn').innerHTML = '<i class="fas fa-download"></i><span>Download</span>';
+                showNotification('Ads verified! You can now download.');
+            } else {
+                showNotification(`Please view at least ${3 - adsViewed} more ads to continue.`);
+            }
+        }
+        
+        function startDownload() {
+            if (adsChecked) {
+                showNotification('Download starting...');
+                // Here you would implement the actual download functionality
+                setTimeout(() => {
+                    showNotification('Download completed!');
+                }, 2000);
+            }
+        }
+        
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Initialize the page
         initAdPage(1);
     </script>
 </body>
