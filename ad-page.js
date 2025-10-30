@@ -177,9 +177,6 @@ function startFakeAdClickProcess() {
             fakeAdsClicked++;
             updateAdCounter();
             
-            // Update progress bar for each fake ad click
-            updateProgressBarForAdClick();
-            
             // Show message for each fake ad click
             showFakeAdClickMessage(fakeAdsClicked);
             
@@ -191,16 +188,6 @@ function startFakeAdClickProcess() {
             }
         }
     }, 7000); // 7 seconds between each fake ad click
-}
-
-// Update progress bar for each fake ad click
-function updateProgressBarForAdClick() {
-    const progressBar = document.getElementById('progressBar');
-    if (progressBar) {
-        // Calculate progress based on ads clicked
-        const progressPercent = (fakeAdsClicked / totalAds) * 100;
-        progressBar.style.width = progressPercent + '%';
-    }
 }
 
 // Show message for fake ad click
@@ -247,6 +234,9 @@ function showAdCheckButton() {
     if (adCheckBtn && instructions) {
         adCheckBtn.style.display = 'flex';
         instructions.style.display = 'block';
+        
+        // Update instructions based on ads clicked
+        instructions.querySelector('p').textContent = `Click the "Check Ads" button below to verify you've viewed the advertisements`;
         
         // Scroll to bottom to show button
         setTimeout(() => {
