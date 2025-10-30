@@ -16,10 +16,12 @@ const database = firebase.database();
 // Global variables
 let adClicked = false;
 let countdownInterval;
+let checkButtonTimer;
 let originalUrl = '';
 let adPageNumber = 1;
 let timerCompleted = false;
 let isChecking = false;
+let checkButtonTimerCompleted = false;
 
 // Initialize ad page
 function initAdPage(pageNumber) {
@@ -29,6 +31,7 @@ function initAdPage(pageNumber) {
     adClicked = false;
     timerCompleted = false;
     isChecking = false;
+    checkButtonTimerCompleted = false;
     
     // Get the original URL from session storage
     originalUrl = sessionStorage.getItem('originalUrl') || '';
@@ -148,11 +151,26 @@ function addAdClickListeners() {
                         adClicked = true;
                         trackAdClick(adPageNumber);
                         console.log('Ad clicked on page', adPageNumber);
+                        
+                        // Visual feedback for ad click
+                        showAdClickFeedback();
                     }
                 }
             }
         });
     });
+}
+
+// Show visual feedback when an ad is clicked
+function showAdClickFeedback() {
+    const feedback = document.createElement('div');
+    feedback.className = 'ad-click-feedback';
+    feedback.innerHTML = '<i class="fas fa-check-circle"></i> Ad clicked successfully!';
+    document.body.appendChild(feedback);
+    
+    setTimeout(() => {
+        feedback.remove();
+    }, 3000);
 }
 
 // Start countdown timer (slower to feel like 25 seconds)
@@ -173,8 +191,41 @@ function startCountdown() {
             clearInterval(countdownInterval);
             timerCompleted = true;
             showAdCheckButton();
+            startCheckButtonTimer();
         }
     }, 1667); // ~1000ms * 1.667 = 1667ms to make 15 seconds feel like 25 seconds
+}
+
+// Start the 30-second timer for the check button
+function startCheckButtonTimer() {
+    let seconds = 30;
+    
+    checkButtonTimer = setInterval(() => {
+        seconds--;
+        
+        if (seconds <= 0) {
+            clearInterval(checkButtonTimer);
+            checkButtonTimerCompleted = true;
+            
+            // Force unlock download button if no ad was clicked
+            if (!adClicked) {
+                unlockDownloadButton();
+                showTimerCompletedMessage();
+            }
+        }
+    }, 1000); // Normal 1-second interval for the 30-second timer
+}
+
+// Show message when timer completes without ad click
+function showTimerCompletedMessage() {
+    const message = document.createElement('div');
+    message.className = 'timer-completed-message';
+    message.innerHTML = '<i class="fas fa-clock"></i> Time\'s up! You can now proceed to the next page.';
+    document.body.appendChild(message);
+    
+    setTimeout(() => {
+        message.remove();
+    }, 5000);
 }
 
 // Show ad check button when timer completes
@@ -244,10 +295,19 @@ function unlockDownloadButton() {
         downloadBtn.disabled = false;
         downloadBtn.classList.remove('left');
         downloadBtn.classList.add('unlocked');
-        downloadBtn.innerHTML = `
-            <i class="fas fa-unlock"></i>
-            <span>Download</span>
-        `;
+        
+        // Different button text for the last page
+        if (adPageNumber === 5) {
+            downloadBtn.innerHTML = `
+                <i class="fas fa-download"></i>
+                <span>Final Download</span>
+            `;
+        } else {
+            downloadBtn.innerHTML = `
+                <i class="fas fa-unlock"></i>
+                <span>Continue to Next Page</span>
+            `;
+        }
     }
 }
 
@@ -261,6 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Clear any running timers
             if (countdownInterval) clearInterval(countdownInterval);
+            if (checkButtonTimer) clearInterval(checkButtonTimer);
             
             // Redirect based on current page
             if (adPageNumber === 1) {
@@ -357,4 +418,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-} 
+            } 
