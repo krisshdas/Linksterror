@@ -32,7 +32,6 @@ let touchEndX = 0;
 let touchEndY = 0;
 let pageFocusLost = false;
 let adClickDetectionInterval;
-let instructionsShown = false;
 
 // Initialize ad page
 function initAdPage(pageNumber) {
@@ -47,7 +46,6 @@ function initAdPage(pageNumber) {
     pageVisibilityHidden = false;
     lastInteractionTime = 0;
     pageFocusLost = false;
-    instructionsShown = false;
     
     // Clear any existing intervals
     if (adClickDetectionInterval) clearInterval(adClickDetectionInterval);
@@ -79,82 +77,20 @@ function initAdPage(pageNumber) {
     // Set up ad click detection after a delay to allow ads to load
     setTimeout(() => {
         setupAdClickDetection();
-        showInstructions();
     }, 3000);
 }
 
-// Show instructions to the user
-function showInstructions() {
-    if (instructionsShown) return;
-    instructionsShown = true;
+// Reset progress bars to initial state
+function resetProgressBars() {
+    const progressBar = document.getElementById('progressBar');
+    const mainProgressBar = document.getElementById('mainProgressBar');
     
-    // Show main instructions
-    const mainInstructions = document.createElement('div');
-    mainInstructions.className = 'main-instructions';
-    mainInstructions.innerHTML = `
-        <h3><i class="fas fa-info-circle"></i> How to Continue to Your Destination</h3>
-        <p>Please follow these simple steps to access your content:</p>
-        <div class="instruction-steps">
-            <ol>
-                <li>Wait for the timer to complete (15 seconds)</li>
-                <li>Click on the <strong>border area</strong> of any advertisement</li>
-                <li>After clicking, wait a moment for the ad to register</li>
-                <li>Repeat for at least ${totalAds} different advertisements</li>
-                <li>Click the "Check Ads" button when ready</li>
-            </ol>
-        </div>
-        <p><strong>Important:</strong> Click on the <strong>border/hitbox</strong> around the ads, not directly on the ad content!</p>
-    `;
-    
-    // Insert at the top of the ad container
-    const adContainer = document.querySelector('.ad-container');
-    if (adContainer) {
-        adContainer.insertBefore(mainInstructions, adContainer.firstChild);
+    if (progressBar) {
+        progressBar.style.width = '100%';
     }
     
-    // Show demo
-    const demoSection = document.createElement('div');
-    demoSection.className = 'ad-interaction-demo';
-    demoSection.innerHTML = `
-        <div class="demo-ad">
-            <div class="demo-arrow"><i class="fas fa-arrow-right"></i></div>
-        </div>
-        <div class="demo-instruction">
-            <h5>Click Here!</h5>
-            <p>Click on the border area around the ad</p>
-            <p>Not directly on the ad content</p>
-        </div>
-    `;
-    
-    // Insert after the main instructions
-    if (adContainer) {
-        adContainer.insertBefore(demoSection, adContainer.children[1]);
-    }
-    
-    // Show page-specific instruction
-    const pageInstruction = document.createElement('div');
-    pageInstruction.className = 'page-instruction';
-    pageInstruction.innerHTML = `
-        <h4><i class="fas fa-exclamation-triangle"></i> Page ${adPageNumber} of 5</h4>
-        <p>You need to click on at least ${totalAds} ads on this page before continuing to the next page.</p>
-        <p>Progress: <span id="instructionProgress">0/${totalAds}</span> ads clicked</p>
-    `;
-    
-    // Insert after the demo
-    if (adContainer) {
-        adContainer.insertBefore(pageInstruction, adContainer.children[2]);
-    }
-    
-    // Add progress instruction to the stats section
-    const adStats = document.querySelector('.ad-stats');
-    if (adStats) {
-        const progressInstruction = document.createElement('div');
-        progressInstruction.className = 'progress-instruction';
-        progressInstruction.innerHTML = `
-            <i class="fas fa-info-circle"></i>
-            <span>Click on the border area of the ads to register your interaction</span>
-        `;
-        adStats.appendChild(progressInstruction);
+    if (mainProgressBar) {
+        mainProgressBar.style.width = '100%';
     }
 }
 
@@ -172,12 +108,6 @@ function updateAdCounter() {
         if (countdownElement) {
             timeRemainingElement.textContent = countdownElement.textContent;
         }
-    }
-    
-    // Update instruction progress
-    const instructionProgress = document.getElementById('instructionProgress');
-    if (instructionProgress) {
-        instructionProgress.textContent = `${adsClicked.size}/${totalAds}`;
     }
 }
 
@@ -287,31 +217,22 @@ function setupAdClickDetection() {
         // Add a subtle border to indicate it's clickable
         wrapper.style.border = '1px dashed rgba(52, 152, 219, 0.3)';
         
-        // Add instruction to unclicked ads
+        // Add a "Tap me" indicator for unclicked ads
         if (!adsClicked.has(adId)) {
-            const instruction = document.createElement('div');
-            instruction.className = 'ad-instruction';
-            instruction.innerHTML = 'Click on the border area!';
-            
-            const arrow = document.createElement('div');
-            arrow.className = 'ad-instruction-arrow';
-            
-            const pulse = document.createElement('div');
-            pulse.className = 'ad-instruction-pulse';
-            
-            const tooltip = document.createElement('div');
-            tooltip.className = 'instruction-tooltip';
-            tooltip.innerHTML = 'Click here to register interaction';
-            
-            wrapper.appendChild(instruction);
-            wrapper.appendChild(arrow);
-            wrapper.appendChild(pulse);
-            wrapper.appendChild(tooltip);
-            
-            // Add highlight class for first few unclicked ads
-            if (adsClicked.size < 2) {
-                wrapper.classList.add('ad-instruction-highlight');
-            }
+            const indicator = document.createElement('div');
+            indicator.className = 'ad-click-indicator';
+            indicator.innerHTML = '<i class="fas fa-hand-pointer"></i> Tap me';
+            indicator.style.position = 'absolute';
+            indicator.style.top = '5px';
+            indicator.style.right = '5px';
+            indicator.style.backgroundColor = 'rgba(52, 152, 219, 0.8)';
+            indicator.style.color = 'white';
+            indicator.style.padding = '5px 10px';
+            indicator.style.borderRadius = '3px';
+            indicator.style.fontSize = '12px';
+            indicator.style.zIndex = '1000';
+            indicator.style.pointerEvents = 'none';
+            wrapper.appendChild(indicator);
         }
         
         // Initialize interaction tracking for this ad
@@ -663,19 +584,11 @@ function markAdAsClicked(adId, showNotif = true) {
     // Update the visual indicator for this ad
     const wrapper = document.querySelector(`[data-ad-id="${adId}"]`);
     if (wrapper) {
-        // Remove the instruction elements
-        const instruction = wrapper.querySelector('.ad-instruction');
-        const arrow = wrapper.querySelector('.ad-instruction-arrow');
-        const pulse = wrapper.querySelector('.ad-instruction-pulse');
-        const tooltip = wrapper.querySelector('.instruction-tooltip');
-        
-        if (instruction) instruction.remove();
-        if (arrow) arrow.remove();
-        if (pulse) pulse.remove();
-        if (tooltip) tooltip.remove();
-        
-        // Remove highlight class
-        wrapper.classList.remove('ad-instruction-highlight');
+        // Remove the "Tap me" indicator
+        const indicator = wrapper.querySelector('.ad-click-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
         
         // Add a "Clicked" indicator
         const clickedIndicator = document.createElement('div');
