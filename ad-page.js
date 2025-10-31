@@ -25,6 +25,7 @@ let adInteractions = new Map(); // Track user interactions with ads
 let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 let lastInteractedAd = null;
 let pageVisibilityHidden = false;
+let adClickTimeouts = new Map(); // Track timeouts for each ad
 
 // Initialize ad page
 function initAdPage(pageNumber) {
@@ -37,6 +38,10 @@ function initAdPage(pageNumber) {
     isChecking = false;
     lastInteractedAd = null;
     pageVisibilityHidden = false;
+    
+    // Clear any existing timeouts
+    adClickTimeouts.forEach(timeout => clearTimeout(timeout));
+    adClickTimeouts.clear();
     
     // Update ad counter display
     updateAdCounter();
@@ -116,9 +121,20 @@ function loadAdsFromFirebase(pageNumber) {
             if (adConfig.popup) {
                 executeAdScript('popAd', adConfig.popup);
             }
+            
+            // Hide loading animation after ads are loaded
+            const loadingAnimation = document.querySelector('.loading-animation');
+            if (loadingAnimation) {
+                loadingAnimation.style.display = 'none';
+            }
         })
         .catch((error) => {
             console.error('Error loading ads from Firebase:', error);
+            // Hide loading animation even if there's an error
+            const loadingAnimation = document.querySelector('.loading-animation');
+            if (loadingAnimation) {
+                loadingAnimation.style.display = 'none';
+            }
         });
 }
 
@@ -209,6 +225,33 @@ function setupAdClickDetection() {
         // Add event listeners to track when user leaves the ad area
         wrapper.addEventListener('mouseleave', handleAdMouseLeave);
         wrapper.addEventListener('touchend', handleAdTouchEnd, { passive: true });
+        
+        // Add click event listener directly to the wrapper
+        wrapper.addEventListener('click', handleAdWrapperClick);
+        
+        // For iframe ads, we need to detect clicks differently
+        const iframes = wrapper.querySelectorAll('iframe');
+        iframes.forEach(iframe => {
+            // Add a transparent overlay to detect clicks
+            const overlay = document.createElement('div');
+            overlay.style.position = 'absolute';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.zIndex = '999';
+            overlay.style.backgroundColor = 'transparent';
+            overlay.style.cursor = 'pointer';
+            
+            // Add click event to the overlay
+            overlay.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleAdClick(adId);
+            });
+            
+            wrapper.appendChild(overlay);
+        });
     });
     
     // Add global event listeners to detect when user leaves the page
@@ -284,6 +327,28 @@ function handleAdTouchEnd(e) {
     wrapper.style.backgroundColor = '';
 }
 
+// Handle ad wrapper click
+function handleAdWrapperClick(e) {
+    const wrapper = e.currentTarget;
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    const interaction = adInteractions.get(adId);
+    if (!interaction) return;
+    
+    interaction.interacted = true;
+    interaction.lastInteractionTime = Date.now();
+    lastInteractedAd = adId;
+    
+    // Mark as clicked after a short delay (to allow the ad to open first)
+    const timeoutId = setTimeout(() => {
+        handleAdClick(adId);
+    }, 500);
+    
+    // Store the timeout ID so we can clear it if needed
+    adClickTimeouts.set(adId, timeoutId);
+}
+
 // Handle document click
 function handleDocumentClick(e) {
     // Check if the click is on an ad
@@ -298,9 +363,12 @@ function handleDocumentClick(e) {
                 lastInteractedAd = adId;
                 
                 // Mark as clicked after a short delay (to allow the ad to open first)
-                setTimeout(() => {
+                const timeoutId = setTimeout(() => {
                     handleAdClick(adId);
                 }, 500);
+                
+                // Store the timeout ID so we can clear it if needed
+                adClickTimeouts.set(adId, timeoutId);
             }
         }
     }
@@ -390,6 +458,12 @@ function handleAdClick(adId) {
         
         // Update the border to indicate it's been clicked
         wrapper.style.border = '1px solid rgba(46, 204, 113, 0.5)';
+        
+        // Remove any overlay that might be blocking the ad
+        const overlay = wrapper.querySelector('div[style*="position: absolute"][style*="z-index: 999"]');
+        if (overlay) {
+            overlay.style.pointerEvents = 'none';
+        }
     }
     
     // Show notification
@@ -437,6 +511,7 @@ function startCountdown() {
     let seconds = 15;
     const countdownElement = document.getElementById('countdown');
     const progressBar = document.getElementById('progressBar');
+    const mainProgressBar = document.getElementById('mainProgressBar');
     
     countdownInterval = setInterval(() => {
         seconds--;
@@ -445,6 +520,7 @@ function startCountdown() {
         // Update progress bar
         const progressPercent = ((15 - seconds) / 15) * 100;
         progressBar.style.width = (100 - progressPercent) + '%';
+        mainProgressBar.style.width = (100 - progressPercent) + '%';
         
         // Update time remaining display
         updateAdCounter();
@@ -529,7 +605,7 @@ function unlockDownloadButton() {
         adCheckBtn.style.display = 'none';
         downloadBtn.style.display = 'flex';
         downloadBtn.disabled = false;
-        downloadBtn.classList.remove('left');
+        downloadBtn.classList.remove('locked');
         downloadBtn.classList.add('unlocked');
         
         // Different button text for the last page
@@ -573,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-}
+});
 
 // Track ad view
 function trackAdView(pageNumber) {
@@ -653,4 +729,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-                }
+    }
