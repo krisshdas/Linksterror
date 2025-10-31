@@ -74,8 +74,16 @@ function findOriginalUrl() {
                             break;
                         }
                         
-                        originalUrl = link.originalUrl;
+                        // Use originalUrl (not longUrl) to match dashboard.js
+                        originalUrl = link.originalUrl || link.longUrl;
                         console.log("Original URL:", originalUrl);
+                        
+                        if (!originalUrl) {
+                            console.error('No original URL found in link data');
+                            showError('Invalid Link', 'The link is malformed. Please contact support.');
+                            found = true;
+                            break;
+                        }
                         
                         // Increment click count
                         incrementClickCount(userId, linkId);
@@ -93,7 +101,8 @@ function findOriginalUrl() {
                 sessionStorage.setItem('originalUrl', originalUrl);
                 sessionStorage.setItem('shortCode', shortCode);
                 
-                // Redirect to the first ad page
+                console.log('Redirecting to ad1.html...');
+                // Redirect to the ad page
                 window.location.href = 'ad1.html';
             } else if (!found) {
                 // Show error if link not found
