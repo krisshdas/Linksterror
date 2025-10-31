@@ -146,6 +146,18 @@ body {
     font-size: 16px;
     opacity: 0.8;
     max-width: 80%;
+    margin-bottom: 20px;
+}
+
+.countdown-container {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+.countdown-container #countdown {
+    font-size: 24px;
+    color: #FFD700;
 }
 
 .ad-content iframe {
