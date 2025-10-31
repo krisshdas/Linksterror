@@ -10,13 +10,17 @@ const firebaseConfig = {
     measurementId: "G-J3XWHEX759"
 };
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
 // DOM elements
 const loadingScreen = document.getElementById('loadingScreen');
+const adContainer = document.getElementById('adContainer');
 const errorContainer = document.getElementById('errorContainer');
+const progress = document.getElementById('progress');
+const countdown = document.getElementById('countdown');
+const skipAd = document.getElementById('skipAd');
+const adContent = document.getElementById('adContent');
 const errorTitle = document.getElementById('errorTitle');
 const errorMessage = document.getElementById('errorMessage');
 
@@ -24,15 +28,17 @@ const errorMessage = document.getElementById('errorMessage');
 const urlParams = new URLSearchParams(window.location.search);
 const shortCode = urlParams.get('code');
 
-// Debug logging
-console.log('Redirect page loaded');
-console.log('Short code from URL:', shortCode);
+// Ad configuration
+let ads = [];
+let currentAdIndex = 0;
+let originalUrl = '';
+let countdownInterval;
 
 // Find the original URL for the short code
 function findOriginalUrl() {
     if (!shortCode) {
         console.error("No short code provided");
-        showError('Invalid Link', 'No link code provided. Please check the URL and try again.');
+        showError('Invalid Link', 'No link code provided.');
         return;
     }
     
@@ -41,7 +47,6 @@ function findOriginalUrl() {
     // Search all users for the short code
     database.ref('users').once('value')
         .then((snapshot) => {
-            console.log('Database snapshot received');
             const users = snapshot.val() || {};
             let found = false;
             
@@ -55,30 +60,27 @@ function findOriginalUrl() {
                     
                     if (link.shortCode === shortCode) {
                         console.log('Found link:', link);
-                        found = true;
                         
-                        // Get the original URL
-                        const originalUrl = link.longUrl;
+                        // Check if link is expired
+                        const now = new Date().getTime();
+                        const expirationDate = link.expirationDate || 0;
                         
-                        if (!originalUrl) {
-                            console.error('No original URL found in link data');
-                            showError('Invalid Link', 'The link is malformed. Please contact support.');
-                            return;
+                        if (expirationDate < now) {
+                            console.log("Link is expired");
+                            // Link is expired, delete it and show error
+                            database.ref('users/' + userId + '/links/' + linkId).remove();
+                            showError('Link Expired', 'This link has expired and is no longer available.');
+                            found = true;
+                            break;
                         }
                         
-                        console.log("Redirecting to ad page first, then to:", originalUrl);
+                        originalUrl = link.originalUrl;
+                        console.log("Original URL:", originalUrl);
                         
                         // Increment click count
                         incrementClickCount(userId, linkId);
                         
-                        // Store the destination URL in sessionStorage
-                        sessionStorage.setItem('destinationUrl', originalUrl);
-                        
-                        // Redirect to ad page after a short delay
-                        setTimeout(() => {
-                            window.location.href = 'ad1.html';
-                        }, 1000);
-                        
+                        found = true;
                         break;
                     }
                 }
@@ -86,13 +88,22 @@ function findOriginalUrl() {
                 if (found) break;
             }
             
-            if (!found) {
-                console.error('Link not found in database');
+            if (found && originalUrl) {
+                // Store data in session storage
+                sessionStorage.setItem('originalUrl', originalUrl);
+                sessionStorage.setItem('shortCode', shortCode);
+                
+                // Redirect to the first ad page
+                window.location.href = 'ad1.html';
+            } else if (!found) {
+                // Show error if link not found
                 showError('Link Not Found', 'The link you\'re looking for doesn\'t exist or has been removed.');
             }
         })
         .catch((error) => {
             console.error('Error finding original URL:', error);
+            console.error('Error code:', error.code);
+            console.error('Error message:', error.message);
             
             // Show more specific error message
             let errorMessage = 'An error occurred while processing your request.';
@@ -126,6 +137,7 @@ function incrementClickCount(userId, linkId) {
 // Show error page
 function showError(title = 'Link Not Found', message = 'The link you\'re looking for doesn\'t exist or has been removed.') {
     loadingScreen.style.display = 'none';
+    adContainer.style.display = 'none';
     errorContainer.style.display = 'block';
     errorTitle.textContent = title;
     errorMessage.textContent = message;
