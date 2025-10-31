@@ -302,6 +302,156 @@ body {
     margin: 20px 0;
 }
 
+/* Help Button Styles */
+.help-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #ff0000;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    animation: pulse 2s infinite;
+}
+
+.help-button:hover {
+    background-color: #cc0000;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 0, 0, 0.4);
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3); }
+    50% { box-shadow: 0 4px 12px rgba(255, 0, 0, 0.6); }
+    100% { box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3); }
+}
+
+/* Help Section Styles */
+.help-section {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.help-section h3 {
+    color: #856404;
+    margin-bottom: 10px;
+}
+
+.help-section p {
+    color: #856404;
+    margin-bottom: 15px;
+}
+
+.video-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #ff0000;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.video-link:hover {
+    background-color: #cc0000;
+    transform: translateY(-2px);
+}
+
+.video-link.large {
+    font-size: 18px;
+    padding: 15px 30px;
+}
+
+/* Help Card Styles */
+.help-card {
+    background-color: #e7f3ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.help-card h4 {
+    color: #0066cc;
+    margin-bottom: 10px;
+}
+
+.help-card ol {
+    text-align: left;
+    margin: 15px 0;
+    padding-left: 20px;
+}
+
+.help-card li {
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.help-card a {
+    color: #0066cc;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.help-card a:hover {
+    text-decoration: underline;
+}
+
+/* Help Reminder Styles */
+.help-reminder {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 15px 0;
+}
+
+.help-reminder p {
+    color: #155724;
+    margin: 0;
+}
+
+.help-reminder a {
+    color: #155724;
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+/* Final Help Section */
+.final-help {
+    background-color: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 30px 0;
+    text-align: center;
+}
+
+.final-help h3 {
+    color: #495057;
+    margin-bottom: 10px;
+}
+
+.final-help p {
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 480px) {
     .ad-container {
@@ -316,242 +466,20 @@ body {
         font-size: 13px;
         padding: 10px 12px;
     }
-}
-
-/* NEW: Instructions for ad interaction */
-.main-instructions {
-    background-color: #e3f2fd;
-    border: 1px solid #2196f3;
-    border-radius: 8px;
-    padding: 15px;
-    margin: 15px 0;
-    text-align: center;
-    color: #0d47a1;
-    font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.main-instructions h3 {
-    margin-top: 0;
-    color: #0d47a1;
-}
-
-.main-instructions p {
-    margin-bottom: 10px;
-}
-
-.instruction-steps {
-    text-align: left;
-    background-color: #f5f5f5;
-    border-radius: 5px;
-    padding: 10px;
-    margin: 10px 0;
-}
-
-.instruction-steps ol {
-    margin: 0;
-    padding-left: 20px;
-}
-
-.instruction-steps li {
-    margin-bottom: 8px;
-}
-
-.ad-instruction {
-    position: absolute;
-    top: -40px;
-    left: 0;
-    right: 0;
-    background-color: #ff9800;
-    color: white;
-    padding: 8px;
-    border-radius: 5px 5px 0 0;
-    text-align: center;
-    font-size: 12px;
-    font-weight: bold;
-    z-index: 100;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-.ad-instruction-arrow {
-    position: absolute;
-    top: -25px;
-    right: 10px;
-    width: 0;
-    height: 0;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-top: 15px solid #ff9800;
-    z-index: 101;
-}
-
-.ad-instruction-pulse {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    width: 20px;
-    height: 20px;
-    background-color: #ff5722;
-    border-radius: 50%;
-    z-index: 102;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(255, 87, 34, 0.7);
+    
+    .help-button {
+        bottom: 10px;
+        right: 10px;
+        padding: 10px 14px;
+        font-size: 12px;
     }
     
-    70% {
-        transform: scale(1);
-        box-shadow: 0 0 0 10px rgba(255, 87, 34, 0);
+    .help-button span {
+        display: none;
     }
     
-    100% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(255, 87, 34, 0);
+    .video-link.large {
+        font-size: 16px;
+        padding: 12px 20px;
     }
-}
-
-.ad-instruction-highlight {
-    border: 2px dashed #ff5722 !important;
-    box-shadow: 0 0 10px rgba(255, 87, 34, 0.5) !important;
-}
-
-.instruction-tooltip {
-    position: absolute;
-    bottom: -30px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #333;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    white-space: nowrap;
-    z-index: 103;
-    opacity: 0;
-    transition: opacity 0.3s;
-}
-
-.instruction-tooltip:after {
-    content: '';
-    position: absolute;
-    top: -5px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-bottom: 5px solid #333;
-}
-
-.ad-wrapper:hover .instruction-tooltip {
-    opacity: 1;
-}
-
-.page-instruction {
-    background-color: #fff8e1;
-    border: 1px solid #ffc107;
-    border-radius: 8px;
-    padding: 15px;
-    margin: 15px 0;
-    text-align: center;
-    color: #ff6f00;
-    font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.page-instruction h4 {
-    margin-top: 0;
-    color: #ff6f00;
-}
-
-.page-instruction p {
-    margin-bottom: 10px;
-}
-
-.progress-instruction {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 10px 0;
-    font-size: 14px;
-    color: #666;
-}
-
-.progress-instruction i {
-    margin-right: 5px;
-    color: #3498db;
-}
-
-.ad-interaction-demo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 15px 0;
-    padding: 10px;
-    background-color: #f0f0f0;
-    border-radius: 5px;
-}
-
-.demo-ad {
-    width: 200px;
-    height: 100px;
-    background-color: #e0e0e0;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    position: relative;
-    margin-right: 20px;
-}
-
-.demo-ad:after {
-    content: 'Ad';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: #999;
-    font-size: 16px;
-}
-
-.demo-instruction {
-    text-align: left;
-}
-
-.demo-instruction h5 {
-    margin-top: 0;
-    color: #333;
-}
-
-.demo-instruction p {
-    margin-bottom: 5px;
-    color: #666;
-}
-
-.demo-arrow {
-    position: absolute;
-    top: 50%;
-    right: -30px;
-    transform: translateY(-50%);
-    color: #ff5722;
-    font-size: 24px;
-}
-
-@keyframes bounce {
-    0%, 20%, 50%, 80%, 100% {
-        transform: translateY(0);
-    }
-    40% {
-        transform: translateY(-10px);
-    }
-    60% {
-        transform: translateY(-5px);
-    }
-}
-
-.demo-arrow {
-    animation: bounce 2s infinite;
 }
