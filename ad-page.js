@@ -43,6 +43,9 @@ function initAdPage(pageNumber) {
     adClickTimeouts.forEach(timeout => clearTimeout(timeout));
     adClickTimeouts.clear();
     
+    // Reset progress bars
+    resetProgressBars();
+    
     // Update ad counter display
     updateAdCounter();
     
@@ -68,6 +71,20 @@ function initAdPage(pageNumber) {
     setTimeout(() => {
         setupAdClickDetection();
     }, 3000);
+}
+
+// Reset progress bars to initial state
+function resetProgressBars() {
+    const progressBar = document.getElementById('progressBar');
+    const mainProgressBar = document.getElementById('mainProgressBar');
+    
+    if (progressBar) {
+        progressBar.style.width = '100%';
+    }
+    
+    if (mainProgressBar) {
+        mainProgressBar.style.width = '100%';
+    }
 }
 
 // Update ad counter display
@@ -513,14 +530,30 @@ function startCountdown() {
     const progressBar = document.getElementById('progressBar');
     const mainProgressBar = document.getElementById('mainProgressBar');
     
+    // Ensure countdown element exists
+    if (!countdownElement) {
+        console.error('Countdown element not found');
+        return;
+    }
+    
+    // Initialize countdown display
+    countdownElement.textContent = seconds;
+    
     countdownInterval = setInterval(() => {
         seconds--;
         countdownElement.textContent = seconds;
         
-        // Update progress bar
-        const progressPercent = ((15 - seconds) / 15) * 100;
-        progressBar.style.width = (100 - progressPercent) + '%';
-        mainProgressBar.style.width = (100 - progressPercent) + '%';
+        // Calculate progress percentage (remaining time / total time)
+        const progressPercent = (seconds / 15) * 100;
+        
+        // Update progress bars
+        if (progressBar) {
+            progressBar.style.width = progressPercent + '%';
+        }
+        
+        if (mainProgressBar) {
+            mainProgressBar.style.width = progressPercent + '%';
+        }
         
         // Update time remaining display
         updateAdCounter();
@@ -729,4 +762,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-    }
+                                      }
