@@ -21,6 +21,7 @@ let originalUrl = '';
 let adPageNumber = 1;
 let timerCompleted = false;
 let isChecking = false;
+let adWrappers = new Map(); // Map to track ad wrappers and their click status
 
 // Initialize ad page
 function initAdPage(pageNumber) {
@@ -28,6 +29,7 @@ function initAdPage(pageNumber) {
     
     // Reset variables for new page
     adsClicked.clear();
+    adWrappers.clear();
     timerCompleted = false;
     isChecking = false;
     
@@ -52,8 +54,10 @@ function initAdPage(pageNumber) {
     // Track ad view
     trackAdView(pageNumber);
     
-    // Add click listeners to all ads
-    addClickListenersToAllAds();
+    // Set up ad click detection after a delay to allow ads to load
+    setTimeout(() => {
+        setupAdClickDetection();
+    }, 3000);
 }
 
 // Update ad counter display
@@ -152,40 +156,96 @@ function executeAdScript(elementId, scriptContent) {
     });
 }
 
-// Add click listeners to all ads
-function addClickListenersToAllAds() {
-    // Add click listeners to all clickable ads
-    const clickableAds = document.querySelectorAll('.clickable-ad');
+// Set up ad click detection
+function setupAdClickDetection() {
+    // Get all ad wrappers
+    const wrappers = document.querySelectorAll('.ad-wrapper');
     
-    clickableAds.forEach(ad => {
-        // Remove any existing click listeners
-        ad.removeEventListener('click', handleAdClick);
+    wrappers.forEach(wrapper => {
+        const adId = wrapper.getAttribute('data-ad-id');
+        if (!adId) return;
         
-        // Add new click listener
-        ad.addEventListener('click', handleAdClick);
+        // Store the wrapper in our map
+        adWrappers.set(adId, {
+            element: wrapper,
+            clicked: false
+        });
         
-        // Make sure the ad has a pointer cursor
-        ad.style.cursor = 'pointer';
+        // Monitor for clicks on iframes within the wrapper
+        const iframes = wrapper.querySelectorAll('iframe');
+        iframes.forEach(iframe => {
+            // Track clicks on iframes (this is a workaround since we can't directly detect iframe clicks)
+            iframe.addEventListener('load', function() {
+                try {
+                    // Try to add a click listener to the iframe content
+                    // This will likely fail due to cross-origin restrictions
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    iframeDoc.addEventListener('click', function() {
+                        handleAdClick(adId);
+                    });
+                } catch (e) {
+                    // Cross-origin restriction, use alternative method
+                    // Add a blur event listener to detect when user clicks on iframe
+                    iframe.addEventListener('blur', function() {
+                        // Check if the iframe is still focused after a short delay
+                        setTimeout(function() {
+                            if (document.activeElement !== iframe) {
+                                // User clicked on the iframe
+                                handleAdClick(adId);
+                            }
+                        }, 100);
+                    });
+                }
+            });
+        });
+        
+        // Monitor for clicks on other elements (a tags, img tags, etc.)
+        const clickableElements = wrapper.querySelectorAll('a, img, div[onclick], button');
+        clickableElements.forEach(element => {
+            element.addEventListener('click', function(e) {
+                handleAdClick(adId);
+            });
+        });
+        
+        // Monitor for any clicks within the wrapper
+        wrapper.addEventListener('click', function(e) {
+            // Check if the click is on an actual ad element
+            const target = e.target;
+            const tagName = target.tagName.toLowerCase();
+            
+            // Count clicks on iframes, links, images, or elements with specific ad attributes
+            if (tagName === 'iframe' || 
+                tagName === 'a' || 
+                tagName === 'img' ||
+                target.hasAttribute('data-ad') ||
+                target.closest('[data-ad]')) {
+                handleAdClick(adId);
+            }
+        });
+        
+        // Monitor for window focus changes (another way to detect iframe clicks)
+        window.addEventListener('focus', function() {
+            // Check if any iframe was recently clicked
+            const iframes = wrapper.querySelectorAll('iframe');
+            iframes.forEach(iframe => {
+                if (document.activeElement === iframe) {
+                    handleAdClick(adId);
+                }
+            });
+        });
     });
 }
 
 // Handle ad click
-function handleAdClick(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Get the ad ID
-    const adId = e.currentTarget.getAttribute('data-ad-id');
-    
+function handleAdClick(adId) {
     if (!adId) return;
     
-    // Check if this ad has already been clicked
-    if (adsClicked.has(adId)) {
-        showNotification('You already clicked this ad!');
-        return;
-    }
+    // Get the wrapper info
+    const wrapperInfo = adWrappers.get(adId);
+    if (!wrapperInfo || wrapperInfo.clicked) return;
     
     // Mark this ad as clicked
+    wrapperInfo.clicked = true;
     adsClicked.add(adId);
     updateAdCounter();
     
@@ -207,11 +267,6 @@ function handleAdClick(e) {
             }
         }
     }
-    
-    // Open the ad in a new tab after a short delay
-    setTimeout(() => {
-        window.open('#', '_blank');
-    }, 500);
 }
 
 // Show notification
@@ -455,4 +510,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-}
+                }
