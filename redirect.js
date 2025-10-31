@@ -13,50 +13,52 @@ const firebaseConfig = {
   measurementId: "G-J3XWHEX759"
 };
 
-// Init Firebase
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Extract the ID from the URL
+// Grab link ID from URL
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 
-// Get elements
 const adFrame = document.getElementById("adFrame");
 const countdown = document.getElementById("countdown");
 
-// Use your GitHub-hosted ad page
+// Load your ad from GitHub
 adFrame.src = "https://krisshdas.github.io/Linksterror/ad1.html";
 
 async function redirectUser() {
   if (!id) {
-    countdown.textContent = "Invalid link ID.";
+    countdown.textContent = "Invalid or missing link ID.";
     return;
   }
 
   try {
-    const snapshot = await get(child(ref(db), `links/${id}`));
+    const dbRef = ref(db);
+    const snapshot = await get(child(dbRef, `links/${id}`));
+
     if (!snapshot.exists()) {
-      countdown.textContent = "Short link not found.";
+      countdown.textContent = "Link not found in database.";
       return;
     }
 
     const { longUrl } = snapshot.val();
-    let timer = 8; // seconds delay before redirect
-    countdown.textContent = `Please wait ${timer} seconds...`;
+
+    let timer = 8;
+    countdown.textContent = `Redirecting in ${timer} seconds...`;
 
     const interval = setInterval(() => {
       timer--;
       countdown.textContent = `Redirecting in ${timer} seconds...`;
-
       if (timer <= 0) {
         clearInterval(interval);
         window.location.href = longUrl;
       }
     }, 1000);
-  } catch (error) {
-    countdown.textContent = "Error loading link.";
-    console.error(error);
+
+  } catch (err) {
+    console.error("Error fetching link:", err);
+    countdown.textContent = "Error fetching link from Firebase.";
   }
 }
 
