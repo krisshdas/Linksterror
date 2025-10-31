@@ -21,7 +21,6 @@ let originalUrl = '';
 let adPageNumber = 1;
 let timerCompleted = false;
 let isChecking = false;
-let allAdsClicked = false;
 
 // Initialize ad page
 function initAdPage(pageNumber) {
@@ -31,7 +30,6 @@ function initAdPage(pageNumber) {
     adsClicked.clear();
     timerCompleted = false;
     isChecking = false;
-    allAdsClicked = false;
     
     // Update ad counter display
     updateAdCounter();
@@ -54,8 +52,8 @@ function initAdPage(pageNumber) {
     // Track ad view
     trackAdView(pageNumber);
     
-    // Add click listeners to hardcoded ads
-    addClickListenersToHardcodedAds();
+    // Add click listeners to all ads
+    addClickListenersToAllAds();
 }
 
 // Update ad counter display
@@ -109,11 +107,6 @@ function loadAdsFromFirebase(pageNumber) {
             if (adConfig.popup) {
                 executeAdScript('popAd', adConfig.popup);
             }
-            
-            // Add click listeners to Firebase ads after they're loaded
-            setTimeout(() => {
-                addClickListenersToFirebaseAds();
-            }, 2000);
         })
         .catch((error) => {
             console.error('Error loading ads from Firebase:', error);
@@ -159,119 +152,66 @@ function executeAdScript(elementId, scriptContent) {
     });
 }
 
-// Add click listeners to Firebase ads
-function addClickListenersToFirebaseAds() {
-    const adElements = [
-        'headerAd', 'sideAd1', 'sideAd2', 'sideAd3', 'sideAd4', 'bottomAd', 'popAd'
-    ];
+// Add click listeners to all ads
+function addClickListenersToAllAds() {
+    // Add click listeners to all clickable ads
+    const clickableAds = document.querySelectorAll('.clickable-ad');
     
-    adElements.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            // Add a transparent overlay to detect clicks
-            const overlay = document.createElement('div');
-            overlay.style.position = 'absolute';
-            overlay.style.top = '0';
-            overlay.style.left = '0';
-            overlay.style.width = '100%';
-            overlay.style.height = '100%';
-            overlay.style.zIndex = '10';
-            overlay.style.cursor = 'pointer';
-            
-            // Make the parent element relative
-            if (getComputedStyle(element).position !== 'relative') {
-                element.style.position = 'relative';
-            }
-            
-            element.appendChild(overlay);
-            
-            // Add click event listener
-            overlay.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Mark this ad as clicked
-                adsClicked.add(id);
-                updateAdCounter();
-                
-                // Show notification
-                showNotification(`Ad clicked! (${adsClicked.size}/${totalAds})`);
-                
-                // Track the ad click
-                trackAdClick(adPageNumber);
-                
-                // Check if all ads have been clicked
-                if (adsClicked.size >= totalAds) {
-                    allAdsClicked = true;
-                    showNotification('All ads clicked! You can now continue.');
-                }
-                
-                // Open the ad in a new tab after a short delay
-                setTimeout(() => {
-                    window.open('#', '_blank');
-                }, 500);
-            });
-        }
+    clickableAds.forEach(ad => {
+        // Remove any existing click listeners
+        ad.removeEventListener('click', handleAdClick);
+        
+        // Add new click listener
+        ad.addEventListener('click', handleAdClick);
+        
+        // Make sure the ad has a pointer cursor
+        ad.style.cursor = 'pointer';
     });
 }
 
-// Add click listeners to hardcoded ads
-function addClickListenersToHardcodedAds() {
-    // Wait for the hardcoded ads to load
-    setTimeout(() => {
-        const hardcodedAds = document.querySelectorAll('.hardcoded-ad');
+// Handle ad click
+function handleAdClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Get the ad ID
+    const adId = e.currentTarget.getAttribute('data-ad-id');
+    
+    if (!adId) return;
+    
+    // Check if this ad has already been clicked
+    if (adsClicked.has(adId)) {
+        showNotification('You already clicked this ad!');
+        return;
+    }
+    
+    // Mark this ad as clicked
+    adsClicked.add(adId);
+    updateAdCounter();
+    
+    // Show notification
+    showNotification(`Ad clicked! (${adsClicked.size}/${totalAds})`);
+    
+    // Track the ad click
+    trackAdClick(adPageNumber);
+    
+    // Check if all ads have been clicked
+    if (adsClicked.size >= totalAds) {
+        showNotification('All ads clicked! You can now continue.');
         
-        hardcodedAds.forEach((ad, index) => {
-            // Add a unique ID to each ad if it doesn't have one
-            if (!ad.id) {
-                ad.id = `hardcodedAd${index}`;
+        // If timer is already completed, enable the check button
+        if (timerCompleted) {
+            const instructions = document.getElementById('instructions');
+            if (instructions) {
+                instructions.querySelector('p').textContent = `Great! You've clicked all the ads. Click the button below to continue.`;
             }
-            
-            // Add a transparent overlay to detect clicks
-            const overlay = document.createElement('div');
-            overlay.style.position = 'absolute';
-            overlay.style.top = '0';
-            overlay.style.left = '0';
-            overlay.style.width = '100%';
-            overlay.style.height = '100%';
-            overlay.style.zIndex = '10';
-            overlay.style.cursor = 'pointer';
-            
-            // Make the parent element relative
-            if (getComputedStyle(ad).position !== 'relative') {
-                ad.style.position = 'relative';
-            }
-            
-            ad.appendChild(overlay);
-            
-            // Add click event listener
-            overlay.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Mark this ad as clicked
-                adsClicked.add(ad.id);
-                updateAdCounter();
-                
-                // Show notification
-                showNotification(`Ad clicked! (${adsClicked.size}/${totalAds})`);
-                
-                // Track the ad click
-                trackAdClick(adPageNumber);
-                
-                // Check if all ads have been clicked
-                if (adsClicked.size >= totalAds) {
-                    allAdsClicked = true;
-                    showNotification('All ads clicked! You can now continue.');
-                }
-                
-                // Open the ad in a new tab after a short delay
-                setTimeout(() => {
-                    window.open('#', '_blank');
-                }, 500);
-            });
-        });
-    }, 3000); // Wait for ads to load
+        }
+    }
+    
+    // Open the ad in a new tab after a short delay
+    setTimeout(() => {
+        window.open('#', '_blank');
+    }, 500);
 }
 
 // Show notification
@@ -282,10 +222,14 @@ function showNotification(message) {
     if (notification && notificationText) {
         notificationText.textContent = message;
         notification.style.display = 'block';
+        notification.classList.add('show');
         
         // Hide notification after 3 seconds
         setTimeout(() => {
-            notification.style.display = 'none';
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 300);
         }, 3000);
     }
 }
