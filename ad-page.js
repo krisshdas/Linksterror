@@ -21,7 +21,7 @@ let originalUrl = '';
 let adPageNumber = 1;
 let timerCompleted = false;
 let isChecking = false;
-let adWrappers = new Map(); // Map to track ad wrappers and their click status
+let adClickHandlers = new Map(); // Map to track click handlers for cleanup
 
 // Initialize ad page
 function initAdPage(pageNumber) {
@@ -29,7 +29,7 @@ function initAdPage(pageNumber) {
     
     // Reset variables for new page
     adsClicked.clear();
-    adWrappers.clear();
+    adClickHandlers.clear();
     timerCompleted = false;
     isChecking = false;
     
@@ -165,73 +165,103 @@ function setupAdClickDetection() {
         const adId = wrapper.getAttribute('data-ad-id');
         if (!adId) return;
         
-        // Store the wrapper in our map
-        adWrappers.set(adId, {
-            element: wrapper,
-            clicked: false
-        });
+        // Remove any existing click handlers for this ad
+        if (adClickHandlers.has(adId)) {
+            const handlers = adClickHandlers.get(adId);
+            handlers.forEach(handler => {
+                wrapper.removeEventListener('click', handler);
+            });
+        }
         
-        // Monitor for clicks on iframes within the wrapper
+        // Create a new array to store handlers for this ad
+        const handlers = [];
+        
+        // Create a click handler for this ad
+        const clickHandler = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Handle the ad click
+            handleAdClick(adId);
+            
+            return false;
+        };
+        
+        // Add the click handler to the wrapper
+        wrapper.addEventListener('click', clickHandler);
+        handlers.push(clickHandler);
+        
+        // Store the handlers for cleanup
+        adClickHandlers.set(adId, handlers);
+        
+        // Add a visual indicator that the ad is clickable
+        wrapper.style.cursor = 'pointer';
+        wrapper.style.position = 'relative';
+        
+        // Add a subtle border to indicate it's clickable
+        wrapper.style.border = '1px dashed rgba(52, 152, 219, 0.3)';
+        
+        // Add a "Click me" indicator for unclicked ads
+        if (!adsClicked.has(adId)) {
+            const indicator = document.createElement('div');
+            indicator.className = 'ad-click-indicator';
+            indicator.innerHTML = '<i class="fas fa-hand-pointer"></i> Click here';
+            indicator.style.position = 'absolute';
+            indicator.style.top = '5px';
+            indicator.style.right = '5px';
+            indicator.style.backgroundColor = 'rgba(52, 152, 219, 0.8)';
+            indicator.style.color = 'white';
+            indicator.style.padding = '5px 10px';
+            indicator.style.borderRadius = '3px';
+            indicator.style.fontSize = '12px';
+            indicator.style.zIndex = '1000';
+            indicator.style.pointerEvents = 'none';
+            wrapper.appendChild(indicator);
+        }
+        
+        // Special handling for iframes
         const iframes = wrapper.querySelectorAll('iframe');
         iframes.forEach(iframe => {
-            // Track clicks on iframes (this is a workaround since we can't directly detect iframe clicks)
-            iframe.addEventListener('load', function() {
-                try {
-                    // Try to add a click listener to the iframe content
-                    // This will likely fail due to cross-origin restrictions
-                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    iframeDoc.addEventListener('click', function() {
-                        handleAdClick(adId);
-                    });
-                } catch (e) {
-                    // Cross-origin restriction, use alternative method
-                    // Add a blur event listener to detect when user clicks on iframe
-                    iframe.addEventListener('blur', function() {
-                        // Check if the iframe is still focused after a short delay
-                        setTimeout(function() {
-                            if (document.activeElement !== iframe) {
-                                // User clicked on the iframe
-                                handleAdClick(adId);
-                            }
-                        }, 100);
-                    });
-                }
-            });
-        });
-        
-        // Monitor for clicks on other elements (a tags, img tags, etc.)
-        const clickableElements = wrapper.querySelectorAll('a, img, div[onclick], button');
-        clickableElements.forEach(element => {
-            element.addEventListener('click', function(e) {
-                handleAdClick(adId);
-            });
-        });
-        
-        // Monitor for any clicks within the wrapper
-        wrapper.addEventListener('click', function(e) {
-            // Check if the click is on an actual ad element
-            const target = e.target;
-            const tagName = target.tagName.toLowerCase();
+            // Add a transparent overlay over the iframe to capture clicks
+            const overlay = document.createElement('div');
+            overlay.style.position = 'absolute';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.zIndex = '999';
+            overlay.style.cursor = 'pointer';
+            overlay.style.backgroundColor = 'transparent';
             
-            // Count clicks on iframes, links, images, or elements with specific ad attributes
-            if (tagName === 'iframe' || 
-                tagName === 'a' || 
-                tagName === 'img' ||
-                target.hasAttribute('data-ad') ||
-                target.closest('[data-ad]')) {
+            // Add click handler to the overlay
+            overlay.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Handle the ad click
                 handleAdClick(adId);
-            }
-        });
-        
-        // Monitor for window focus changes (another way to detect iframe clicks)
-        window.addEventListener('focus', function() {
-            // Check if any iframe was recently clicked
-            const iframes = wrapper.querySelectorAll('iframe');
-            iframes.forEach(iframe => {
-                if (document.activeElement === iframe) {
-                    handleAdClick(adId);
-                }
+                
+                // Open the ad in a new tab after a short delay
+                setTimeout(() => {
+                    // Try to open the iframe's src in a new tab
+                    if (iframe.src) {
+                        window.open(iframe.src, '_blank');
+                    } else {
+                        // Fallback to a placeholder URL
+                        window.open('#', '_blank');
+                    }
+                }, 500);
+                
+                return false;
             });
+            
+            // Make sure the wrapper is positioned relative
+            if (getComputedStyle(wrapper).position !== 'relative') {
+                wrapper.style.position = 'relative';
+            }
+            
+            // Add the overlay to the wrapper
+            wrapper.appendChild(overlay);
         });
     });
 }
@@ -240,14 +270,44 @@ function setupAdClickDetection() {
 function handleAdClick(adId) {
     if (!adId) return;
     
-    // Get the wrapper info
-    const wrapperInfo = adWrappers.get(adId);
-    if (!wrapperInfo || wrapperInfo.clicked) return;
+    // Check if this ad has already been clicked
+    if (adsClicked.has(adId)) {
+        showNotification('You already clicked this ad!');
+        return;
+    }
     
     // Mark this ad as clicked
-    wrapperInfo.clicked = true;
     adsClicked.add(adId);
     updateAdCounter();
+    
+    // Update the visual indicator for this ad
+    const wrapper = document.querySelector(`[data-ad-id="${adId}"]`);
+    if (wrapper) {
+        // Remove the "Click me" indicator
+        const indicator = wrapper.querySelector('.ad-click-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+        
+        // Add a "Clicked" indicator
+        const clickedIndicator = document.createElement('div');
+        clickedIndicator.className = 'ad-clicked-indicator';
+        clickedIndicator.innerHTML = '<i class="fas fa-check-circle"></i> Clicked';
+        clickedIndicator.style.position = 'absolute';
+        clickedIndicator.style.top = '5px';
+        clickedIndicator.style.right = '5px';
+        clickedIndicator.style.backgroundColor = 'rgba(46, 204, 113, 0.8)';
+        clickedIndicator.style.color = 'white';
+        clickedIndicator.style.padding = '5px 10px';
+        clickedIndicator.style.borderRadius = '3px';
+        clickedIndicator.style.fontSize = '12px';
+        clickedIndicator.style.zIndex = '1000';
+        clickedIndicator.style.pointerEvents = 'none';
+        wrapper.appendChild(clickedIndicator);
+        
+        // Update the border to indicate it's been clicked
+        wrapper.style.border = '1px solid rgba(46, 204, 113, 0.5)';
+    }
     
     // Show notification
     showNotification(`Ad clicked! (${adsClicked.size}/${totalAds})`);
@@ -510,4 +570,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-                }
+}
