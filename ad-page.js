@@ -22,6 +22,7 @@ let adPageNumber = 1;
 let timerCompleted = false;
 let isChecking = false;
 let adClickHandlers = new Map(); // Map to track click handlers for cleanup
+let lastFocusedElement = null;
 
 // Initialize ad page
 function initAdPage(pageNumber) {
@@ -32,6 +33,7 @@ function initAdPage(pageNumber) {
     adClickHandlers.clear();
     timerCompleted = false;
     isChecking = false;
+    lastFocusedElement = null;
     
     // Update ad counter display
     updateAdCounter();
@@ -176,24 +178,6 @@ function setupAdClickDetection() {
         // Create a new array to store handlers for this ad
         const handlers = [];
         
-        // Create a click handler for this ad
-        const clickHandler = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Handle the ad click
-            handleAdClick(adId);
-            
-            return false;
-        };
-        
-        // Add the click handler to the wrapper
-        wrapper.addEventListener('click', clickHandler);
-        handlers.push(clickHandler);
-        
-        // Store the handlers for cleanup
-        adClickHandlers.set(adId, handlers);
-        
         // Add a visual indicator that the ad is clickable
         wrapper.style.cursor = 'pointer';
         wrapper.style.position = 'relative';
@@ -219,50 +203,65 @@ function setupAdClickDetection() {
             wrapper.appendChild(indicator);
         }
         
-        // Special handling for iframes
+        // Special handling for iframes - use focus/blur events
         const iframes = wrapper.querySelectorAll('iframe');
         iframes.forEach(iframe => {
-            // Add a transparent overlay over the iframe to capture clicks
-            const overlay = document.createElement('div');
-            overlay.style.position = 'absolute';
-            overlay.style.top = '0';
-            overlay.style.left = '0';
-            overlay.style.width = '100%';
-            overlay.style.height = '100%';
-            overlay.style.zIndex = '999';
-            overlay.style.cursor = 'pointer';
-            overlay.style.backgroundColor = 'transparent';
-            
-            // Add click handler to the overlay
-            overlay.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Handle the ad click
-                handleAdClick(adId);
-                
-                // Open the ad in a new tab after a short delay
-                setTimeout(() => {
-                    // Try to open the iframe's src in a new tab
-                    if (iframe.src) {
-                        window.open(iframe.src, '_blank');
-                    } else {
-                        // Fallback to a placeholder URL
-                        window.open('#', '_blank');
-                    }
-                }, 500);
-                
-                return false;
+            // Track when the iframe gets focus (user clicked on it)
+            iframe.addEventListener('focus', function() {
+                lastFocusedElement = adId;
             });
             
-            // Make sure the wrapper is positioned relative
-            if (getComputedStyle(wrapper).position !== 'relative') {
-                wrapper.style.position = 'relative';
-            }
+            // Track when the iframe loses focus (user clicked away or opened a new tab)
+            iframe.addEventListener('blur', function() {
+                // Check if this was the last focused element
+                if (lastFocusedElement === adId) {
+                    // Handle the ad click
+                    handleAdClick(adId);
+                    lastFocusedElement = null;
+                }
+            });
             
-            // Add the overlay to the wrapper
-            wrapper.appendChild(overlay);
+            // Make sure the iframe can receive focus
+            iframe.style.pointerEvents = 'auto';
         });
+        
+        // Handle other clickable elements (links, images, etc.)
+        const clickableElements = wrapper.querySelectorAll('a, img, div[onclick], button');
+        clickableElements.forEach(element => {
+            const clickHandler = function(e) {
+                // Don't prevent the default action - let the ad work normally
+                // Just count the click
+                handleAdClick(adId);
+            };
+            
+            element.addEventListener('click', clickHandler);
+            handlers.push({ element, handler: clickHandler });
+        });
+        
+        // Store the handlers for cleanup
+        adClickHandlers.set(adId, handlers);
+    });
+    
+    // Also track window focus changes to detect when user clicks on an iframe
+    window.addEventListener('focus', function() {
+        if (lastFocusedElement) {
+            // Handle the ad click
+            handleAdClick(lastFocusedElement);
+            lastFocusedElement = null;
+        }
+    });
+    
+    // Track when user clicks anywhere on the page
+    document.addEventListener('click', function(e) {
+        // Check if the click is inside an ad wrapper
+        const wrapper = e.target.closest('.ad-wrapper');
+        if (wrapper) {
+            const adId = wrapper.getAttribute('data-ad-id');
+            if (adId) {
+                // Handle the ad click
+                handleAdClick(adId);
+            }
+        }
     });
 }
 
@@ -272,8 +271,7 @@ function handleAdClick(adId) {
     
     // Check if this ad has already been clicked
     if (adsClicked.has(adId)) {
-        showNotification('You already clicked this ad!');
-        return;
+        return; // Don't show notification for duplicate clicks
     }
     
     // Mark this ad as clicked
@@ -570,4 +568,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-}
+                        }
