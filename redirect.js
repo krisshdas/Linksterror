@@ -33,6 +33,7 @@ let ads = [];
 let currentAdIndex = 0;
 let originalUrl = '';
 let countdownInterval;
+let timeLeft = 15;
 
 // Find the original URL for the short code
 function findOriginalUrl() {
@@ -74,7 +75,8 @@ function findOriginalUrl() {
                             break;
                         }
                         
-                        originalUrl = link.originalUrl;
+                        // Fixed: Use longUrl instead of originalUrl
+                        originalUrl = link.longUrl;
                         console.log("Original URL:", originalUrl);
                         
                         // Increment click count
