@@ -17,49 +17,36 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Grab link ID from URL
+// Read the short ID from the link
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 
-const adFrame = document.getElementById("adFrame");
-const countdown = document.getElementById("countdown");
-
-// Load your ad from GitHub
-adFrame.src = "https://krisshdas.github.io/Linksterror/ad1.html";
-
-async function redirectUser() {
+// Get long URL from Firebase
+async function fetchAndRedirect() {
   if (!id) {
-    countdown.textContent = "Invalid or missing link ID.";
+    document.body.innerHTML = "<h3>Invalid or missing link ID.</h3>";
     return;
   }
 
   try {
-    const dbRef = ref(db);
-    const snapshot = await get(child(dbRef, `links/${id}`));
+    const snapshot = await get(child(ref(db), `links/${id}`));
 
     if (!snapshot.exists()) {
-      countdown.textContent = "Link not found in database.";
+      document.body.innerHTML = "<h3>Short link not found.</h3>";
       return;
     }
 
     const { longUrl } = snapshot.val();
 
-    let timer = 8;
-    countdown.textContent = `Redirecting in ${timer} seconds...`;
-
-    const interval = setInterval(() => {
-      timer--;
-      countdown.textContent = `Redirecting in ${timer} seconds...`;
-      if (timer <= 0) {
-        clearInterval(interval);
-        window.location.href = longUrl;
-      }
-    }, 1000);
+    // Encode the destination and send the visitor to your GitHub ad page
+    const encoded = encodeURIComponent(longUrl);
+    const adPage = `https://krisshdas.github.io/Linksterror/ad1.html?dest=${encoded}`;
+    window.location.href = adPage;
 
   } catch (err) {
     console.error("Error fetching link:", err);
-    countdown.textContent = "Error fetching link from Firebase.";
+    document.body.innerHTML = "<h3>Error fetching link from Firebase.</h3>";
   }
 }
 
-redirectUser();
+fetchAndRedirect();
