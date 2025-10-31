@@ -1,236 +1,29 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
 body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    overflow: hidden;
+  font-family: Arial, sans-serif;
+  background: #f3f4f6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
 }
-
 .container {
-    width: 100%;
-    max-width: 500px;
-    padding: 20px;
+  text-align: center;
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  width: 90%;
+  max-width: 500px;
 }
-
-.loading-screen {
-    text-align: center;
-    animation: fadeIn 0.5s ease-out;
+iframe {
+  width: 100%;
+  height: 300px;
+  border: none;
+  margin-top: 1rem;
+  border-radius: 8px;
 }
-
-.loader {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 30px;
-}
-
-.circle {
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-    background-color: white;
-    margin: 0 5px;
-    animation: bounce 1.4s infinite ease-in-out both;
-}
-
-.circle:nth-child(1) {
-    animation-delay: -0.32s;
-}
-
-.circle:nth-child(2) {
-    animation-delay: -0.16s;
-}
-
-@keyframes bounce {
-    0%, 80%, 100% {
-        transform: scale(0);
-    }
-    40% {
-        transform: scale(1);
-    }
-}
-
-.loading-screen h2 {
-    font-size: 24px;
-    margin-bottom: 10px;
-}
-
-.loading-screen p {
-    font-size: 16px;
-    opacity: 0.8;
-}
-
-.ad-container {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    animation: slideUp 0.5s ease-out;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.ad-header {
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.progress-bar {
-    flex: 1;
-    height: 4px;
-    background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 2px;
-    overflow: hidden;
-    margin-right: 15px;
-}
-
-.progress {
-    height: 100%;
-    background-color: white;
-    width: 0%;
-    transition: width 1s linear;
-}
-
-.skip-ad {
-    background-color: rgba(255, 255, 255, 0.2);
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.skip-ad:hover {
-    background-color: rgba(255, 255, 255, 0.3);
-}
-
-.ad-content {
-    padding: 40px 20px;
-    text-align: center;
-    min-height: 300px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-.ad-content h3 {
-    font-size: 24px;
-    margin-bottom: 15px;
-}
-
-.ad-content p {
-    font-size: 16px;
-    opacity: 0.8;
-    max-width: 80%;
-}
-
-.ad-content iframe {
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-.ad-footer {
-    padding: 15px 20px;
-    text-align: center;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 14px;
-}
-
-.error-container {
-    text-align: center;
-    animation: fadeIn 0.5s ease-out;
-}
-
-.error-icon {
-    font-size: 60px;
-    margin-bottom: 20px;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.error-container h2 {
-    font-size: 24px;
-    margin-bottom: 10px;
-}
-
-.error-container p {
-    font-size: 16px;
-    opacity: 0.8;
-    margin-bottom: 20px;
-}
-
-.home-btn {
-    display: inline-block;
-    padding: 12px 25px;
-    background-color: white;
-    color: #667eea;
-    border-radius: 30px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.home-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-/* Mobile responsive */
-@media (max-width: 600px) {
-    .container {
-        padding: 15px;
-    }
-    
-    .loading-screen h2 {
-        font-size: 20px;
-    }
-    
-    .loading-screen p {
-        font-size: 14px;
-    }
-    
-    .ad-header {
-        padding: 12px 15px;
-    }
-    
-    .ad-content {
-        padding: 30px 15px;
-        min-height: 250px;
-    }
-    
-    .ad-content iframe {
-        height: 250px;
-    }
+#countdown {
+  margin-top: 1rem;
+  font-weight: bold;
+  color: #007bff;
 }
