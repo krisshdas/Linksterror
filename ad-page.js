@@ -170,8 +170,8 @@ function setupAdClickDetection() {
         // Remove any existing click handlers for this ad
         if (adClickHandlers.has(adId)) {
             const handlers = adClickHandlers.get(adId);
-            handlers.forEach(handler => {
-                wrapper.removeEventListener('click', handler);
+            handlers.forEach(({ element, handler }) => {
+                element.removeEventListener('click', handler);
             });
         }
         
@@ -207,26 +207,32 @@ function setupAdClickDetection() {
         const iframes = wrapper.querySelectorAll('iframe');
         iframes.forEach(iframe => {
             // Track when the iframe gets focus (user clicked on it)
-            iframe.addEventListener('focus', function() {
+            const focusHandler = function() {
                 lastFocusedElement = adId;
-            });
+            };
             
             // Track when the iframe loses focus (user clicked away or opened a new tab)
-            iframe.addEventListener('blur', function() {
+            const blurHandler = function() {
                 // Check if this was the last focused element
                 if (lastFocusedElement === adId) {
                     // Handle the ad click
                     handleAdClick(adId);
                     lastFocusedElement = null;
                 }
-            });
+            };
+            
+            iframe.addEventListener('focus', focusHandler);
+            iframe.addEventListener('blur', blurHandler);
+            
+            handlers.push({ element: iframe, handler: focusHandler });
+            handlers.push({ element: iframe, handler: blurHandler });
             
             // Make sure the iframe can receive focus
             iframe.style.pointerEvents = 'auto';
         });
         
         // Handle other clickable elements (links, images, etc.)
-        const clickableElements = wrapper.querySelectorAll('a, img, div[onclick], button');
+        const clickableElements = wrapper.querySelectorAll('a, img, div[onclick], button, [data-ad]');
         clickableElements.forEach(element => {
             const clickHandler = function(e) {
                 // Don't prevent the default action - let the ad work normally
@@ -243,24 +249,23 @@ function setupAdClickDetection() {
     });
     
     // Also track window focus changes to detect when user clicks on an iframe
-    window.addEventListener('focus', function() {
+    const windowFocusHandler = function() {
         if (lastFocusedElement) {
             // Handle the ad click
             handleAdClick(lastFocusedElement);
             lastFocusedElement = null;
         }
-    });
+    };
     
-    // Track when user clicks anywhere on the page
-    document.addEventListener('click', function(e) {
-        // Check if the click is inside an ad wrapper
-        const wrapper = e.target.closest('.ad-wrapper');
-        if (wrapper) {
-            const adId = wrapper.getAttribute('data-ad-id');
-            if (adId) {
-                // Handle the ad click
-                handleAdClick(adId);
-            }
+    window.addEventListener('focus', windowFocusHandler);
+    
+    // Add this handler to all ads for cleanup
+    wrappers.forEach(wrapper => {
+        const adId = wrapper.getAttribute('data-ad-id');
+        if (adId) {
+            const handlers = adClickHandlers.get(adId) || [];
+            handlers.push({ element: window, handler: windowFocusHandler });
+            adClickHandlers.set(adId, handlers);
         }
     });
 }
@@ -568,4 +573,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-                        }
+    }
