@@ -66,14 +66,17 @@ function findOriginalUrl() {
                             return;
                         }
                         
-                        console.log("Redirecting to:", originalUrl);
+                        console.log("Redirecting to ad page first, then to:", originalUrl);
                         
                         // Increment click count
                         incrementClickCount(userId, linkId);
                         
-                        // Redirect after a short delay
+                        // Store the destination URL in sessionStorage
+                        sessionStorage.setItem('destinationUrl', originalUrl);
+                        
+                        // Redirect to ad page after a short delay
                         setTimeout(() => {
-                            window.location.href = originalUrl;
+                            window.location.href = 'ad1.html';
                         }, 1000);
                         
                         break;
@@ -127,3 +130,6 @@ function showError(title = 'Link Not Found', message = 'The link you\'re looking
     errorTitle.textContent = title;
     errorMessage.textContent = message;
 }
+
+// Start the process
+findOriginalUrl();
