@@ -1,4 +1,4 @@
-// Initialize Firebase
+// Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBMSFIlfrXV9vPdpXUJm3HkaFVJwXeB0h8",
     authDomain: "link-shortner-2898c.firebaseapp.com",
@@ -10,489 +10,478 @@ const firebaseConfig = {
     measurementId: "G-J3XWHEX759"
 };
 
+// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const database = firebase.database();
 
-// DOM elements
+// DOM Elements
 const profileIcon = document.getElementById('profileIcon');
-const profileMenu = document.getElementById('profileMenu');
-const logoutBtn = document.getElementById('logoutBtn');
-const menuItems = document.querySelectorAll('.menu-item');
-const pages = document.querySelectorAll('.page');
+const profileDropdown = document.getElementById('profileDropdown');
+const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+const mobileNav = document.getElementById('mobileNav');
+const adminBadge = document.getElementById('adminBadge');
+const userName = document.getElementById('userName');
 const longUrlInput = document.getElementById('longUrl');
 const shortenBtn = document.getElementById('shortenBtn');
 const resultContainer = document.getElementById('resultContainer');
 const shortUrlInput = document.getElementById('shortUrl');
 const copyBtn = document.getElementById('copyBtn');
-const notification = document.getElementById('notification');
-const notificationMessage = document.querySelector('.notification-message');
-const notificationIcon = document.querySelector('.notification-icon');
-const userName = document.getElementById('userName');
-const userEmail = document.getElementById('userEmail');
-const adminBadge = document.getElementById('adminBadge');
-const adsMenuItem = document.getElementById('adsMenuItem');
+const newLinkBtn = document.getElementById('newLinkBtn');
+const customDomain = document.getElementById('customDomain');
+const customAlias = document.getElementById('customAlias');
+const toast = document.getElementById('toast');
+const toastMessage = document.getElementById('toastMessage');
+const recentLinksTable = document.getElementById('recentLinksTable');
+const logoutBtn = document.getElementById('logoutBtn');
 
-// User data
-let currentUser = null;
-let isAdmin = false;
+// Analytics Elements
+const totalLinksEl = document.getElementById('totalLinks');
+const totalClicksEl = document.getElementById('totalClicks');
+const clickRateEl = document.getElementById('clickRate');
+const adViewsEl = document.getElementById('adViews');
+
+// Chart
+let clickChart;
+
+// Admin emails
+const adminEmails = ['dask20080@gmail.com', 'daskris20080@gmail.com'];
 
 // Check if user is logged in
-auth.onAuthStateChanged(async (user) => {
-    if (!user) {
-        window.location.href = 'login.html';
+auth.onAuthStateChanged(user => {
+    if (user) {
+        // User is signed in
+        loadUserData(user);
+        loadRecentLinks();
+        initAnalyticsChart();
+        updateAnalytics();
     } else {
-        currentUser = user;
-        userName.textContent = user.displayName || 'User';
-        userEmail.textContent = user.email;
-        
-        // Check if user is admin (hardcoded for dask20080@gmail.com)
-        if (user.email === 'dask20080@gmail.com') {
-            isAdmin = true;
-            adminBadge.style.display = 'flex';
-            adsMenuItem.style.display = 'flex';
-            
-            // Add admin to database if not already there
-            try {
-                await database.ref('admins/' + user.uid).set(true);
-            } catch (err) {
-                console.log('Admin already exists or error adding:', err);
-            }
-        }
-        
-        // Initialize user data structure if it doesn't exist
-        await initializeUserData();
-        
-        // Load user data
-        loadUserData();
-        
-        // Clean expired links
-        cleanExpiredLinks();
+        // User is signed out, redirect to login page
+        window.location.href = 'login.html';
     }
 });
 
-// Initialize user data structure
-async function initializeUserData() {
-    try {
-        const userRef = database.ref('users/' + currentUser.uid);
-        const snapshot = await userRef.once('value');
-        
-        if (!snapshot.exists()) {
-            // Create user structure if it doesn't exist
-            await userRef.set({
-                email: currentUser.email,
-                displayName: currentUser.displayName || 'User',
-                createdAt: new Date().toISOString(),
-                links: {}
-            });
-            console.log('User data structure created');
-        }
-    } catch (error) {
-        console.error('Error initializing user data:', error);
-    }
-}
+// Mobile menu toggle
+mobileMenuToggle.addEventListener('click', () => {
+    mobileNav.classList.toggle('active');
+});
 
-// Clean expired links
-async function cleanExpiredLinks() {
-    try {
-        const now = new Date().getTime();
-        const fortyFiveDaysInMs = 45 * 24 * 60 * 60 * 1000;
-        
-        const snapshot = await database.ref('users/' + currentUser.uid + '/links').once('value');
-        const links = snapshot.val() || {};
-        
-        const deletePromises = [];
-        
-        Object.keys(links).forEach(linkId => {
-            const link = links[linkId];
-            const expirationDate = link.expirationDate || 0;
-            
-            if (expirationDate < now) {
-                // Link is expired, delete it
-                deletePromises.push(
-                    database.ref('users/' + currentUser.uid + '/links/' + linkId).remove()
-                );
-            }
-        });
-        
-        await Promise.all(deletePromises);
-        if (deletePromises.length > 0) {
-            console.log(`Cleaned ${deletePromises.length} expired links`);
-        }
-    } catch (error) {
-        console.error('Error cleaning expired links:', error);
+// Profile dropdown toggle
+profileIcon.addEventListener('click', () => {
+    profileDropdown.classList.toggle('active');
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    if (!profileIcon.contains(e.target) && !profileDropdown.contains(e.target)) {
+        profileDropdown.classList.remove('active');
     }
-}
+    
+    // Close mobile menu when clicking outside
+    if (!mobileMenuToggle.contains(e.target) && !mobileNav.contains(e.target)) {
+        mobileNav.classList.remove('active');
+    }
+});
 
 // Load user data
-async function loadUserData() {
-    if (!currentUser) return;
+function loadUserData(user) {
+    const userEmail = user.email;
     
-    try {
-        const snapshot = await database.ref('users/' + currentUser.uid + '/links').once('value');
-        const links = snapshot.val() || {};
-        
-        const linksArray = Object.keys(links).map(key => ({
-            id: key,
-            ...links[key]
-        })).filter(link => {
-            // Filter out expired links
-            const now = new Date().getTime();
-            return (link.expirationDate || 0) > now;
-        });
-        
-        // Update stats
-        document.getElementById('totalLinks').textContent = linksArray.length;
-        
-        const totalClicks = linksArray.reduce((sum, link) => sum + (link.clicks || 0), 0);
-        document.getElementById('totalClicks').textContent = totalClicks;
-        
-        const clickRate = linksArray.length > 0 ? 
-            Math.round((totalClicks / linksArray.length) * 10) / 10 : 0;
-        document.getElementById('clickRate').textContent = clickRate + '%';
-        
-        document.getElementById('todayClicks').textContent = Math.floor(totalClicks * 0.2);
-        document.getElementById('weekClicks').textContent = Math.floor(totalClicks * 0.5);
-        document.getElementById('monthClicks').textContent = Math.floor(totalClicks * 0.8);
-        document.getElementById('allTimeClicks').textContent = totalClicks;
-        
-        // Populate tables
-        populateLinksTable(linksArray);
-        populateTopLinks(linksArray);
-        
-    } catch (error) {
-        console.error('Error loading user data:', error);
-        
-        // Show specific error message
-        let errorMessage = 'Error loading data';
-        if (error.code === 'PERMISSION_DENIED') {
-            errorMessage = 'Permission denied. Please refresh the page.';
-        } else if (error.message) {
-            errorMessage = 'Network error. Please check your connection.';
-        }
-        
-        showNotification(errorMessage, 'error');
-        
-        // Set default values
-        document.getElementById('totalLinks').textContent = '0';
-        document.getElementById('totalClicks').textContent = '0';
-        document.getElementById('clickRate').textContent = '0%';
-        document.getElementById('todayClicks').textContent = '0';
-        document.getElementById('weekClicks').textContent = '0';
-        document.getElementById('monthClicks').textContent = '0';
-        document.getElementById('allTimeClicks').textContent = '0';
-        
-        // Show empty tables
-        populateLinksTable([]);
-        populateTopLinks([]);
-    }
-}
-
-// Populate links table
-function populateLinksTable(links) {
-    const tableBody = document.getElementById('linksTableBody');
-    tableBody.innerHTML = '';
+    // Set user name
+    userName.textContent = user.displayName || userEmail.split('@')[0];
     
-    if (links.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No links found</td></tr>';
-        return;
+    // Check if user is admin
+    if (adminEmails.includes(userEmail)) {
+        adminBadge.style.display = 'block';
     }
     
-    links.forEach(link => {
-        const row = document.createElement('tr');
-        
-        const originalUrl = document.createElement('td');
-        originalUrl.textContent = link.originalUrl.length > 30 ? 
-            link.originalUrl.substring(0, 30) + '...' : link.originalUrl;
-        originalUrl.title = link.originalUrl;
-        
-        const shortUrl = document.createElement('td');
-        const shortUrlLink = document.createElement('a');
-        shortUrlLink.href = '#';
-        shortUrlLink.textContent = window.location.origin + '/redirect.html/' + link.shortCode;
-        shortUrlLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            copyToClipboard(window.location.origin + '/redirect.html/' + link.shortCode);
-        });
-        shortUrl.appendChild(shortUrlLink);
-        
-        const clicks = document.createElement('td');
-        clicks.textContent = link.clicks || 0;
-        
-        const created = document.createElement('td');
-        created.textContent = new Date(link.createdAt).toLocaleDateString();
-        
-        const expires = document.createElement('td');
-        const expirationDate = new Date(link.expirationDate);
-        const daysLeft = Math.ceil((expirationDate - new Date()) / (1000 * 60 * 60 * 24));
-        expires.textContent = daysLeft + ' days';
-        expires.style.color = daysLeft < 7 ? '#dc3545' : '#6c757d';
-        
-        const actions = document.createElement('td');
-        actions.style.display = 'flex';
-        actions.style.gap = '5px';
-        
-        const editBtn = document.createElement('button');
-        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-        editBtn.className = 'edit-btn';
-        editBtn.addEventListener('click', () => editLink(link.id));
-        
-        const deleteBtn = document.createElement('button');
-        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-        deleteBtn.className = 'delete-btn';
-        deleteBtn.addEventListener('click', () => deleteLink(link.id));
-        
-        actions.appendChild(editBtn);
-        actions.appendChild(deleteBtn);
-        
-        row.appendChild(originalUrl);
-        row.appendChild(shortUrl);
-        row.appendChild(clicks);
-        row.appendChild(created);
-        row.appendChild(expires);
-        row.appendChild(actions);
-        
-        tableBody.appendChild(row);
-    });
-}
-
-// Populate top links
-function populateTopLinks(links) {
-    const topLinksList = document.getElementById('topLinksList');
-    topLinksList.innerHTML = '';
-    
-    if (links.length === 0) {
-        topLinksList.innerHTML = '<p>No links found</p>';
-        return;
-    }
-    
-    const sortedLinks = [...links].sort((a, b) => (b.clicks || 0) - (a.clicks || 0));
-    const top5 = sortedLinks.slice(0, 5);
-    
-    top5.forEach(link => {
-        const linkItem = document.createElement('div');
-        linkItem.className = 'top-link-item';
-        
-        const url = document.createElement('div');
-        url.className = 'top-link-url';
-        url.textContent = link.originalUrl.length > 40 ? 
-            link.originalUrl.substring(0, 40) + '...' : link.originalUrl;
-        url.title = link.originalUrl;
-        
-        const clicks = document.createElement('div');
-        clicks.className = 'top-link-clicks';
-        clicks.textContent = (link.clicks || 0) + ' clicks';
-        
-        linkItem.appendChild(url);
-        linkItem.appendChild(clicks);
-        topLinksList.appendChild(linkItem);
-    });
-}
-
-// Edit link
-async function editLink(linkId) {
-    try {
-        const snapshot = await database.ref('users/' + currentUser.uid + '/links/' + linkId).once('value');
-        const link = snapshot.val();
-        
-        if (link) {
-            const newUrl = prompt('Edit URL:', link.originalUrl);
-            if (newUrl && newUrl.trim()) {
-                try {
-                    new URL(newUrl.trim());
-                    
-                    // Update link and reset expiration
-                    const updatedLink = {
-                        ...link,
-                        originalUrl: newUrl.trim(),
-                        expirationDate: new Date().getTime() + (45 * 24 * 60 * 60 * 1000), // Reset to 45 days
-                        lastModified: new Date().toISOString()
-                    };
-                    
-                    await database.ref('users/' + currentUser.uid + '/links/' + linkId).update(updatedLink);
-                    showNotification('Link updated successfully', 'success');
-                    loadUserData();
-                } catch (e) {
-                    showNotification('Please enter a valid URL', 'error');
-                }
+    // Load additional user data from Firebase
+    database.ref(`users/${user.uid}`).once('value')
+        .then(snapshot => {
+            const userData = snapshot.val();
+            if (userData && userData.displayName) {
+                userName.textContent = userData.displayName;
             }
-        }
-    } catch (error) {
-        console.error('Error editing link:', error);
-        showNotification('Failed to edit link', 'error');
-    }
+        })
+        .catch(error => {
+            console.error('Error loading user data:', error);
+        });
 }
 
-// Delete link
-async function deleteLink(linkId) {
-    if (confirm('Are you sure you want to delete this link?')) {
-        try {
-            await database.ref('users/' + currentUser.uid + '/links/' + linkId).remove();
-            showNotification('Link deleted successfully', 'success');
-            loadUserData();
-        } catch (error) {
-            console.error('Error deleting link:', error);
-            showNotification('Failed to delete link', 'error');
-        }
-    }
-}
-
-// Toggle profile menu
-profileIcon.addEventListener('click', () => {
-    profileMenu.classList.toggle('active');
-});
-
-// Close profile menu when clicking outside
-document.addEventListener('click', (e) => {
-    if (!profileIcon.contains(e.target) && !profileMenu.contains(e.target)) {
-        profileMenu.classList.remove('active');
-    }
-});
-
-// Handle menu item clicks
-menuItems.forEach(item => {
-    item.addEventListener('click', (e) => {
-        e.preventDefault();
-        
-        if (item.classList.contains('logout')) {
-            auth.signOut()
-                .then(() => {
-                    window.location.href = 'login.html';
-                })
-                .catch((error) => {
-                    console.error('Error signing out:', error);
-                    showNotification('Failed to sign out', 'error');
-                });
-            return;
-        }
-        
-        if (item.id === 'adsMenuItem') {
-            window.location.href = 'ads.html';
-            return;
-        }
-        
-        const pageName = item.getAttribute('data-page');
-        if (pageName) {
-            menuItems.forEach(mi => mi.classList.remove('active'));
-            item.classList.add('active');
-            
-            pages.forEach(page => page.style.display = 'none');
-            document.getElementById(pageName + 'Page').style.display = 'block';
-            
-            profileMenu.classList.remove('active');
-        }
-    });
-});
-
-// Handle shorten button click
-shortenBtn.addEventListener('click', shortenUrl);
-
+// Shorten link functionality
+shortenBtn.addEventListener('click', shortenLink);
 longUrlInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
-        shortenUrl();
+        shortenLink();
     }
 });
 
-// Shorten URL function
-async function shortenUrl() {
+function shortenLink() {
     const longUrl = longUrlInput.value.trim();
     
     if (!longUrl) {
-        showNotification('Please enter a URL', 'error');
+        showToast('Please enter a URL');
         return;
     }
     
-    try {
-        new URL(longUrl);
-    } catch (e) {
-        showNotification('Please enter a valid URL', 'error');
+    // Validate URL
+    if (!isValidUrl(longUrl)) {
+        showToast('Please enter a valid URL');
         return;
     }
     
-    const shortCode = generateShortCode();
-    
-    shortenBtn.textContent = 'Shortening...';
-    shortenBtn.disabled = true;
-    
-    try {
-        // Calculate expiration date (45 days from now)
-        const expirationDate = new Date().getTime() + (45 * 24 * 60 * 60 * 1000);
-        
-        const linkData = {
-            originalUrl: longUrl,
-            shortCode: shortCode,
-            createdAt: new Date().toISOString(),
-            expirationDate: expirationDate,
-            clicks: 0
-        };
-        
-        const snapshot = await database.ref('users/' + currentUser.uid + '/links').push(linkData);
-        const shortUrl = 'https://krisshdas.github.io/Linksterror/redirect.html?code=' + shortCode;
-        shortUrlInput.value = shortUrl;
-        resultContainer.style.display = 'block';
-        longUrlInput.value = '';
-        
-        showNotification('Link shortened successfully (expires in 45 days)', 'success');
-        loadUserData();
-    } catch (error) {
-        console.error('Error shortening URL:', error);
-        let errorMessage = 'Failed to shorten URL';
-        
-        if (error.code === 'PERMISSION_DENIED') {
-            errorMessage = 'Permission denied. Please check your database rules.';
-        } else if (error.message) {
-            errorMessage = error.message;
-        }
-        
-        showNotification(errorMessage, 'error');
-    } finally {
-        shortenBtn.textContent = 'Shorten';
-        shortenBtn.disabled = false;
+    // Generate short code
+    let shortCode = customAlias.value.trim();
+    if (!shortCode) {
+        shortCode = generateShortCode();
     }
-}
-
-// Generate short code
-function generateShortCode() {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < 6; i++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return result;
+    
+    // Create short URL - Updated to match redirect.js structure
+    const domain = customDomain.value;
+    const shortUrl = `https://${domain}/Linksterror/redirect.html?code=${shortCode}`;
+    
+    // Save to Firebase - Updated to match redirect.js structure
+    const userId = auth.currentUser.uid;
+    const linkData = {
+        originalUrl: longUrl, // Changed from longUrl to originalUrl to match redirect.js
+        shortCode: shortCode,
+        shortUrl: shortUrl,
+        createdAt: firebase.database.ServerValue.TIMESTAMP,
+        clicks: 0
+    };
+    
+    database.ref(`users/${userId}/links/${shortCode}`).set(linkData)
+        .then(() => {
+            // Show result
+            shortUrlInput.value = shortUrl;
+            resultContainer.style.display = 'block';
+            
+            // Reset form
+            longUrlInput.value = '';
+            customAlias.value = '';
+            
+            // Update analytics
+            updateAnalytics();
+            
+            // Reload recent links
+            loadRecentLinks();
+            
+            showToast('Link shortened successfully!');
+        })
+        .catch(error => {
+            console.error('Error shortening link:', error);
+            showToast('Error shortening link. Please try again.');
+        });
 }
 
 // Copy to clipboard
 copyBtn.addEventListener('click', () => {
-    copyToClipboard(shortUrlInput.value);
+    shortUrlInput.select();
+    document.execCommand('copy');
+    showToast('Link copied to clipboard!');
 });
 
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text)
+// Create new link
+newLinkBtn.addEventListener('click', () => {
+    resultContainer.style.display = 'none';
+    longUrlInput.focus();
+});
+
+// Logout
+logoutBtn.addEventListener('click', () => {
+    auth.signOut()
         .then(() => {
-            showNotification('Copied to clipboard', 'success');
+            window.location.href = 'login.html';
         })
-        .catch((error) => {
-            console.error('Error copying to clipboard:', error);
-            showNotification('Failed to copy to clipboard', 'error');
+        .catch(error => {
+            console.error('Error signing out:', error);
+            showToast('Error signing out. Please try again.');
+        });
+});
+
+// Load recent links
+function loadRecentLinks() {
+    const userId = auth.currentUser.uid;
+    database.ref(`users/${userId}/links`).orderByChild('createdAt').limitToLast(5).once('value')
+        .then(snapshot => {
+            recentLinksTable.innerHTML = '';
+            
+            if (!snapshot.exists()) {
+                recentLinksTable.innerHTML = '<tr><td colspan="5" style="text-align: center;">No links created yet</td></tr>';
+                return;
+            }
+            
+            const links = [];
+            snapshot.forEach(childSnapshot => {
+                links.push({
+                    id: childSnapshot.key,
+                    ...childSnapshot.val()
+                });
+            });
+            
+            // Reverse to show newest first
+            links.reverse();
+            
+            links.forEach(link => {
+                const row = document.createElement('tr');
+                
+                const shortLinkCell = document.createElement('td');
+                shortLinkCell.innerHTML = `<a href="${link.shortUrl}" target="_blank">${link.shortUrl}</a>`;
+                
+                const originalUrlCell = document.createElement('td');
+                originalUrlCell.textContent = truncateUrl(link.originalUrl, 40); // Updated to use originalUrl
+                
+                const clicksCell = document.createElement('td');
+                clicksCell.textContent = link.clicks || 0;
+                
+                const createdCell = document.createElement('td');
+                const date = new Date(link.createdAt);
+                createdCell.textContent = date.toLocaleDateString();
+                
+                const actionsCell = document.createElement('td');
+                actionsCell.className = 'action-btns';
+                
+                const viewBtn = document.createElement('button');
+                viewBtn.className = 'action-btn';
+                viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
+                viewBtn.title = 'View';
+                viewBtn.addEventListener('click', () => {
+                    window.open(link.shortUrl, '_blank');
+                });
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'action-btn';
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.title = 'Delete';
+                deleteBtn.addEventListener('click', () => {
+                    if (confirm('Are you sure you want to delete this link?')) {
+                        deleteLink(link.id);
+                    }
+                });
+                
+                actionsCell.appendChild(viewBtn);
+                actionsCell.appendChild(deleteBtn);
+                
+                row.appendChild(shortLinkCell);
+                row.appendChild(originalUrlCell);
+                row.appendChild(clicksCell);
+                row.appendChild(createdCell);
+                row.appendChild(actionsCell);
+                
+                recentLinksTable.appendChild(row);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading recent links:', error);
+            recentLinksTable.innerHTML = '<tr><td colspan="5" style="text-align: center;">Error loading links</td></tr>';
         });
 }
 
-// Show notification
-function showNotification(message, type) {
-    notificationMessage.textContent = message;
-    notification.className = `notification ${type}`;
+// Delete link
+function deleteLink(linkId) {
+    const userId = auth.currentUser.uid;
+    database.ref(`users/${userId}/links/${linkId}`).remove()
+        .then(() => {
+            showToast('Link deleted successfully');
+            loadRecentLinks();
+            updateAnalytics();
+        })
+        .catch(error => {
+            console.error('Error deleting link:', error);
+            showToast('Error deleting link. Please try again.');
+        });
+}
+
+// Update analytics
+function updateAnalytics() {
+    const userId = auth.currentUser.uid;
+    database.ref(`users/${userId}/links`).once('value')
+        .then(snapshot => {
+            let totalLinks = 0;
+            let totalClicks = 0;
+            
+            snapshot.forEach(childSnapshot => {
+                totalLinks++;
+                totalClicks += childSnapshot.val().clicks || 0;
+            });
+            
+            totalLinksEl.textContent = totalLinks;
+            totalClicksEl.textContent = totalClicks;
+            
+            const clickRate = totalLinks > 0 ? Math.round((totalClicks / totalLinks) * 100) : 0;
+            clickRateEl.textContent = `${clickRate}%`;
+            
+            // Update chart
+            if (clickChart) {
+                updateChart();
+            }
+        })
+        .catch(error => {
+            console.error('Error updating analytics:', error);
+        });
     
-    if (type === 'success') {
-        notificationIcon.className = 'notification-icon fas fa-check-circle';
-    } else if (type === 'error') {
-        notificationIcon.className = 'notification-icon fas fa-exclamation-circle';
+    // Get ad views (placeholder)
+    database.ref(`users/${userId}/adViews`).once('value')
+        .then(snapshot => {
+            const adViews = snapshot.val() || 0;
+            adViewsEl.textContent = adViews;
+        })
+        .catch(error => {
+            console.error('Error getting ad views:', error);
+            adViewsEl.textContent = '0';
+        });
+}
+
+// Initialize analytics chart
+function initAnalyticsChart() {
+    const ctx = document.getElementById('clickChart').getContext('2d');
+    
+    clickChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: getLast7Days(),
+            datasets: [{
+                label: 'Clicks',
+                data: [0, 0, 0, 0, 0, 0, 0],
+                backgroundColor: 'rgba(255, 107, 157, 0.1)',
+                borderColor: 'rgba(255, 107, 157, 1)',
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    padding: 10,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return `Clicks: ${context.parsed.y}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0
+                    }
+                }
+            }
+        }
+    });
+    
+    updateChart();
+}
+
+// Update chart with data
+function updateChart() {
+    const userId = auth.currentUser.uid;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const promises = [];
+    
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        promises.push(
+            database.ref(`users/${userId}/dailyClicks/${dateStr}`).once('value')
+                .then(snapshot => snapshot.val() || 0)
+        );
     }
     
-    setTimeout(() => {
-        notification.classList.add('show');
-    }, 100);
+    Promise.all(promises)
+        .then(data => {
+            clickChart.data.datasets[0].data = data;
+            clickChart.update();
+        })
+        .catch(error => {
+            console.error('Error updating chart:', error);
+        });
+}
+
+// Get last 7 days
+function getLast7Days() {
+    const days = [];
+    const today = new Date();
+    
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        days.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
+    }
+    
+    return days;
+}
+
+// Generate short code
+function generateShortCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    
+    for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    
+    return result;
+}
+
+// Validate URL
+function isValidUrl(string) {
+    try {
+        new URL(string);
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+
+// Truncate URL
+function truncateUrl(url, maxLength) {
+    if (url.length <= maxLength) {
+        return url;
+    }
+    
+    return url.substring(0, maxLength) + '...';
+}
+
+// Show toast notification
+function showToast(message) {
+    toastMessage.textContent = message;
+    toast.classList.add('show');
     
     setTimeout(() => {
-        notification.classList.remove('show');
+        toast.classList.remove('show');
     }, 3000);
+}
+
+// Track clicks for analytics
+function trackClick(shortCode) {
+    const userId = auth.currentUser.uid;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dateStr = today.toISOString().split('T')[0];
+    
+    // Update link click count
+    database.ref(`users/${userId}/links/${shortCode}/clicks`).transaction(currentClicks => {
+        return (currentClicks || 0) + 1;
+    });
+    
+    // Update daily clicks
+    database.ref(`users/${userId}/dailyClicks/${dateStr}`).transaction(currentClicks => {
+        return (currentClicks || 0) + 1;
+    });
 }
