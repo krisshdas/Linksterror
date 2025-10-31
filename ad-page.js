@@ -22,7 +22,6 @@ let adPageNumber = 1;
 let timerCompleted = false;
 let isChecking = false;
 let adInteractions = new Map(); // Track user interactions with ads
-let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 let lastInteractedAd = null;
 let pageVisibilityHidden = false;
 let lastInteractionTime = 0;
@@ -31,6 +30,8 @@ let touchStartX = 0;
 let touchStartY = 0;
 let touchEndX = 0;
 let touchEndY = 0;
+let pageFocusLost = false;
+let adClickDetectionInterval;
 
 // Initialize ad page
 function initAdPage(pageNumber) {
@@ -44,6 +45,10 @@ function initAdPage(pageNumber) {
     lastInteractedAd = null;
     pageVisibilityHidden = false;
     lastInteractionTime = 0;
+    pageFocusLost = false;
+    
+    // Clear any existing intervals
+    if (adClickDetectionInterval) clearInterval(adClickDetectionInterval);
     
     // Reset progress bars
     resetProgressBars();
@@ -234,18 +239,27 @@ function setupAdClickDetection() {
         adInteractions.set(adId, {
             entered: false,
             interacted: false,
-            lastInteractionTime: 0
+            lastInteractionTime: 0,
+            hoverTime: 0,
+            hoverStartTime: null,
+            touchTime: 0,
+            touchStartTime: null
         });
         
         // Add event listeners for desktop
         wrapper.addEventListener('mouseenter', handleAdMouseEnter);
         wrapper.addEventListener('mouseleave', handleAdMouseLeave);
-        wrapper.addEventListener('click', handleAdClick);
         
         // Add event listeners for mobile
         wrapper.addEventListener('touchstart', handleAdTouchStart, { passive: true });
         wrapper.addEventListener('touchend', handleAdTouchEnd, { passive: true });
         wrapper.addEventListener('touchmove', handleAdTouchMove, { passive: true });
+        
+        // Monitor for clicks on the ad area
+        wrapper.addEventListener('click', handleAdAreaClick);
+        
+        // Monitor for right-clicks (which might indicate user interest)
+        wrapper.addEventListener('contextmenu', handleAdRightClick);
     });
     
     // Add global event listeners to detect when user leaves the page
@@ -258,6 +272,12 @@ function setupAdClickDetection() {
     
     // Monitor for link clicks
     document.addEventListener('click', handleDocumentClick);
+    
+    // Monitor for mouse leaving the window (might indicate clicking an ad)
+    document.addEventListener('mouseout', handleMouseLeaveWindow);
+    
+    // Start a periodic check for ad interactions
+    adClickDetectionInterval = setInterval(checkForAdInteractions, 1000);
 }
 
 // Handle mouse enter on ad
@@ -270,6 +290,7 @@ function handleAdMouseEnter(e) {
     if (!interaction) return;
     
     interaction.entered = true;
+    interaction.hoverStartTime = Date.now();
     interaction.lastInteractionTime = Date.now();
     lastInteractedAd = adId;
     lastInteractionTime = Date.now();
@@ -289,6 +310,12 @@ function handleAdMouseLeave(e) {
     
     interaction.entered = false;
     
+    // Calculate hover time
+    if (interaction.hoverStartTime) {
+        interaction.hoverTime += Date.now() - interaction.hoverStartTime;
+        interaction.hoverStartTime = null;
+    }
+    
     // Remove visual feedback
     wrapper.style.backgroundColor = '';
 }
@@ -307,7 +334,7 @@ function handleAdTouchStart(e) {
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
     
-    interaction.entered = true;
+    interaction.touchStartTime = Date.now();
     interaction.lastInteractionTime = Date.now();
     lastInteractedAd = adId;
     lastInteractionTime = Date.now();
@@ -332,7 +359,11 @@ function handleAdTouchEnd(e) {
     const interaction = adInteractions.get(adId);
     if (!interaction) return;
     
-    interaction.entered = false;
+    // Calculate touch time
+    if (interaction.touchStartTime) {
+        interaction.touchTime += Date.now() - interaction.touchStartTime;
+        interaction.touchStartTime = null;
+    }
     
     // Remove visual feedback
     wrapper.style.backgroundColor = '';
@@ -350,20 +381,11 @@ function handleAdTouchEnd(e) {
         interaction.interacted = true;
         lastInteractedAd = adId;
         lastInteractionTime = Date.now();
-        
-        // Set a timeout to check if the user is still on the page after a short delay
-        setTimeout(() => {
-            // If the user is still on the page, it might not have been a real ad click
-            // But we'll still count it as an interaction
-            if (lastInteractedAd === adId && !adsClicked.has(adId)) {
-                handleAdClick(adId);
-            }
-        }, 1000);
     }
 }
 
-// Handle ad click
-function handleAdClick(e) {
+// Handle ad area click
+function handleAdAreaClick(e) {
     const wrapper = e.currentTarget;
     const adId = wrapper.getAttribute('data-ad-id');
     if (!adId) return;
@@ -371,17 +393,30 @@ function handleAdClick(e) {
     const interaction = adInteractions.get(adId);
     if (!interaction) return;
     
+    // Mark as interacted
     interaction.interacted = true;
     interaction.lastInteractionTime = Date.now();
     lastInteractedAd = adId;
     lastInteractionTime = Date.now();
     
-    // Mark as clicked after a short delay (to allow the ad to open first)
-    setTimeout(() => {
-        if (lastInteractedAd === adId && !adsClicked.has(adId)) {
-            markAdAsClicked(adId);
-        }
-    }, 500);
+    // Don't immediately mark as clicked - wait to see if user leaves the page
+    // This allows the ad to actually open first
+}
+
+// Handle ad right-click
+function handleAdRightClick(e) {
+    const wrapper = e.currentTarget;
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    const interaction = adInteractions.get(adId);
+    if (!interaction) return;
+    
+    // Mark as interacted
+    interaction.interacted = true;
+    interaction.lastInteractionTime = Date.now();
+    lastInteractedAd = adId;
+    lastInteractionTime = Date.now();
 }
 
 // Handle document click
@@ -397,16 +432,36 @@ function handleDocumentClick(e) {
                 interaction.lastInteractionTime = Date.now();
                 lastInteractedAd = adId;
                 lastInteractionTime = Date.now();
-                
-                // Mark as clicked after a short delay (to allow the ad to open first)
-                setTimeout(() => {
-                    if (lastInteractedAd === adId && !adsClicked.has(adId)) {
-                        markAdAsClicked(adId);
-                    }
-                }, 500);
             }
         }
     }
+}
+
+// Handle mouse leaving the window
+function handleMouseLeaveWindow(e) {
+    if (e.clientX <= 0 || e.clientY <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
+        // Mouse left the window, check if it was after interacting with an ad
+        if (lastInteractedAd && !adsClicked.has(lastInteractedAd)) {
+            const interaction = adInteractions.get(lastInteractedAd);
+            if (interaction && interaction.interacted) {
+                // Mark the ad as clicked
+                markAdAsClicked(lastInteractedAd);
+            }
+        }
+    }
+}
+
+// Check for ad interactions periodically
+function checkForAdInteractions() {
+    // Check if any ad has been interacted with but not yet marked as clicked
+    adInteractions.forEach((interaction, adId) => {
+        if (interaction.interacted && !adsClicked.has(adId)) {
+            // If the user interacted with an ad more than 2 seconds ago, mark it as clicked
+            if (Date.now() - interaction.lastInteractionTime > 2000) {
+                markAdAsClicked(adId);
+            }
+        }
+    });
 }
 
 // Handle before unload event
@@ -427,6 +482,8 @@ function handleBeforeUnload(e) {
 
 // Handle window blur event
 function handleWindowBlur() {
+    pageFocusLost = true;
+    
     // If the window loses focus after interacting with an ad
     if (lastInteractedAd && !adsClicked.has(lastInteractedAd)) {
         const interaction = adInteractions.get(lastInteractedAd);
@@ -740,6 +797,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Clear any running timers
             if (countdownInterval) clearInterval(countdownInterval);
+            if (adClickDetectionInterval) clearInterval(adClickDetectionInterval);
             
             // Redirect based on current page
             if (adPageNumber === 1) {
@@ -836,4 +894,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-                                         }
+}
