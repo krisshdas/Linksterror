@@ -22,6 +22,9 @@ let adPageNumber = 1;
 let timerCompleted = false;
 let isChecking = false;
 let adInteractions = new Map(); // Track user interactions with ads
+let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+let lastInteractedAd = null;
+let pageVisibilityHidden = false;
 
 // Initialize ad page
 function initAdPage(pageNumber) {
@@ -32,6 +35,8 @@ function initAdPage(pageNumber) {
     adInteractions.clear();
     timerCompleted = false;
     isChecking = false;
+    lastInteractedAd = null;
+    pageVisibilityHidden = false;
     
     // Update ad counter display
     updateAdCounter();
@@ -172,11 +177,11 @@ function setupAdClickDetection() {
         // Add a subtle border to indicate it's clickable
         wrapper.style.border = '1px dashed rgba(52, 152, 219, 0.3)';
         
-        // Add a "Click me" indicator for unclicked ads
+        // Add a "Tap me" indicator for unclicked ads
         if (!adsClicked.has(adId)) {
             const indicator = document.createElement('div');
             indicator.className = 'ad-click-indicator';
-            indicator.innerHTML = '<i class="fas fa-hand-pointer"></i> Click here';
+            indicator.innerHTML = '<i class="fas fa-hand-pointer"></i> Tap me';
             indicator.style.position = 'absolute';
             indicator.style.top = '5px';
             indicator.style.right = '5px';
@@ -190,140 +195,159 @@ function setupAdClickDetection() {
             wrapper.appendChild(indicator);
         }
         
-        // Create a click zone overlay for this ad
-        createClickZone(wrapper, adId);
-        
         // Initialize interaction tracking for this ad
         adInteractions.set(adId, {
-            mouseDown: false,
-            mouseUp: false,
-            clicked: false
+            entered: false,
+            interacted: false,
+            lastInteractionTime: 0
         });
+        
+        // Add event listeners to track when user enters the ad area
+        wrapper.addEventListener('mouseenter', handleAdMouseEnter);
+        wrapper.addEventListener('touchstart', handleAdTouchStart, { passive: true });
+        
+        // Add event listeners to track when user leaves the ad area
+        wrapper.addEventListener('mouseleave', handleAdMouseLeave);
+        wrapper.addEventListener('touchend', handleAdTouchEnd, { passive: true });
     });
     
-    // Add global mouse event listeners
-    document.addEventListener('mousedown', handleGlobalMouseDown);
-    document.addEventListener('mouseup', handleGlobalMouseUp);
-    document.addEventListener('click', handleGlobalClick);
-    
-    // Track window focus changes for iframe clicks
-    window.addEventListener('focus', handleWindowFocus);
+    // Add global event listeners to detect when user leaves the page
+    window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('blur', handleWindowBlur);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Add click event listener to detect clicks on the page
+    document.addEventListener('click', handleDocumentClick);
 }
 
-// Create a click zone for an ad
-function createClickZone(wrapper, adId) {
-    // Create a transparent overlay that covers the entire ad
-    const clickZone = document.createElement('div');
-    clickZone.className = 'ad-click-zone';
-    clickZone.style.position = 'absolute';
-    clickZone.style.top = '0';
-    clickZone.style.left = '0';
-    clickZone.style.width = '100%';
-    clickZone.style.height = '100%';
-    clickZone.style.zIndex = '999';
-    clickZone.style.backgroundColor = 'transparent';
-    clickZone.style.pointerEvents = 'none'; // Initially disabled
+// Handle mouse enter on ad
+function handleAdMouseEnter(e) {
+    const wrapper = e.currentTarget;
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
     
-    // Add the click zone to the wrapper
-    wrapper.appendChild(clickZone);
+    const interaction = adInteractions.get(adId);
+    if (!interaction) return;
     
-    // Store reference to the click zone
-    wrapper.clickZone = clickZone;
+    interaction.entered = true;
+    interaction.lastInteractionTime = Date.now();
+    lastInteractedAd = adId;
+    
+    // Add visual feedback
+    wrapper.style.backgroundColor = 'rgba(52, 152, 219, 0.1)';
 }
 
-// Handle global mouse down event
-function handleGlobalMouseDown(e) {
-    // Find if the mouse down is on an ad
+// Handle mouse leave on ad
+function handleAdMouseLeave(e) {
+    const wrapper = e.currentTarget;
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    const interaction = adInteractions.get(adId);
+    if (!interaction) return;
+    
+    interaction.entered = false;
+    
+    // Remove visual feedback
+    wrapper.style.backgroundColor = '';
+}
+
+// Handle touch start on ad
+function handleAdTouchStart(e) {
+    const wrapper = e.currentTarget;
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    const interaction = adInteractions.get(adId);
+    if (!interaction) return;
+    
+    interaction.entered = true;
+    interaction.lastInteractionTime = Date.now();
+    lastInteractedAd = adId;
+    
+    // Add visual feedback
+    wrapper.style.backgroundColor = 'rgba(52, 152, 219, 0.1)';
+}
+
+// Handle touch end on ad
+function handleAdTouchEnd(e) {
+    const wrapper = e.currentTarget;
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    const interaction = adInteractions.get(adId);
+    if (!interaction) return;
+    
+    interaction.entered = false;
+    
+    // Remove visual feedback
+    wrapper.style.backgroundColor = '';
+}
+
+// Handle document click
+function handleDocumentClick(e) {
+    // Check if the click is on an ad
     const wrapper = e.target.closest('.ad-wrapper');
     if (wrapper) {
         const adId = wrapper.getAttribute('data-ad-id');
         if (adId) {
             const interaction = adInteractions.get(adId);
             if (interaction) {
-                interaction.mouseDown = true;
+                interaction.interacted = true;
+                interaction.lastInteractionTime = Date.now();
+                lastInteractedAd = adId;
                 
-                // Enable the click zone to capture the mouse up
-                if (wrapper.clickZone) {
-                    wrapper.clickZone.style.pointerEvents = 'auto';
-                }
-            }
-        }
-    }
-}
-
-// Handle global mouse up event
-function handleGlobalMouseUp(e) {
-    // Find if the mouse up is on an ad
-    const wrapper = e.target.closest('.ad-wrapper');
-    if (wrapper) {
-        const adId = wrapper.getAttribute('data-ad-id');
-        if (adId) {
-            const interaction = adInteractions.get(adId);
-            if (interaction) {
-                interaction.mouseUp = true;
-                
-                // Disable the click zone
-                if (wrapper.clickZone) {
-                    wrapper.clickZone.style.pointerEvents = 'none';
-                }
-            }
-        }
-    }
-}
-
-// Handle global click event
-function handleGlobalClick(e) {
-    // Find if the click is on an ad
-    const wrapper = e.target.closest('.ad-wrapper');
-    if (wrapper) {
-        const adId = wrapper.getAttribute('data-ad-id');
-        if (adId) {
-            const interaction = adInteractions.get(adId);
-            if (interaction && interaction.mouseDown && interaction.mouseUp && !interaction.clicked) {
-                // This is a valid click on the ad
-                handleAdClick(adId);
-                interaction.clicked = true;
-                
-                // Reset the interaction state after a short delay
+                // Mark as clicked after a short delay (to allow the ad to open first)
                 setTimeout(() => {
-                    interaction.mouseDown = false;
-                    interaction.mouseUp = false;
-                    interaction.clicked = false;
-                }, 1000);
+                    handleAdClick(adId);
+                }, 500);
             }
         }
     }
 }
 
-// Handle window focus event (for iframe clicks)
-function handleWindowFocus() {
-    // Check if any ad was the last active element
-    document.querySelectorAll('.ad-wrapper iframe').forEach(iframe => {
-        const wrapper = iframe.closest('.ad-wrapper');
-        if (wrapper) {
-            const adId = wrapper.getAttribute('data-ad-id');
-            if (adId) {
-                const interaction = adInteractions.get(adId);
-                if (interaction && !interaction.clicked) {
-                    // The iframe was clicked
-                    handleAdClick(adId);
-                    interaction.clicked = true;
-                    
-                    // Reset the interaction state after a short delay
-                    setTimeout(() => {
-                        interaction.clicked = false;
-                    }, 1000);
-                }
-            }
+// Handle before unload event
+function handleBeforeUnload(e) {
+    // If the user is leaving the page after interacting with an ad
+    if (lastInteractedAd && !adsClicked.has(lastInteractedAd)) {
+        const interaction = adInteractions.get(lastInteractedAd);
+        if (interaction && interaction.interacted) {
+            // Mark the ad as clicked
+            handleAdClick(lastInteractedAd);
         }
-    });
+    }
 }
 
 // Handle window blur event
 function handleWindowBlur() {
-    // This is called when the user clicks on an iframe or opens a new tab
-    // We'll handle the actual click detection in the focus event
+    // If the window loses focus after interacting with an ad
+    if (lastInteractedAd && !adsClicked.has(lastInteractedAd)) {
+        const interaction = adInteractions.get(lastInteractedAd);
+        if (interaction && interaction.interacted) {
+            // Mark the ad as clicked
+            handleAdClick(lastInteractedAd);
+        }
+    }
+}
+
+// Handle visibility change event
+function handleVisibilityChange() {
+    if (document.hidden && !pageVisibilityHidden) {
+        // Page is becoming hidden
+        pageVisibilityHidden = true;
+        
+        // If the page becomes hidden after interacting with an ad
+        if (lastInteractedAd && !adsClicked.has(lastInteractedAd)) {
+            const interaction = adInteractions.get(lastInteractedAd);
+            if (interaction && interaction.interacted) {
+                // Mark the ad as clicked
+                handleAdClick(lastInteractedAd);
+            }
+        }
+    } else if (!document.hidden) {
+        // Page is becoming visible again
+        pageVisibilityHidden = false;
+    }
 }
 
 // Handle ad click
@@ -342,7 +366,7 @@ function handleAdClick(adId) {
     // Update the visual indicator for this ad
     const wrapper = document.querySelector(`[data-ad-id="${adId}"]`);
     if (wrapper) {
-        // Remove the "Click me" indicator
+        // Remove the "Tap me" indicator
         const indicator = wrapper.querySelector('.ad-click-indicator');
         if (indicator) {
             indicator.remove();
@@ -446,7 +470,7 @@ function showAdCheckButton() {
         if (adsClicked.size >= totalAds) {
             instructions.querySelector('p').textContent = `Great! You've clicked all the ads. Click the button below to continue.`;
         } else {
-            instructions.querySelector('p').textContent = `Please click on at least ${totalAds} ads before continuing. (${adsClicked.size}/${totalAds} clicked)`;
+            instructions.querySelector('p').textContent = `Please tap on at least ${totalAds} ads before continuing. (${adsClicked.size}/${totalAds} clicked)`;
         }
         
         // Scroll to bottom to show button
@@ -470,12 +494,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // Check if all ads have been clicked
             if (adsClicked.size < totalAds) {
                 // Show warning if not all ads have been clicked
-                showNotification(`Please click on at least ${totalAds} ads before continuing! (${adsClicked.size}/${totalAds} clicked)`);
+                showNotification(`Please tap on at least ${totalAds} ads before continuing! (${adsClicked.size}/${totalAds} clicked)`);
                 
                 // Update instructions
                 const instructions = document.getElementById('instructions');
                 if (instructions) {
-                    instructions.querySelector('p').textContent = `Please click on at least ${totalAds} ads before continuing. (${adsClicked.size}/${totalAds} clicked)`;
+                    instructions.querySelector('p').textContent = `Please tap on at least ${totalAds} ads before continuing. (${adsClicked.size}/${totalAds} clicked)`;
                 }
             } else {
                 // All ads have been clicked, show loading for 3 seconds
@@ -629,4 +653,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-}
+                }
