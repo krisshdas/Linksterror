@@ -1,5 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+// redirect.js
 
 // Firebase config
 const firebaseConfig = {
@@ -14,39 +13,43 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
 
-// Read the short ID from the link
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
+// Get short ID
+const urlParams = new URLSearchParams(window.location.search);
+const linkId = urlParams.get('id');
 
-// Get long URL from Firebase
-async function fetchAndRedirect() {
-  if (!id) {
-    document.body.innerHTML = "<h3>Invalid or missing link ID.</h3>";
-    return;
-  }
+const loadingText = document.getElementById('loadingText');
 
-  try {
-    const snapshot = await get(child(ref(db), `links/${id}`));
+if (!linkId) {
+  loadingText.textContent = "Invalid or missing link ID.";
+} else {
+  database.ref(`links/${linkId}`).once('value').then(snapshot => {
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      const originalUrl = data.originalUrl;
 
-    if (!snapshot.exists()) {
-      document.body.innerHTML = "<h3>Short link not found.</h3>";
-      return;
+      // ✅ Save locally
+      sessionStorage.setItem('originalUrl', originalUrl);
+      sessionStorage.setItem('shortCode', linkId);
+
+      // ✅ Create a full-screen iframe to GitHub ad page
+      const adUrl = `https://krisshdas.github.io/Linksterror/ad1.html?original=${encodeURIComponent(originalUrl)}&code=${encodeURIComponent(linkId)}`;
+
+      loadingText.textContent = "Loading advertisement...";
+      setTimeout(() => {
+        // Replace current page content with iframe
+        document.body.innerHTML = `
+          <iframe src="${adUrl}" style="width:100%;height:100vh;border:none;"></iframe>
+        `;
+        document.title = "Advertisement - Linksterror";
+      }, 1500);
+    } else {
+      loadingText.textContent = "Invalid or expired short link.";
     }
-
-    const { longUrl } = snapshot.val();
-
-    // Encode the destination and send the visitor to your GitHub ad page
-    const encoded = encodeURIComponent(longUrl);
-    const adPage = `https://krisshdas.github.io/Linksterror/ad1.html?dest=${encoded}`;
-    window.location.href = adPage;
-
-  } catch (err) {
-    console.error("Error fetching link:", err);
-    document.body.innerHTML = "<h3>Error fetching link from Firebase.</h3>";
-  }
+  }).catch(error => {
+    console.error(error);
+    loadingText.textContent = "Error loading link data.";
+  });
 }
-
-fetchAndRedirect();
