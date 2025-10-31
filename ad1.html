@@ -18,6 +18,12 @@
         <span id="notificationText">Ad viewed successfully!</span>
     </div>
     
+    <!-- Floating Help Button -->
+    <div class="help-button" onclick="window.open('https://www.youtube.com/watch?v=YOUR_VIDEO_ID', '_blank')">
+        <i class="fas fa-question-circle"></i>
+        <span>Need Help?</span>
+    </div>
+    
     <div class="ad-container">
         <!-- Cooldown Timer -->
         <div class="cooldown-bar">
@@ -40,6 +46,17 @@
             <div class="ad-center">
                 <h2>Please check out our sponsors</h2>
                 <p>Tap on any advertisement to continue to your destination</p>
+                
+                <!-- Help Video Section -->
+                <div class="help-section">
+                    <h3><i class="fas fa-video"></i> Having Trouble? Watch This Tutorial</h3>
+                    <p>Learn how to complete the ad verification process in just 2 minutes</p>
+                    <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank" class="video-link">
+                        <i class="fab fa-youtube"></i>
+                        Watch Tutorial Video
+                    </a>
+                </div>
+                
                 <div class="loading-animation">
                     <div class="loader"></div>
                 </div>
@@ -53,6 +70,18 @@
                 <div class="ad-stats">
                     <span>Ads Tapped: <span id="adsViewed">0</span>/6</span>
                     <span>Time Remaining: <span id="timeRemaining">15</span>s</span>
+                </div>
+                
+                <!-- Additional Help Section -->
+                <div class="help-card">
+                    <h4><i class="fas fa-info-circle"></i> Quick Instructions</h4>
+                    <ol>
+                        <li>Wait for the timer to complete (15 seconds)</li>
+                        <li>Tap on at least 6 advertisements</li>
+                        <li>Click "Check Ads" button</li>
+                        <li>Click "Continue to Next Page"</li>
+                    </ol>
+                    <p><strong>Still stuck?</strong> <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank">Watch our video tutorial</a></p>
                 </div>
             </div>
             
@@ -94,6 +123,11 @@
         <!-- Hardcoded Ads Section -->
         <div class="hardcoded-ads">
             <h3 class="ad-section-title">More Offers From Our Partners</h3>
+            
+            <!-- Help Reminder -->
+            <div class="help-reminder">
+                <p><i class="fas fa-lightbulb"></i> <strong>Tip:</strong> If you're having trouble clicking ads, <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank">watch our tutorial video</a> for step-by-step guidance!</p>
+            </div>
             
             <div class="hardcoded-ad-container">
                 <!-- Ad 1: 728x90 -->
@@ -188,6 +222,7 @@
         <div class="ad-check-container">
             <div class="instructions" id="instructions" style="display: none;">
                 <p>Tap the "Check Ads" button below to verify you've viewed the advertisements</p>
+                <p><strong>Need help?</strong> <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank">Watch our tutorial video</a> for step-by-step instructions!</p>
             </div>
             <button class="ad-check-btn" id="adCheckBtn" style="display: none;">
                 <i class="fas fa-search"></i>
@@ -201,6 +236,16 @@
                 <i class="fas fa-lock"></i>
                 <span>Download</span>
             </button>
+        </div>
+        
+        <!-- Final Help Section -->
+        <div class="final-help">
+            <h3><i class="fas fa-question-circle"></i> Still Having Trouble?</h3>
+            <p>We're here to help! Watch our complete video tutorial that shows you exactly how to complete this process:</p>
+            <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank" class="video-link large">
+                <i class="fab fa-youtube"></i>
+                Watch Complete Tutorial
+            </a>
         </div>
     </div>
     
