@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting...</title>
+    <title>Advertisement - Redirecting...</title>
     
     <!-- Open Graph meta tags for social media previews -->
     <meta property="og:title" content="Check out this link!">
@@ -33,7 +33,7 @@
 </head>
 <body>
     <div class="container">
-        <div class="loading-screen" id="loadingScreen">
+        <div class="loading-screen" id="loadingScreen" style="display: none;">
             <div class="loader">
                 <div class="circle"></div>
                 <div class="circle"></div>
@@ -43,7 +43,7 @@
             <p>Please wait while we prepare your link...</p>
         </div>
         
-        <div class="ad-container" id="adContainer" style="display: none;">
+        <div class="ad-container" id="adContainer">
             <div class="ad-header">
                 <div class="progress-bar">
                     <div class="progress" id="progress"></div>
@@ -74,8 +74,77 @@
         </div>
     </div>
     
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
-    <script src="redirect.js"></script>
+    <script>
+        // DOM elements
+        const adContainer = document.getElementById('adContainer');
+        const progress = document.getElementById('progress');
+        const countdown = document.getElementById('countdown');
+        const skipAd = document.getElementById('skipAd');
+        const errorContainer = document.getElementById('errorContainer');
+        const errorTitle = document.getElementById('errorTitle');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        // Get the destination URL from sessionStorage
+        const destinationUrl = sessionStorage.getItem('destinationUrl');
+        
+        // Countdown variables
+        let countdownValue = 15;
+        let countdownInterval;
+        
+        // Initialize the ad page
+        function init() {
+            if (!destinationUrl) {
+                showError('Invalid Redirect', 'No destination URL provided. Please try again.');
+                return;
+            }
+            
+            // Start the countdown
+            startCountdown();
+            
+            // Add click event to skip button
+            skipAd.addEventListener('click', skipAdAndRedirect);
+        }
+        
+        // Start the countdown
+        function startCountdown() {
+            countdownInterval = setInterval(() => {
+                countdownValue--;
+                countdown.textContent = countdownValue;
+                
+                // Update progress bar
+                const progressPercent = ((15 - countdownValue) / 15) * 100;
+                progress.style.width = progressPercent + '%';
+                
+                // When countdown reaches 0, redirect
+                if (countdownValue <= 0) {
+                    clearInterval(countdownInterval);
+                    redirectToDestination();
+                }
+            }, 1000);
+        }
+        
+        // Skip ad and redirect
+        function skipAdAndRedirect() {
+            clearInterval(countdownInterval);
+            redirectToDestination();
+        }
+        
+        // Redirect to the destination URL
+        function redirectToDestination() {
+            console.log("Redirecting to destination:", destinationUrl);
+            window.location.href = destinationUrl;
+        }
+        
+        // Show error page
+        function showError(title = 'Link Not Found', message = 'The link you\'re looking for doesn\'t exist or has been removed.') {
+            adContainer.style.display = 'none';
+            errorContainer.style.display = 'block';
+            errorTitle.textContent = title;
+            errorMessage.textContent = message;
+        }
+        
+        // Start the process
+        init();
+    </script>
 </body>
 </html>
