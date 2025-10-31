@@ -21,8 +21,8 @@ let originalUrl = '';
 let adPageNumber = 1;
 let timerCompleted = false;
 let isChecking = false;
-let adClickHandlers = new Map(); // Map to track click handlers for cleanup
-let lastFocusedElement = null;
+let adInteractions = new Map(); // Track user interactions with ads
+let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
 // Initialize ad page
 function initAdPage(pageNumber) {
@@ -30,10 +30,9 @@ function initAdPage(pageNumber) {
     
     // Reset variables for new page
     adsClicked.clear();
-    adClickHandlers.clear();
+    adInteractions.clear();
     timerCompleted = false;
     isChecking = false;
-    lastFocusedElement = null;
     
     // Update ad counter display
     updateAdCounter();
@@ -167,17 +166,6 @@ function setupAdClickDetection() {
         const adId = wrapper.getAttribute('data-ad-id');
         if (!adId) return;
         
-        // Remove any existing click handlers for this ad
-        if (adClickHandlers.has(adId)) {
-            const handlers = adClickHandlers.get(adId);
-            handlers.forEach(({ element, handler }) => {
-                element.removeEventListener('click', handler);
-            });
-        }
-        
-        // Create a new array to store handlers for this ad
-        const handlers = [];
-        
         // Add a visual indicator that the ad is clickable
         wrapper.style.cursor = 'pointer';
         wrapper.style.position = 'relative';
@@ -189,7 +177,7 @@ function setupAdClickDetection() {
         if (!adsClicked.has(adId)) {
             const indicator = document.createElement('div');
             indicator.className = 'ad-click-indicator';
-            indicator.innerHTML = '<i class="fas fa-hand-pointer"></i> Click here';
+            indicator.innerHTML = '<i class="fas fa-hand-pointer"></i> Tap here';
             indicator.style.position = 'absolute';
             indicator.style.top = '5px';
             indicator.style.right = '5px';
@@ -203,71 +191,292 @@ function setupAdClickDetection() {
             wrapper.appendChild(indicator);
         }
         
-        // Special handling for iframes - use focus/blur events
-        const iframes = wrapper.querySelectorAll('iframe');
-        iframes.forEach(iframe => {
-            // Track when the iframe gets focus (user clicked on it)
-            const focusHandler = function() {
-                lastFocusedElement = adId;
-            };
-            
-            // Track when the iframe loses focus (user clicked away or opened a new tab)
-            const blurHandler = function() {
-                // Check if this was the last focused element
-                if (lastFocusedElement === adId) {
-                    // Handle the ad click
+        // Create a click zone overlay for this ad
+        createClickZone(wrapper, adId);
+        
+        // Initialize interaction tracking for this ad
+        adInteractions.set(adId, {
+            touchStart: false,
+            touchEnd: false,
+            clicked: false,
+            touchStartTime: 0
+        });
+        
+        // Add touch event listeners directly to the wrapper
+        wrapper.addEventListener('touchstart', handleTouchStart, { passive: false });
+        wrapper.addEventListener('touchend', handleTouchEnd, { passive: false });
+        wrapper.addEventListener('touchcancel', handleTouchCancel, { passive: false });
+        
+        // Also add mouse event listeners for desktop compatibility
+        wrapper.addEventListener('mousedown', handleMouseDown);
+        wrapper.addEventListener('mouseup', handleMouseUp);
+        wrapper.addEventListener('click', handleClick);
+    });
+    
+    // Track window focus changes for iframe clicks
+    window.addEventListener('focus', handleWindowFocus);
+    window.addEventListener('blur', handleWindowBlur);
+    
+    // Add visibility change listener for mobile
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+}
+
+// Create a click zone for an ad
+function createClickZone(wrapper, adId) {
+    // Create a transparent overlay that covers the entire ad
+    const clickZone = document.createElement('div');
+    clickZone.className = 'ad-click-zone';
+    clickZone.style.position = 'absolute';
+    clickZone.style.top = '0';
+    clickZone.style.left = '0';
+    clickZone.style.width = '100%';
+    clickZone.style.height = '100%';
+    clickZone.style.zIndex = '999';
+    clickZone.style.backgroundColor = 'transparent';
+    clickZone.style.pointerEvents = 'none'; // Initially disabled
+    
+    // Add the click zone to the wrapper
+    wrapper.appendChild(clickZone);
+    
+    // Store reference to the click zone
+    wrapper.clickZone = clickZone;
+}
+
+// Handle touch start event
+function handleTouchStart(e) {
+    // Find the ad wrapper
+    const wrapper = e.target.closest('.ad-wrapper');
+    if (!wrapper) return;
+    
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    const interaction = adInteractions.get(adId);
+    if (!interaction) return;
+    
+    // Mark touch start
+    interaction.touchStart = true;
+    interaction.touchStartTime = Date.now();
+    
+    // Prevent default to avoid scrolling while touching an ad
+    e.preventDefault();
+    
+    // Add visual feedback
+    wrapper.style.backgroundColor = 'rgba(52, 152, 219, 0.1)';
+}
+
+// Handle touch end event
+function handleTouchEnd(e) {
+    // Find the ad wrapper
+    const wrapper = e.target.closest('.ad-wrapper');
+    if (!wrapper) return;
+    
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    const interaction = adInteractions.get(adId);
+    if (!interaction) return;
+    
+    // Mark touch end
+    interaction.touchEnd = true;
+    
+    // Check if this was a quick tap (not a long press or scroll)
+    const touchDuration = Date.now() - interaction.touchStartTime;
+    if (touchDuration < 500 && interaction.touchStart && !interaction.clicked) {
+        // This is a valid tap on the ad
+        handleAdClick(adId);
+        interaction.clicked = true;
+        
+        // Reset the interaction state after a short delay
+        setTimeout(() => {
+            interaction.touchStart = false;
+            interaction.touchEnd = false;
+            interaction.clicked = false;
+        }, 1000);
+    }
+    
+    // Remove visual feedback
+    wrapper.style.backgroundColor = '';
+    
+    // Prevent default to avoid clicking through
+    e.preventDefault();
+    
+    // Try to open the ad in a new tab
+    tryToOpenAd(wrapper);
+}
+
+// Handle touch cancel event
+function handleTouchCancel(e) {
+    // Find the ad wrapper
+    const wrapper = e.target.closest('.ad-wrapper');
+    if (!wrapper) return;
+    
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    const interaction = adInteractions.get(adId);
+    if (!interaction) return;
+    
+    // Reset the interaction state
+    interaction.touchStart = false;
+    interaction.touchEnd = false;
+    
+    // Remove visual feedback
+    wrapper.style.backgroundColor = '';
+}
+
+// Handle mouse down event (for desktop)
+function handleMouseDown(e) {
+    // Find the ad wrapper
+    const wrapper = e.target.closest('.ad-wrapper');
+    if (!wrapper) return;
+    
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    const interaction = adInteractions.get(adId);
+    if (!interaction) return;
+    
+    // Mark mouse down
+    interaction.touchStart = true;
+    interaction.touchStartTime = Date.now();
+    
+    // Add visual feedback
+    wrapper.style.backgroundColor = 'rgba(52, 152, 219, 0.1)';
+}
+
+// Handle mouse up event (for desktop)
+function handleMouseUp(e) {
+    // Find the ad wrapper
+    const wrapper = e.target.closest('.ad-wrapper');
+    if (!wrapper) return;
+    
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    const interaction = adInteractions.get(adId);
+    if (!interaction) return;
+    
+    // Mark mouse up
+    interaction.touchEnd = true;
+    
+    // Remove visual feedback
+    wrapper.style.backgroundColor = '';
+}
+
+// Handle click event (for desktop)
+function handleClick(e) {
+    // Find the ad wrapper
+    const wrapper = e.target.closest('.ad-wrapper');
+    if (!wrapper) return;
+    
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    const interaction = adInteractions.get(adId);
+    if (!interaction) return;
+    
+    // Check if this was a quick click
+    const clickDuration = Date.now() - interaction.touchStartTime;
+    if (clickDuration < 500 && interaction.touchStart && interaction.touchEnd && !interaction.clicked) {
+        // This is a valid click on the ad
+        handleAdClick(adId);
+        interaction.clicked = true;
+        
+        // Reset the interaction state after a short delay
+        setTimeout(() => {
+            interaction.touchStart = false;
+            interaction.touchEnd = false;
+            interaction.clicked = false;
+        }, 1000);
+    }
+    
+    // Try to open the ad in a new tab
+    tryToOpenAd(wrapper);
+}
+
+// Try to open the ad in a new tab
+function tryToOpenAd(wrapper) {
+    // Try to find an iframe in the wrapper
+    const iframe = wrapper.querySelector('iframe');
+    if (iframe && iframe.src) {
+        // Open the iframe's src in a new tab
+        window.open(iframe.src, '_blank');
+        return;
+    }
+    
+    // Try to find a link in the wrapper
+    const link = wrapper.querySelector('a');
+    if (link && link.href) {
+        // Open the link's href in a new tab
+        window.open(link.href, '_blank');
+        return;
+    }
+    
+    // Try to find an image with a parent link
+    const img = wrapper.querySelector('img');
+    if (img && img.parentElement && img.parentElement.tagName === 'A' && img.parentElement.href) {
+        // Open the parent link's href in a new tab
+        window.open(img.parentElement.href, '_blank');
+        return;
+    }
+    
+    // Fallback: open a placeholder URL
+    window.open('#', '_blank');
+}
+
+// Handle window focus event (for iframe clicks)
+function handleWindowFocus() {
+    // Check if any ad was the last active element
+    document.querySelectorAll('.ad-wrapper iframe').forEach(iframe => {
+        const wrapper = iframe.closest('.ad-wrapper');
+        if (wrapper) {
+            const adId = wrapper.getAttribute('data-ad-id');
+            if (adId) {
+                const interaction = adInteractions.get(adId);
+                if (interaction && !interaction.clicked) {
+                    // The iframe was clicked
                     handleAdClick(adId);
-                    lastFocusedElement = null;
+                    interaction.clicked = true;
+                    
+                    // Reset the interaction state after a short delay
+                    setTimeout(() => {
+                        interaction.clicked = false;
+                    }, 1000);
                 }
-            };
-            
-            iframe.addEventListener('focus', focusHandler);
-            iframe.addEventListener('blur', blurHandler);
-            
-            handlers.push({ element: iframe, handler: focusHandler });
-            handlers.push({ element: iframe, handler: blurHandler });
-            
-            // Make sure the iframe can receive focus
-            iframe.style.pointerEvents = 'auto';
-        });
-        
-        // Handle other clickable elements (links, images, etc.)
-        const clickableElements = wrapper.querySelectorAll('a, img, div[onclick], button, [data-ad]');
-        clickableElements.forEach(element => {
-            const clickHandler = function(e) {
-                // Don't prevent the default action - let the ad work normally
-                // Just count the click
-                handleAdClick(adId);
-            };
-            
-            element.addEventListener('click', clickHandler);
-            handlers.push({ element, handler: clickHandler });
-        });
-        
-        // Store the handlers for cleanup
-        adClickHandlers.set(adId, handlers);
-    });
-    
-    // Also track window focus changes to detect when user clicks on an iframe
-    const windowFocusHandler = function() {
-        if (lastFocusedElement) {
-            // Handle the ad click
-            handleAdClick(lastFocusedElement);
-            lastFocusedElement = null;
-        }
-    };
-    
-    window.addEventListener('focus', windowFocusHandler);
-    
-    // Add this handler to all ads for cleanup
-    wrappers.forEach(wrapper => {
-        const adId = wrapper.getAttribute('data-ad-id');
-        if (adId) {
-            const handlers = adClickHandlers.get(adId) || [];
-            handlers.push({ element: window, handler: windowFocusHandler });
-            adClickHandlers.set(adId, handlers);
+            }
         }
     });
+}
+
+// Handle window blur event
+function handleWindowBlur() {
+    // This is called when the user clicks on an iframe or opens a new tab
+    // We'll handle the actual click detection in the focus event
+}
+
+// Handle visibility change event (for mobile)
+function handleVisibilityChange() {
+    // When the page becomes hidden, it might be because the user clicked an ad
+    if (document.hidden) {
+        // Check all ads to see if any might have been clicked
+        document.querySelectorAll('.ad-wrapper').forEach(wrapper => {
+            const adId = wrapper.getAttribute('data-ad-id');
+            if (adId) {
+                const interaction = adInteractions.get(adId);
+                if (interaction && interaction.touchStart && !interaction.clicked) {
+                    // This ad might have been clicked
+                    handleAdClick(adId);
+                    interaction.clicked = true;
+                    
+                    // Reset the interaction state after a short delay
+                    setTimeout(() => {
+                        interaction.clicked = false;
+                    }, 1000);
+                }
+            }
+        });
+    }
 }
 
 // Handle ad click
@@ -390,7 +599,7 @@ function showAdCheckButton() {
         if (adsClicked.size >= totalAds) {
             instructions.querySelector('p').textContent = `Great! You've clicked all the ads. Click the button below to continue.`;
         } else {
-            instructions.querySelector('p').textContent = `Please click on at least ${totalAds} ads before continuing. (${adsClicked.size}/${totalAds} clicked)`;
+            instructions.querySelector('p').textContent = `Please tap on at least ${totalAds} ads before continuing. (${adsClicked.size}/${totalAds} clicked)`;
         }
         
         // Scroll to bottom to show button
@@ -414,12 +623,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // Check if all ads have been clicked
             if (adsClicked.size < totalAds) {
                 // Show warning if not all ads have been clicked
-                showNotification(`Please click on at least ${totalAds} ads before continuing! (${adsClicked.size}/${totalAds} clicked)`);
+                showNotification(`Please tap on at least ${totalAds} ads before continuing! (${adsClicked.size}/${totalAds} clicked)`);
                 
                 // Update instructions
                 const instructions = document.getElementById('instructions');
                 if (instructions) {
-                    instructions.querySelector('p').textContent = `Please click on at least ${totalAds} ads before continuing. (${adsClicked.size}/${totalAds} clicked)`;
+                    instructions.querySelector('p').textContent = `Please tap on at least ${totalAds} ads before continuing. (${adsClicked.size}/${totalAds} clicked)`;
                 }
             } else {
                 // All ads have been clicked, show loading for 3 seconds
