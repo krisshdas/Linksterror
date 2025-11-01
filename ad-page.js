@@ -1,17 +1,20 @@
 // Initialize Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyBMSFIlfrXV9vPdpXUJm3HkaFVJwXeB0h8",
-  authDomain: "link-shortner-2898c.firebaseapp.com",
-  databaseURL: "https://link-shortner-2898c-default-rtdb.firebaseio.com",
-  projectId: "link-shortner-2898c",
-  storageBucket: "link-shortner-2898c.firebasestorage.app",
-  messagingSenderId: "283153832071",
-  appId: "1:283153832071:web:8704bb833305447d4f8022",
-  measurementId: "G-J3XWHEX759"
+    apiKey: "AIzaSyBMSFIlfrXV9vPdpXUJm3HkaFVJwXeB0h8",
+    authDomain: "link-shortner-2898c.firebaseapp.com",
+    databaseURL: "https://link-shortner-2898c-default-rtdb.firebaseio.com",
+    projectId: "link-shortner-2898c",
+    storageBucket: "link-shortner-2898c.firebasestorage.app",
+    messagingSenderId: "283153832071",
+    appId: "1:283153832071:web:8704bb833305447d4f8022",
+    measurementId: "G-J3XWHEX759"
 };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+// Check if Firebase is already initialized
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+
 const database = firebase.database();
 
 // Get data from session storage
@@ -23,6 +26,7 @@ const linkId = sessionStorage.getItem('linkId');
 // Variables
 let countdown = 10;
 let countdownInterval;
+let timerCompleted = false;
 
 // DOM elements
 const timer = document.getElementById('timer');
@@ -39,124 +43,267 @@ console.log('Current ad page:', currentPage);
 
 // Function to get user ID from email if needed
 function getUserIdFromEmail(email) {
-  // This is a workaround - in a real app, you should store the UID
-  // For now, we'll use the email as part of the path
-  return email ? email.replace(/[.@]/g, '_') : null;
+    // This is a workaround - in a real app, you should store the UID
+    // For now, we'll use the email as part of the path
+    return email ? email.replace(/[.@]/g, '_') : null;
 }
 
 // Determine which user ID to use
 let targetUserId = userId;
 if (!targetUserId && userEmail) {
-  targetUserId = getUserIdFromEmail(userEmail);
+    targetUserId = getUserIdFromEmail(userEmail);
 }
 
-// Load user's ad configuration
-if (targetUserId) {
-  console.log('Attempting to load ads for:', targetUserId);
-  
-  database.ref(`users/${targetUserId}/ads/config/ad${currentPage}`).once('value')
-    .then((snapshot) => {
-      const adConfig = snapshot.val();
-      console.log('Ad config found:', !!adConfig);
-      
-      if (adConfig) {
-        // Load ads into their respective containers
-        if (adConfig.header) {
-          document.getElementById('headerAd').innerHTML = adConfig.header;
-        }
-        if (adConfig.side1) {
-          document.getElementById('sideAd1').innerHTML = adConfig.side1;
-        }
-        if (adConfig.side2) {
-          document.getElementById('sideAd2').innerHTML = adConfig.side2;
-        }
-        if (adConfig.bottom) {
-          document.getElementById('bottomAd').innerHTML = adConfig.bottom;
-        }
+// Initialize the page when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing ad page...');
+    
+    if (!originalUrl) {
+        console.error('No original URL found in session storage');
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    // Load user's ad configuration
+    if (targetUserId) {
+        console.log('Attempting to load ads for:', targetUserId);
         
-        // Load popup ad if available
-        if (adConfig.popup) {
-          setTimeout(() => {
-            const popupDiv = document.createElement('div');
-            popupDiv.className = 'popup-ad';
-            popupDiv.innerHTML = `
-              <button class="popup-close" id="popupClose">
-                <i class="fas fa-times"></i>
-              </button>
-              ${adConfig.popup}
-            `;
-            document.body.appendChild(popupDiv);
-            
-            // Add close button functionality
-            document.getElementById('popupClose').addEventListener('click', () => {
-              document.body.removeChild(popupDiv);
+        database.ref(`users/${targetUserId}/ads/config/ad${currentPage}`).once('value')
+            .then((snapshot) => {
+                const adConfig = snapshot.val();
+                console.log('Ad config found:', !!adConfig);
+                
+                if (adConfig) {
+                    // Load ads into their respective containers
+                    if (adConfig.header) {
+                        executeAdScript('headerAd', adConfig.header);
+                    }
+                    if (adConfig.side1) {
+                        executeAdScript('sideAd1', adConfig.side1);
+                    }
+                    if (adConfig.side2) {
+                        executeAdScript('sideAd2', adConfig.side2);
+                    }
+                    if (adConfig.bottom) {
+                        executeAdScript('bottomAd', adConfig.bottom);
+                    }
+                    
+                    // Load popup ad if available
+                    if (adConfig.popup) {
+                        setTimeout(() => {
+                            const popupDiv = document.createElement('div');
+                            popupDiv.className = 'popup-ad';
+                            popupDiv.innerHTML = `
+                                <button class="popup-close" id="popupClose">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                ${adConfig.popup}
+                            `;
+                            document.body.appendChild(popupDiv);
+                            
+                            // Add close button functionality
+                            document.getElementById('popupClose').addEventListener('click', () => {
+                                document.body.removeChild(popupDiv);
+                            });
+                        }, 2000); // Show popup after 2 seconds
+                    }
+                } else {
+                    console.log('No ad config found for user, loading default ads');
+                    loadDefaultAds();
+                }
+                
+                // Start countdown after ads are loaded
+                startCountdown();
+            })
+            .catch((error) => {
+                console.error('Error loading user ads:', error);
+                loadDefaultAds();
+                startCountdown();
             });
-          }, 2000); // Show popup after 2 seconds
-        }
-      } else {
-        console.log('No ad config found for user, loading default ads');
+    } else {
+        console.log('No user ID found, loading default ads');
         loadDefaultAds();
-      }
-      
-      // Start countdown after ads are loaded
-      startCountdown();
-    })
-    .catch((error) => {
-      console.error('Error loading user ads:', error);
-      loadDefaultAds();
-      startCountdown();
+        startCountdown();
+    }
+    
+    // Set up skip button
+    if (skipBtn) {
+        skipBtn.addEventListener('click', () => {
+            clearInterval(countdownInterval);
+            redirectToOriginal();
+        });
+    }
+});
+
+// Execute ad script properly
+function executeAdScript(elementId, scriptContent) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    // Clear the element first
+    element.innerHTML = '';
+    
+    // Create a temporary div to parse the script
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = scriptContent;
+    
+    // Find all script tags in the content
+    const scripts = tempDiv.querySelectorAll('script');
+    
+    // Extract and execute each script
+    scripts.forEach(script => {
+        const newScript = document.createElement('script');
+        
+        // Copy all attributes from the original script
+        Array.from(script.attributes).forEach(attr => {
+            newScript.setAttribute(attr.name, attr.value);
+        });
+        
+        // Copy the script content
+        newScript.textContent = script.textContent;
+        
+        // Append to the element
+        element.appendChild(newScript);
     });
-} else {
-  console.log('No user ID found, loading default ads');
-  loadDefaultAds();
-  startCountdown();
+    
+    // Add non-script content
+    Array.from(tempDiv.childNodes).forEach(node => {
+        if (node.nodeType !== Node.ELEMENT_NODE || node.tagName !== 'SCRIPT') {
+            element.appendChild(node.cloneNode(true));
+        }
+    });
 }
 
 // Load default ads (fallback)
 function loadDefaultAds() {
-  document.getElementById('headerAd').innerHTML = '<div style="text-align: center; padding: 20px; color: white;">Advertisement Space</div>';
-  document.getElementById('sideAd1').innerHTML = '<div style="text-align: center; padding: 20px; color: white;">Side Ad 1</div>';
-  document.getElementById('sideAd2').innerHTML = '<div style="text-align: center; padding: 20px; color: white;">Side Ad 2</div>';
-  document.getElementById('bottomAd').innerHTML = '<div style="text-align: center; padding: 20px; color: white;">Advertisement Space</div>';
+    const adElements = ['headerAd', 'sideAd1', 'sideAd2', 'bottomAd'];
+    
+    adElements.forEach(elementId => {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.innerHTML = `<div style="text-align: center; padding: 20px; color: white;">Advertisement Space</div>`;
+        }
+    });
 }
 
-// Start countdown
+// Start countdown timer
 function startCountdown() {
-  updateProgress();
-  
-  countdownInterval = setInterval(() => {
-    countdown--;
-    timer.textContent = countdown;
+    console.log('Starting countdown...');
+    
+    // Reset countdown
+    countdown = 10;
+    timerCompleted = false;
+    
+    // Update timer display
+    if (timer) {
+        timer.textContent = countdown;
+    }
+    
+    // Update progress bar
     updateProgress();
     
-    if (countdown <= 0) {
-      clearInterval(countdownInterval);
-      redirectToOriginal();
+    // Clear any existing interval
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
     }
-  }, 1000);
+    
+    // Start new interval
+    countdownInterval = setInterval(() => {
+        countdown--;
+        
+        // Update timer display
+        if (timer) {
+            timer.textContent = countdown;
+        }
+        
+        // Update progress bar
+        updateProgress();
+        
+        // Check if countdown is complete
+        if (countdown <= 0) {
+            clearInterval(countdownInterval);
+            timerCompleted = true;
+            
+            // Auto-redirect after 1 second
+            setTimeout(() => {
+                redirectToOriginal();
+            }, 1000);
+        }
+    }, 1000);
 }
 
 // Update progress bar
 function updateProgress() {
-  const progressValue = ((10 - countdown) / 10) * 100;
-  progress.style.width = progressValue + '%';
+    if (progress) {
+        const progressValue = ((10 - countdown) / 10) * 100;
+        progress.style.width = progressValue + '%';
+    }
 }
 
 // Redirect to original URL
 function redirectToOriginal() {
-  // Clear session storage
-  sessionStorage.clear();
-  
-  if (originalUrl) {
-    window.location.href = originalUrl;
-  } else {
-    // Fallback if no URL
-    window.location.href = 'https://google.com';
-  }
+    // Clear session storage
+    sessionStorage.clear();
+    
+    if (originalUrl) {
+        window.location.href = originalUrl;
+    } else {
+        // Fallback if no URL
+        window.location.href = 'https://google.com';
+    }
 }
 
-// Skip button
-skipBtn.addEventListener('click', () => {
-  clearInterval(countdownInterval);
-  redirectToOriginal();
-});
+// Track ad view
+function trackAdView(pageNumber) {
+    if (!linkId) return;
+    
+    database.ref('links/' + linkId).once('value')
+        .then((snapshot) => {
+            const link = snapshot.val();
+            if (link) {
+                // Increment ad view count
+                const currentAdViews = link.adViews || {};
+                const pageViews = currentAdViews[`page${pageNumber}`] || 0;
+                
+                database.ref('links/' + linkId).update({
+                    adViews: {
+                        ...currentAdViews,
+                        [`page${pageNumber}`]: pageViews + 1
+                    }
+                });
+            }
+        })
+        .catch((error) => {
+            console.error('Error tracking ad view:', error);
+        });
+}
+
+// Track ad click
+function trackAdClick(pageNumber) {
+    if (!linkId) return;
+    
+    database.ref('links/' + linkId).once('value')
+        .then((snapshot) => {
+            const link = snapshot.val();
+            if (link) {
+                // Increment ad click count
+                const currentAdClicks = link.adClicks || {};
+                const pageClicks = currentAdClicks[`page${pageNumber}`] || 0;
+                
+                database.ref('links/' + linkId).update({
+                    adClicks: {
+                        ...currentAdClicks,
+                        [`page${pageNumber}`]: pageClicks + 1
+                    }
+                });
+            }
+        })
+        .catch((error) => {
+            console.error('Error tracking ad click:', error);
+        });
+}
+
+// Track ad view when page loads
+if (targetUserId) {
+    trackAdView(currentPage);
+}
