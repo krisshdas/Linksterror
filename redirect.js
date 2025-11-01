@@ -1,6 +1,6 @@
 // redirect.js
 
-// Firebase config
+// --- Firebase Config ---
 const firebaseConfig = {
   apiKey: "AIzaSyBMSFIlfrXV9vPdpXUJm3HkaFVJwXeB0h8",
   authDomain: "link-shortner-2898c.firebaseapp.com",
@@ -12,44 +12,57 @@ const firebaseConfig = {
   measurementId: "G-J3XWHEX759"
 };
 
-// Initialize Firebase
+// --- Initialize Firebase ---
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// Get short ID
+// --- Get Short Link ID ---
 const urlParams = new URLSearchParams(window.location.search);
-const linkId = urlParams.get('id');
+const linkId = urlParams.get("id");
 
-const loadingText = document.getElementById('loadingText');
+// --- DOM Element ---
+const loadingText = document.getElementById("loadingText");
 
+// --- Handle Missing ID ---
 if (!linkId) {
   loadingText.textContent = "Invalid or missing link ID.";
 } else {
-  database.ref(`links/${linkId}`).once('value').then(snapshot => {
-    if (snapshot.exists()) {
-      const data = snapshot.val();
-      const originalUrl = data.originalUrl;
+  database
+    .ref(`links/${linkId}`)
+    .once("value")
+    .then((snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const originalUrl = data.originalUrl;
 
-      // ✅ Save locally
-      sessionStorage.setItem('originalUrl', originalUrl);
-      sessionStorage.setItem('shortCode', linkId);
+        // Save in sessionStorage (if same origin)
+        sessionStorage.setItem("originalUrl", originalUrl);
+        sessionStorage.setItem("shortCode", linkId);
 
-      // ✅ Create a full-screen iframe to GitHub ad page
-      const adUrl = `https://krisshdas.github.io/Linksterror/ad1.html?original=${encodeURIComponent(originalUrl)}&code=${encodeURIComponent(linkId)}`;
+        // 🔥 Construct ad1.html link on the SAME domain (GitHub Pages)
+        const adPageUrl = `https://krisshdas.github.io/Linksterror/ad1.html?original=${encodeURIComponent(
+          originalUrl
+        )}&code=${encodeURIComponent(linkId)}`;
 
-      loadingText.textContent = "Loading advertisement...";
-      setTimeout(() => {
-        // Replace current page content with iframe
-        document.body.innerHTML = `
-          <iframe src="${adUrl}" style="width:100%;height:100vh;border:none;"></iframe>
-        `;
-        document.title = "Advertisement - Linksterror";
-      }, 1500);
-    } else {
-      loadingText.textContent = "Invalid or expired short link.";
-    }
-  }).catch(error => {
-    console.error(error);
-    loadingText.textContent = "Error loading link data.";
-  });
+        loadingText.textContent = "Loading advertisement page...";
+
+        // 🔁 Replace body content with iframe to keep origin same
+        setTimeout(() => {
+          document.body.innerHTML = `
+            <iframe 
+              src="${adPageUrl}" 
+              style="border:none;width:100%;height:100vh;display:block;"
+              allowfullscreen
+            ></iframe>
+          `;
+          document.title = "Advertisement | Linksterror";
+        }, 1500);
+      } else {
+        loadingText.textContent = "Invalid or expired short link.";
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      loadingText.textContent = "Error loading link data.";
+    });
 }
