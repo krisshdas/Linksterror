@@ -1,212 +1,148 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linksterror - Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="dashboard.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>LinksTerror — Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
-    <!-- Cherry Blossom Background -->
-    <div class="cherry-blossom-container">
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-        <div class="petal"></div>
-    </div>
+  <div id="app" class="fade-in">
+    <header class="topbar">
+      <div class="brand">
+        <img src="https://raw.githubusercontent.com/krisshdas/Linksterror/main/icon.png" alt="logo" class="logo" onerror="this.style.display='none'">
+        <div class="title">LinksTerror</div>
+      </div>
 
-    <!-- Header -->
-    <header class="header">
-        <div class="container">
-            <div class="logo">
-                <i class="fas fa-link"></i>
-                <span>Linksterror</span>
+      <div class="right">
+        <div id="welcome" class="welcome-anim">Welcome</div>
+
+        <div id="profileWrap" class="profile-wrap invisible">
+          <button id="profileBtn" class="profile-btn" aria-label="Profile">
+            <img id="profileAvatar" class="avatar" src="" alt="avatar" />
+            <span id="profileName" class="profile-name"></span>
+            <span id="adminCrown" class="crown" title="Admin" style="display:none">👑</span>
+            <i class="chev">▾</i>
+          </button>
+
+          <div id="profileMenu" class="profile-menu hidden">
+            <div class="pm-header">
+              <img id="pm-avatar" class="pm-avatar" src="" alt="avatar">
+              <div>
+                <div id="pm-name" class="pm-name"></div>
+                <div id="pm-email" class="pm-email"></div>
+              </div>
             </div>
-            <div class="header-actions">
-                <button class="mobile-menu-toggle" id="mobileMenuToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div class="profile-menu">
-                    <div class="profile-icon" id="profileIcon">
-                        <i class="fas fa-user-circle"></i>
-                        <span class="admin-badge" id="adminBadge" style="display: none;">👑</span>
-                    </div>
-                    <div class="profile-dropdown" id="profileDropdown">
-                        <a href="links.html"><i class="fas fa-link"></i> Manage Links</a>
-                        <a href="ads.html"><i class="fas fa-ad"></i> Manage Ads</a>
-                        <a href="analytics.html"><i class="fas fa-chart-line"></i> Analytics</a>
-                        <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                    </div>
-                </div>
+
+            <nav class="pm-nav">
+              <button data-page="dashboard" class="pm-link active">Dashboard</button>
+              <button data-page="ads" class="pm-link">Manage Ads</button>
+              <button data-page="links" class="pm-link">Manage Links</button>
+              <button data-page="analytics" class="pm-link">Analytics</button>
+            </nav>
+
+            <div class="pm-actions">
+              <button id="logoutBtn" class="btn-ghost">Logout</button>
             </div>
+          </div>
         </div>
-        <!-- Mobile Navigation -->
-        <nav class="mobile-nav" id="mobileNav">
-            <a href="#" class="nav-link active">Dashboard</a>
-            <a href="#" class="nav-link">Analytics</a>
-            <a href="#" class="nav-link">Help</a>
-        </nav>
+
+        <button id="signInBtn" class="btn-primary">Sign in with Google</button>
+      </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
-            <!-- Welcome Section -->
-            <section class="welcome-section">
-                <div class="welcome-content">
-                    <h1>Welcome back, <span id="userName">User</span></h1>
-                    <p>Create beautiful short links and track their performance</p>
-                </div>
-                <div class="welcome-image">
-                    <i class="fas fa-link"></i>
-                </div>
-            </section>
+    <main class="main">
+      <!-- DASHBOARD PAGE -->
+      <section id="page-dashboard" class="page active">
+        <div class="panel create-panel">
+          <h2>Create a Short Link</h2>
+          <p class="muted">Paste a destination URL to create a short link that expires in 30 days.</p>
 
-            <!-- Link Shortener Section -->
-            <section class="shortener-section">
-                <div class="section-header">
-                    <h2>Shorten Your Link</h2>
-                    <p>Transform long URLs into short, memorable links</p>
-                </div>
-                <div class="shortener-form">
-                    <div class="input-group">
-                        <input type="text" id="longUrl" placeholder="Enter your long URL here...">
-                        <button id="shortenBtn" class="btn-primary">
-                            <i class="fas fa-compress-alt"></i> Shorten
-                        </button>
-                    </div>
-                    <div class="options-row">
-                        <div class="custom-domain">
-                            <label for="customDomain">Custom Domain:</label>
-                            <select id="customDomain">
-                                <option value="krisshdas.github.io">krisshdas.github.io</option>
-                                <option value="linksterror.github.io">linksterror.github.io</option>
-                                <option value="custom.domain.com">custom.domain.com</option>
-                            </select>
-                        </div>
-                        <div class="custom-alias">
-                            <label for="customAlias">Custom Alias (optional):</label>
-                            <input type="text" id="customAlias" placeholder="custom-alias">
-                        </div>
-                    </div>
-                </div>
-                <div class="result-container" id="resultContainer" style="display: none;">
-                    <div class="result-header">
-                        <h3>Your Shortened Link</h3>
-                        <button id="copyBtn" class="btn-secondary">
-                            <i class="fas fa-copy"></i> Copy
-                        </button>
-                    </div>
-                    <div class="result-link">
-                        <input type="text" id="shortUrl" readonly>
-                        <button id="newLinkBtn" class="btn-primary">
-                            <i class="fas fa-plus"></i> Create New Link
-                        </button>
-                    </div>
-                </div>
-            </section>
+          <div class="form-row">
+            <input id="longUrl" type="url" placeholder="https://example.com/some/path" autocomplete="off">
+            <button id="shortenBtn" class="btn-primary">Shorten</button>
+          </div>
 
-            <!-- Analytics Section -->
-            <section class="analytics-section">
-                <div class="section-header">
-                    <h2>Analytics Overview</h2>
-                    <p>Track your link performance</p>
-                </div>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-link"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="totalLinks">0</h3>
-                            <p>Total Links</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-mouse-pointer"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="totalClicks">0</h3>
-                            <p>Total Clicks</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="clickRate">0%</h3>
-                            <p>Click Rate</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i class="fas fa-ad"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="adViews">0</h3>
-                            <p>Ad Views</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="clickChart"></canvas>
-                </div>
-            </section>
-
-            <!-- Recent Links Section -->
-            <section class="recent-links-section">
-                <div class="section-header">
-                    <h2>Recent Links</h2>
-                    <a href="links.html" class="view-all">View All</a>
-                </div>
-                <div class="links-table-container">
-                    <table class="links-table">
-                        <thead>
-                            <tr>
-                                <th>Short Link</th>
-                                <th>Original URL</th>
-                                <th>Clicks</th>
-                                <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recentLinksTable">
-                            <!-- Links will be populated here -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+          <div id="result" class="result hidden"></div>
         </div>
+
+        <div class="panel stats-panel">
+          <h3>Quick Stats</h3>
+          <div class="stats-grid">
+            <div class="stat card">
+              <div class="stat-title">Total Links</div>
+              <div id="statTotal" class="stat-value">—</div>
+            </div>
+            <div class="stat card">
+              <div class="stat-title">Your Links</div>
+              <div id="statMine" class="stat-value">—</div>
+            </div>
+            <div class="stat card">
+              <div class="stat-title">Active Links</div>
+              <div id="statActive" class="stat-value">—</div>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <h4>Created (last 7 days)</h4>
+            <svg id="spark" class="spark" viewBox="0 0 140 40" preserveAspectRatio="none"></svg>
+          </div>
+        </div>
+
+        <div class="panel list-panel">
+          <h3>Your Recent Links</h3>
+          <div id="linksList" class="links-list">Loading...</div>
+        </div>
+      </section>
+
+      <!-- ADS PAGE (placeholder) -->
+      <section id="page-ads" class="page">
+        <div class="panel">
+          <h2>Manage Ads</h2>
+          <p class="muted">You can manage your own custom ad snippets (these are separate from the hardcoded ads in ad1.html).</p>
+          <p class="muted tiny">(This area is a scaffold — ads management will create records under /ads/{uid}/...)</p>
+          <div id="adsArea">Feature planned — quick scaffold present.</div>
+        </div>
+      </section>
+
+      <!-- LINKS MANAGEMENT -->
+      <section id="page-links" class="page">
+        <div class="panel">
+          <h2>All Links</h2>
+          <p class="muted">Admins can view and edit all links. Regular users see their own links only.</p>
+          <div id="allLinksList" class="links-list">Loading...</div>
+        </div>
+      </section>
+
+      <!-- ANALYTICS -->
+      <section id="page-analytics" class="page">
+        <div class="panel">
+          <h2>Analytics Prototype</h2>
+          <p class="muted">Simple breakdown of links created recently.</p>
+          <div class="analytics-grid">
+            <div class="card big">
+              <h4>Top Metrics</h4>
+              <ul class="metrics">
+                <li>Total links: <strong id="metricTotal">—</strong></li>
+                <li>Links created (7d): <strong id="metric7d">—</strong></li>
+                <li>Active links: <strong id="metricActive">—</strong></li>
+              </ul>
+            </div>
+            <div class="card">
+              <h4>Traffic (created / day)</h4>
+              <svg id="barChart" viewBox="0 0 140 40" preserveAspectRatio="none" class="spark"></svg>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
-    <!-- Toast Notification -->
-    <div class="toast" id="toast">
-        <div class="toast-content">
-            <i class="fas fa-check-circle"></i>
-            <span id="toastMessage">Success!</span>
-        </div>
-    </div>
+    <footer class="footer">
+      <div>LinksTerror • Built with 🔥</div>
+      <div class="muted tiny">Signed in via Google — admins: dask20080@gmail.com, daskris20080@gmail.com</div>
+    </footer>
+  </div>
 
-    <!-- Scripts -->
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="dashboard.js"></script>
+  <script type="module" src="dashboard.js"></script>
 </body>
 </html>
