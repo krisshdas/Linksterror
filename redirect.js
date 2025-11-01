@@ -30,51 +30,26 @@ if (linkId) {
         // Increment click count
         database.ref('links/' + linkId).update({
           clicks: (data.clicks || 0) + 1
-        });
+        }).catch(err => console.log('Click update error:', err));
         
         // Get the user ID who created this link
-        const userId = data.createdById;
+        const userId = data.createdById || data.createdBy; // Fallback to email if ID not available
         
-        // Always use ad page 1
-        const adPageNum = 1;
+        // Select a random ad page (1-5)
+        const adPageNum = Math.floor(Math.random() * 5) + 1;
         
         // Store data in session storage for the ad page to use
         sessionStorage.setItem('originalUrl', data.originalUrl);
         sessionStorage.setItem('userId', userId);
+        sessionStorage.setItem('userEmail', data.createdBy); // Store email as backup
         sessionStorage.setItem('linkId', linkId);
-        sessionStorage.setItem('shortCode', linkId); // Your ad-page.js uses shortCode
         
-        // Load user's ad configuration and update the global ads config
-        if (userId) {
-          database.ref(`users/${userId}/ads/config/ad${adPageNum}`).once('value')
-            .then((snapshot) => {
-              const adConfig = snapshot.val();
-              if (adConfig) {
-                // Update the global ads config with user's ads
-                database.ref('ads/config/ad' + adPageNum).set(adConfig)
-                  .then(() => {
-                    // Always redirect to ad1.html
-                    window.location.href = 'ad1.html';
-                  })
-                  .catch((error) => {
-                    console.error('Error updating ads config:', error);
-                    // Still redirect even if there's an error
-                    window.location.href = 'ad1.html';
-                  });
-              } else {
-                // No user ads configured, redirect anyway
-                window.location.href = 'ad1.html';
-              }
-            })
-            .catch((error) => {
-              console.error('Error loading user ads:', error);
-              // Still redirect even if there's an error
-              window.location.href = 'ad1.html';
-            });
-        } else {
-          // No user ID, redirect anyway
-          window.location.href = 'ad1.html';
-        }
+        // Debug log to verify
+        console.log('Redirecting with user ID:', userId);
+        console.log('User email:', data.createdBy);
+        
+        // Redirect to the selected ad page
+        window.location.href = `ad${adPageNum}.html`;
       } else {
         loadingText.textContent = 'Link not found';
       }
