@@ -4,15 +4,34 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Redirecting...</title>
-  <link rel="stylesheet" href="redirect.css">
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: white;
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      text-align: center;
+    }
+    #loadingText {
+      font-size: 1.2rem;
+      animation: fadeBlink 1.5s infinite;
+    }
+    @keyframes fadeBlink {
+      50% { opacity: 0.6; }
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Advertisement</h2>
-    <p>You'll be redirected after viewing this ad.</p>
-    <iframe id="adFrame" src="" frameborder="0"></iframe>
-    <p id="countdown"></p>
-  </div>
-  <script type="module" src="redirect.js"></script>
+  <div id="loadingText">Connecting to server...</div>
+  <script src="redirect.js?v=5"></script>
 </body>
 </html>
