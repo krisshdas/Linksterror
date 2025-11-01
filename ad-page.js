@@ -10,130 +10,175 @@ const firebaseConfig = {
     measurementId: "G-J3XWHEX759"
 };
 
-// Check if Firebase is already initialized
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-
+firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// Get data from session storage
-const originalUrl = sessionStorage.getItem('originalUrl');
-const userId = sessionStorage.getItem('userId');
-const userEmail = sessionStorage.getItem('userEmail');
-const linkId = sessionStorage.getItem('linkId');
-
-// Variables
-let countdown = 10;
+// Global variables
+let adsClicked = new Set(); // Track which ads have been clicked
+let totalAds = 6; // Total number of ads to click
 let countdownInterval;
+let originalUrl = '';
+let adPageNumber = 1;
 let timerCompleted = false;
+let isChecking = false;
+let adInteractions = new Map(); // Track user interactions with ads
+let lastInteractedAd = null;
+let pageVisibilityHidden = false;
+let lastInteractionTime = 0;
+let touchStartTime = 0;
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+let pageFocusLost = false;
+let adClickDetectionInterval;
+let uniqueUserId = ''; // New: Unique ID for each user
 
-// DOM elements
-const timer = document.getElementById('timer');
-const progress = document.getElementById('progress');
-const skipBtn = document.getElementById('skipBtn');
-
-// Get current page number (ad1, ad2, etc.)
-const currentPage = window.location.pathname.split('/').pop().split('.')[0].replace('ad', '');
-
-// Debug logs
-console.log('Loading ads for user ID:', userId);
-console.log('User email:', userEmail);
-console.log('Current ad page:', currentPage);
-
-// Function to get user ID from email if needed
-function getUserIdFromEmail(email) {
-    // This is a workaround - in a real app, you should store the UID
-    // For now, we'll use the email as part of the path
-    return email ? email.replace(/[.@]/g, '_') : null;
+// Generate or retrieve unique user ID
+function getOrCreateUserId() {
+    // Check if user ID exists in localStorage
+    let userId = localStorage.getItem('uniqueUserId');
+    
+    if (!userId) {
+        // Generate a new unique ID
+        userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('uniqueUserId', userId);
+    }
+    
+    return userId;
 }
 
-// Determine which user ID to use
-let targetUserId = userId;
-if (!targetUserId && userEmail) {
-    targetUserId = getUserIdFromEmail(userEmail);
-}
-
-// Initialize the page when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing ad page...');
+// Initialize ad page
+function initAdPage(pageNumber) {
+    adPageNumber = pageNumber;
+    
+    // Get or create unique user ID
+    uniqueUserId = getOrCreateUserId();
+    
+    // Reset variables for new page
+    adsClicked.clear();
+    adInteractions.clear();
+    timerCompleted = false;
+    isChecking = false;
+    lastInteractedAd = null;
+    pageVisibilityHidden = false;
+    lastInteractionTime = 0;
+    pageFocusLost = false;
+    
+    // Clear any existing intervals
+    if (adClickDetectionInterval) clearInterval(adClickDetectionInterval);
+    
+    // Reset progress bars
+    resetProgressBars();
+    
+    // Update ad counter display
+    updateAdCounter();
+    
+    // Get the original URL from session storage
+    originalUrl = sessionStorage.getItem('originalUrl') || '';
     
     if (!originalUrl) {
-        console.error('No original URL found in session storage');
+        // If no URL, redirect to home
         window.location.href = 'index.html';
         return;
     }
     
-    // Load user's ad configuration
-    if (targetUserId) {
-        console.log('Attempting to load ads for:', targetUserId);
-        
-        database.ref(`users/${targetUserId}/ads/config/ad${currentPage}`).once('value')
-            .then((snapshot) => {
-                const adConfig = snapshot.val();
-                console.log('Ad config found:', !!adConfig);
-                
-                if (adConfig) {
-                    // Load ads into their respective containers
-                    if (adConfig.header) {
-                        executeAdScript('headerAd', adConfig.header);
-                    }
-                    if (adConfig.side1) {
-                        executeAdScript('sideAd1', adConfig.side1);
-                    }
-                    if (adConfig.side2) {
-                        executeAdScript('sideAd2', adConfig.side2);
-                    }
-                    if (adConfig.bottom) {
-                        executeAdScript('bottomAd', adConfig.bottom);
-                    }
-                    
-                    // Load popup ad if available
-                    if (adConfig.popup) {
-                        setTimeout(() => {
-                            const popupDiv = document.createElement('div');
-                            popupDiv.className = 'popup-ad';
-                            popupDiv.innerHTML = `
-                                <button class="popup-close" id="popupClose">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                                ${adConfig.popup}
-                            `;
-                            document.body.appendChild(popupDiv);
-                            
-                            // Add close button functionality
-                            document.getElementById('popupClose').addEventListener('click', () => {
-                                document.body.removeChild(popupDiv);
-                            });
-                        }, 2000); // Show popup after 2 seconds
-                    }
-                } else {
-                    console.log('No ad config found for user, loading default ads');
-                    loadDefaultAds();
-                }
-                
-                // Start countdown after ads are loaded
-                startCountdown();
-            })
-            .catch((error) => {
-                console.error('Error loading user ads:', error);
-                loadDefaultAds();
-                startCountdown();
-            });
-    } else {
-        console.log('No user ID found, loading default ads');
-        loadDefaultAds();
-        startCountdown();
+    // Load ads from Firebase first
+    loadAdsFromFirebase(pageNumber);
+    
+    // Start countdown
+    startCountdown();
+    
+    // Track ad view
+    trackAdView(pageNumber);
+    
+    // Set up ad click detection after a delay to allow ads to load
+    setTimeout(() => {
+        setupAdClickDetection();
+    }, 3000);
+}
+
+// Reset progress bars to initial state
+function resetProgressBars() {
+    const progressBar = document.getElementById('progressBar');
+    const mainProgressBar = document.getElementById('mainProgressBar');
+    
+    if (progressBar) {
+        progressBar.style.width = '100%';
     }
     
-    // Set up skip button
-    if (skipBtn) {
-        skipBtn.addEventListener('click', () => {
-            clearInterval(countdownInterval);
-            redirectToOriginal();
-        });
+    if (mainProgressBar) {
+        mainProgressBar.style.width = '100%';
     }
-});
+}
+
+// Update ad counter display
+function updateAdCounter() {
+    const adsViewedElement = document.getElementById('adsViewed');
+    if (adsViewedElement) {
+        adsViewedElement.textContent = adsClicked.size;
+    }
+    
+    // Update time remaining display
+    const timeRemainingElement = document.getElementById('timeRemaining');
+    if (timeRemainingElement) {
+        const countdownElement = document.getElementById('countdown');
+        if (countdownElement) {
+            timeRemainingElement.textContent = countdownElement.textContent;
+        }
+    }
+}
+
+// Load ads from Firebase for the current page
+function loadAdsFromFirebase(pageNumber) {
+    database.ref('ads/config/ad' + pageNumber).once('value')
+        .then((snapshot) => {
+            const adConfig = snapshot.val() || {};
+            
+            // Load header ad
+            if (adConfig.header) {
+                executeAdScript('headerAd', adConfig.header);
+            }
+            
+            // Load side ads
+            if (adConfig.side1) {
+                executeAdScript('sideAd1', adConfig.side1);
+            }
+            if (adConfig.side2) {
+                executeAdScript('sideAd2', adConfig.side2);
+            }
+            if (adConfig.side3) {
+                executeAdScript('sideAd3', adConfig.side3);
+            }
+            if (adConfig.side4) {
+                executeAdScript('sideAd4', adConfig.side4);
+            }
+            
+            // Load bottom ad
+            if (adConfig.bottom) {
+                executeAdScript('bottomAd', adConfig.bottom);
+            }
+            
+            // Load pop ad
+            if (adConfig.popup) {
+                executeAdScript('popAd', adConfig.popup);
+            }
+            
+            // Hide loading animation after ads are loaded
+            const loadingAnimation = document.querySelector('.loading-animation');
+            if (loadingAnimation) {
+                loadingAnimation.style.display = 'none';
+            }
+        })
+        .catch((error) => {
+            console.error('Error loading ads from Firebase:', error);
+            // Hide loading animation even if there's an error
+            const loadingAnimation = document.querySelector('.loading-animation');
+            if (loadingAnimation) {
+                loadingAnimation.style.display = 'none';
+            }
+        });
+}
 
 // Execute ad script properly
 function executeAdScript(elementId, scriptContent) {
@@ -174,136 +219,724 @@ function executeAdScript(elementId, scriptContent) {
     });
 }
 
-// Load default ads (fallback)
-function loadDefaultAds() {
-    const adElements = ['headerAd', 'sideAd1', 'sideAd2', 'bottomAd'];
+// Set up ad click detection
+function setupAdClickDetection() {
+    // Get all ad wrappers
+    const wrappers = document.querySelectorAll('.ad-wrapper');
     
-    adElements.forEach(elementId => {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.innerHTML = `<div style="text-align: center; padding: 20px; color: white;">Advertisement Space</div>`;
+    wrappers.forEach(wrapper => {
+        const adId = wrapper.getAttribute('data-ad-id');
+        if (!adId) return;
+        
+        // Create unique ad ID by combining ad ID with user ID
+        const uniqueAdId = `${adId}_${uniqueUserId}`;
+        
+        // Add a visual indicator that the ad is clickable
+        wrapper.style.cursor = 'pointer';
+        wrapper.style.position = 'relative';
+        
+        // Add a subtle border to indicate it's clickable
+        wrapper.style.border = '1px dashed rgba(52, 152, 219, 0.3)';
+        
+        // Add a "Tap me" indicator for unclicked ads
+        if (!adsClicked.has(uniqueAdId)) {
+            const indicator = document.createElement('div');
+            indicator.className = 'ad-click-indicator';
+            indicator.innerHTML = '<i class="fas fa-hand-pointer"></i> Tap me';
+            indicator.style.position = 'absolute';
+            indicator.style.top = '5px';
+            indicator.style.right = '5px';
+            indicator.style.backgroundColor = 'rgba(52, 152, 219, 0.8)';
+            indicator.style.color = 'white';
+            indicator.style.padding = '5px 10px';
+            indicator.style.borderRadius = '3px';
+            indicator.style.fontSize = '12px';
+            indicator.style.zIndex = '1000';
+            indicator.style.pointerEvents = 'none';
+            wrapper.appendChild(indicator);
+        }
+        
+        // Initialize interaction tracking for this ad
+        adInteractions.set(uniqueAdId, {
+            entered: false,
+            interacted: false,
+            lastInteractionTime: 0,
+            hoverTime: 0,
+            hoverStartTime: null,
+            touchTime: 0,
+            touchStartTime: null
+        });
+        
+        // Add event listeners for desktop
+        wrapper.addEventListener('mouseenter', handleAdMouseEnter);
+        wrapper.addEventListener('mouseleave', handleAdMouseLeave);
+        
+        // Add event listeners for mobile
+        wrapper.addEventListener('touchstart', handleAdTouchStart, { passive: true });
+        wrapper.addEventListener('touchend', handleAdTouchEnd, { passive: true });
+        wrapper.addEventListener('touchmove', handleAdTouchMove, { passive: true });
+        
+        // Monitor for clicks on the ad area
+        wrapper.addEventListener('click', handleAdAreaClick);
+        
+        // Monitor for right-clicks (which might indicate user interest)
+        wrapper.addEventListener('contextmenu', handleAdRightClick);
+    });
+    
+    // Add global event listeners to detect when user leaves the page
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('blur', handleWindowBlur);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Monitor for page navigation changes
+    window.addEventListener('popstate', handlePopState);
+    
+    // Monitor for link clicks
+    document.addEventListener('click', handleDocumentClick);
+    
+    // Monitor for mouse leaving the window (might indicate clicking an ad)
+    document.addEventListener('mouseout', handleMouseLeaveWindow);
+    
+    // Start a periodic check for ad interactions
+    adClickDetectionInterval = setInterval(checkForAdInteractions, 1000);
+}
+
+// Handle mouse enter on ad
+function handleAdMouseEnter(e) {
+    const wrapper = e.currentTarget;
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    // Create unique ad ID
+    const uniqueAdId = `${adId}_${uniqueUserId}`;
+    
+    const interaction = adInteractions.get(uniqueAdId);
+    if (!interaction) return;
+    
+    interaction.entered = true;
+    interaction.hoverStartTime = Date.now();
+    interaction.lastInteractionTime = Date.now();
+    lastInteractedAd = uniqueAdId;
+    lastInteractionTime = Date.now();
+    
+    // Add visual feedback
+    wrapper.style.backgroundColor = 'rgba(52, 152, 219, 0.1)';
+}
+
+// Handle mouse leave on ad
+function handleAdMouseLeave(e) {
+    const wrapper = e.currentTarget;
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    // Create unique ad ID
+    const uniqueAdId = `${adId}_${uniqueUserId}`;
+    
+    const interaction = adInteractions.get(uniqueAdId);
+    if (!interaction) return;
+    
+    interaction.entered = false;
+    
+    // Calculate hover time
+    if (interaction.hoverStartTime) {
+        interaction.hoverTime += Date.now() - interaction.hoverStartTime;
+        interaction.hoverStartTime = null;
+    }
+    
+    // Remove visual feedback
+    wrapper.style.backgroundColor = '';
+}
+
+// Handle touch start on ad (mobile)
+function handleAdTouchStart(e) {
+    const wrapper = e.currentTarget;
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    // Create unique ad ID
+    const uniqueAdId = `${adId}_${uniqueUserId}`;
+    
+    const interaction = adInteractions.get(uniqueAdId);
+    if (!interaction) return;
+    
+    // Record touch start time and position
+    touchStartTime = Date.now();
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    
+    interaction.touchStartTime = Date.now();
+    interaction.lastInteractionTime = Date.now();
+    lastInteractedAd = uniqueAdId;
+    lastInteractionTime = Date.now();
+    
+    // Add visual feedback
+    wrapper.style.backgroundColor = 'rgba(52, 152, 219, 0.1)';
+}
+
+// Handle touch move on ad (mobile)
+function handleAdTouchMove(e) {
+    // Record the end position
+    touchEndX = e.touches[0].clientX;
+    touchEndY = e.touches[0].clientY;
+}
+
+// Handle touch end on ad (mobile)
+function handleAdTouchEnd(e) {
+    const wrapper = e.currentTarget;
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    // Create unique ad ID
+    const uniqueAdId = `${adId}_${uniqueUserId}`;
+    
+    const interaction = adInteractions.get(uniqueAdId);
+    if (!interaction) return;
+    
+    // Calculate touch time
+    if (interaction.touchStartTime) {
+        interaction.touchTime += Date.now() - interaction.touchStartTime;
+        interaction.touchStartTime = null;
+    }
+    
+    // Remove visual feedback
+    wrapper.style.backgroundColor = '';
+    
+    // Calculate touch duration and distance
+    const touchDuration = Date.now() - touchStartTime;
+    const touchDistance = Math.sqrt(
+        Math.pow(touchEndX - touchStartX, 2) + 
+        Math.pow(touchEndY - touchStartY, 2)
+    );
+    
+    // If it was a quick tap (less than 500ms and minimal movement)
+    if (touchDuration < 500 && touchDistance < 10) {
+        // Mark as potentially clicked
+        interaction.interacted = true;
+        lastInteractedAd = uniqueAdId;
+        lastInteractionTime = Date.now();
+    }
+}
+
+// Handle ad area click
+function handleAdAreaClick(e) {
+    const wrapper = e.currentTarget;
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    // Create unique ad ID
+    const uniqueAdId = `${adId}_${uniqueUserId}`;
+    
+    const interaction = adInteractions.get(uniqueAdId);
+    if (!interaction) return;
+    
+    // Mark as interacted
+    interaction.interacted = true;
+    interaction.lastInteractionTime = Date.now();
+    lastInteractedAd = uniqueAdId;
+    lastInteractionTime = Date.now();
+    
+    // Don't immediately mark as clicked - wait to see if user leaves the page
+    // This allows the ad to actually open first
+}
+
+// Handle ad right-click
+function handleAdRightClick(e) {
+    const wrapper = e.currentTarget;
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    // Create unique ad ID
+    const uniqueAdId = `${adId}_${uniqueUserId}`;
+    
+    const interaction = adInteractions.get(uniqueAdId);
+    if (!interaction) return;
+    
+    // Mark as interacted
+    interaction.interacted = true;
+    interaction.lastInteractionTime = Date.now();
+    lastInteractedAd = uniqueAdId;
+    lastInteractionTime = Date.now();
+}
+
+// Handle document click
+function handleDocumentClick(e) {
+    // Check if the click is on an ad
+    const wrapper = e.target.closest('.ad-wrapper');
+    if (wrapper) {
+        const adId = wrapper.getAttribute('data-ad-id');
+        if (adId) {
+            // Create unique ad ID
+            const uniqueAdId = `${adId}_${uniqueUserId}`;
+            
+            const interaction = adInteractions.get(uniqueAdId);
+            if (interaction) {
+                interaction.interacted = true;
+                interaction.lastInteractionTime = Date.now();
+                lastInteractedAd = uniqueAdId;
+                lastInteractionTime = Date.now();
+            }
+        }
+    }
+}
+
+// Handle mouse leaving the window
+function handleMouseLeaveWindow(e) {
+    if (e.clientX <= 0 || e.clientY <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
+        // Mouse left the window, check if it was after interacting with an ad
+        if (lastInteractedAd && !adsClicked.has(lastInteractedAd)) {
+            const interaction = adInteractions.get(lastInteractedAd);
+            if (interaction && interaction.interacted) {
+                // Mark the ad as clicked
+                markAdAsClicked(lastInteractedAd);
+            }
+        }
+    }
+}
+
+// Check for ad interactions periodically
+function checkForAdInteractions() {
+    // Check if any ad has been interacted with but not yet marked as clicked
+    adInteractions.forEach((interaction, uniqueAdId) => {
+        if (interaction.interacted && !adsClicked.has(uniqueAdId)) {
+            // If the user interacted with an ad more than 2 seconds ago, mark it as clicked
+            if (Date.now() - interaction.lastInteractionTime > 2000) {
+                markAdAsClicked(uniqueAdId);
+            }
         }
     });
 }
 
-// Start countdown timer
-function startCountdown() {
-    console.log('Starting countdown...');
-    
-    // Reset countdown
-    countdown = 10;
-    timerCompleted = false;
-    
-    // Update timer display
-    if (timer) {
-        timer.textContent = countdown;
+// Handle before unload event
+function handleBeforeUnload(e) {
+    // If the user is leaving the page after interacting with an ad
+    if (lastInteractedAd && !adsClicked.has(lastInteractedAd)) {
+        const interaction = adInteractions.get(lastInteractedAd);
+        if (interaction && interaction.interacted) {
+            // Mark the ad as clicked
+            markAdAsClicked(lastInteractedAd);
+            
+            // Save the state to session storage in case the page reloads
+            sessionStorage.setItem('adsClicked', JSON.stringify([...adsClicked]));
+            sessionStorage.setItem('lastInteractedAd', lastInteractedAd);
+        }
     }
+}
+
+// Handle window blur event
+function handleWindowBlur() {
+    pageFocusLost = true;
     
-    // Update progress bar
-    updateProgress();
-    
-    // Clear any existing interval
-    if (countdownInterval) {
-        clearInterval(countdownInterval);
+    // If the window loses focus after interacting with an ad
+    if (lastInteractedAd && !adsClicked.has(lastInteractedAd)) {
+        const interaction = adInteractions.get(lastInteractedAd);
+        if (interaction && interaction.interacted) {
+            // Mark the ad as clicked
+            markAdAsClicked(lastInteractedAd);
+            
+            // Save the state to session storage in case the page reloads
+            sessionStorage.setItem('adsClicked', JSON.stringify([...adsClicked]));
+            sessionStorage.setItem('lastInteractedAd', lastInteractedAd);
+        }
     }
-    
-    // Start new interval
-    countdownInterval = setInterval(() => {
-        countdown--;
+}
+
+// Handle visibility change event
+function handleVisibilityChange() {
+    if (document.hidden && !pageVisibilityHidden) {
+        // Page is becoming hidden
+        pageVisibilityHidden = true;
         
-        // Update timer display
-        if (timer) {
-            timer.textContent = countdown;
+        // If the page becomes hidden after interacting with an ad
+        if (lastInteractedAd && !adsClicked.has(lastInteractedAd)) {
+            const interaction = adInteractions.get(lastInteractedAd);
+            if (interaction && interaction.interacted) {
+                // Mark the ad as clicked
+                markAdAsClicked(lastInteractedAd);
+                
+                // Save the state to session storage in case the page reloads
+                sessionStorage.setItem('adsClicked', JSON.stringify([...adsClicked]));
+                sessionStorage.setItem('lastInteractedAd', lastInteractedAd);
+            }
+        }
+    } else if (!document.hidden) {
+        // Page is becoming visible again
+        pageVisibilityHidden = false;
+        
+        // Check if we need to restore state from session storage
+        restoreStateFromSessionStorage();
+    }
+}
+
+// Handle popstate event (browser back/forward buttons)
+function handlePopState(e) {
+    // If the user navigates away after interacting with an ad
+    if (lastInteractedAd && !adsClicked.has(lastInteractedAd)) {
+        const interaction = adInteractions.get(lastInteractedAd);
+        if (interaction && interaction.interacted) {
+            // Mark the ad as clicked
+            markAdAsClicked(lastInteractedAd);
+            
+            // Save the state to session storage in case the page reloads
+            sessionStorage.setItem('adsClicked', JSON.stringify([...adsClicked]));
+            sessionStorage.setItem('lastInteractedAd', lastInteractedAd);
+        }
+    }
+}
+
+// Restore state from session storage
+function restoreStateFromSessionStorage() {
+    const savedAdsClicked = sessionStorage.getItem('adsClicked');
+    const savedLastInteractedAd = sessionStorage.getItem('lastInteractedAd');
+    
+    if (savedAdsClicked) {
+        try {
+            const savedAds = JSON.parse(savedAdsClicked);
+            savedAds.forEach(uniqueAdId => {
+                if (!adsClicked.has(uniqueAdId)) {
+                    markAdAsClicked(uniqueAdId, false); // Don't show notification for restored ads
+                }
+            });
+        } catch (e) {
+            console.error('Error parsing saved ads clicked:', e);
+        }
+    }
+    
+    if (savedLastInteractedAd) {
+        lastInteractedAd = savedLastInteractedAd;
+    }
+    
+    // Clear the saved state
+    sessionStorage.removeItem('adsClicked');
+    sessionStorage.removeItem('lastInteractedAd');
+}
+
+// Mark ad as clicked
+function markAdAsClicked(uniqueAdId, showNotif = true) {
+    if (!uniqueAdId) return;
+    
+    // Check if this ad has already been clicked
+    if (adsClicked.has(uniqueAdId)) {
+        return; // Don't show notification for duplicate clicks
+    }
+    
+    // Extract the original ad ID from the unique ID
+    const adId = uniqueAdId.split('_').slice(0, -1).join('_');
+    
+    // Mark this ad as clicked
+    adsClicked.add(uniqueAdId);
+    updateAdCounter();
+    
+    // Update the visual indicator for this ad
+    const wrapper = document.querySelector(`[data-ad-id="${adId}"]`);
+    if (wrapper) {
+        // Remove the "Tap me" indicator
+        const indicator = wrapper.querySelector('.ad-click-indicator');
+        if (indicator) {
+            indicator.remove();
         }
         
-        // Update progress bar
-        updateProgress();
+        // Add a "Clicked" indicator
+        const clickedIndicator = document.createElement('div');
+        clickedIndicator.className = 'ad-clicked-indicator';
+        clickedIndicator.innerHTML = '<i class="fas fa-check-circle"></i> Clicked';
+        clickedIndicator.style.position = 'absolute';
+        clickedIndicator.style.top = '5px';
+        clickedIndicator.style.right = '5px';
+        clickedIndicator.style.backgroundColor = 'rgba(46, 204, 113, 0.8)';
+        clickedIndicator.style.color = 'white';
+        clickedIndicator.style.padding = '5px 10px';
+        clickedIndicator.style.borderRadius = '3px';
+        clickedIndicator.style.fontSize = '12px';
+        clickedIndicator.style.zIndex = '1000';
+        clickedIndicator.style.pointerEvents = 'none';
+        wrapper.appendChild(clickedIndicator);
         
-        // Check if countdown is complete
-        if (countdown <= 0) {
+        // Update the border to indicate it's been clicked
+        wrapper.style.border = '1px solid rgba(46, 204, 113, 0.5)';
+    }
+    
+    // Show notification
+    if (showNotif) {
+        showNotification(`Ad clicked! (${adsClicked.size}/${totalAds})`);
+    }
+    
+    // Track the ad click
+    trackAdClick(adPageNumber);
+    
+    // Check if all ads have been clicked
+    if (adsClicked.size >= totalAds) {
+        if (showNotif) {
+            showNotification('All ads clicked! You can now continue.');
+        }
+        
+        // If timer is already completed, enable the check button
+        if (timerCompleted) {
+            const instructions = document.getElementById('instructions');
+            if (instructions) {
+                instructions.querySelector('p').textContent = `Great! You've clicked all the ads. Click the button below to continue.`;
+            }
+        }
+    }
+}
+
+// Show notification
+function showNotification(message) {
+    const notification = document.getElementById('notification');
+    const notificationText = document.getElementById('notificationText');
+    
+    if (notification && notificationText) {
+        notificationText.textContent = message;
+        notification.style.display = 'block';
+        notification.classList.add('show');
+        
+        // Hide notification after 3 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 300);
+        }, 3000);
+    }
+}
+
+// Start countdown timer
+function startCountdown() {
+    let seconds = 15;
+    const countdownElement = document.getElementById('countdown');
+    const progressBar = document.getElementById('progressBar');
+    const mainProgressBar = document.getElementById('mainProgressBar');
+    
+    // Ensure countdown element exists
+    if (!countdownElement) {
+        console.error('Countdown element not found');
+        return;
+    }
+    
+    // Initialize countdown display
+    countdownElement.textContent = seconds;
+    
+    countdownInterval = setInterval(() => {
+        seconds--;
+        countdownElement.textContent = seconds;
+        
+        // Calculate progress percentage (remaining time / total time)
+        const progressPercent = (seconds / 15) * 100;
+        
+        // Update progress bars
+        if (progressBar) {
+            progressBar.style.width = progressPercent + '%';
+        }
+        
+        if (mainProgressBar) {
+            mainProgressBar.style.width = progressPercent + '%';
+        }
+        
+        // Update time remaining display
+        updateAdCounter();
+        
+        if (seconds <= 0) {
             clearInterval(countdownInterval);
             timerCompleted = true;
-            
-            // Auto-redirect after 1 second
-            setTimeout(() => {
-                redirectToOriginal();
-            }, 1000);
+            showAdCheckButton();
         }
     }, 1000);
 }
 
-// Update progress bar
-function updateProgress() {
-    if (progress) {
-        const progressValue = ((10 - countdown) / 10) * 100;
-        progress.style.width = progressValue + '%';
+// Show ad check button when timer completes
+function showAdCheckButton() {
+    const adCheckBtn = document.getElementById('adCheckBtn');
+    const instructions = document.getElementById('instructions');
+    
+    if (adCheckBtn && instructions) {
+        adCheckBtn.style.display = 'flex';
+        instructions.style.display = 'block';
+        
+        // Update instructions based on ads clicked
+        if (adsClicked.size >= totalAds) {
+            instructions.querySelector('p').textContent = `Great! You've clicked all the ads. Click the button below to continue.`;
+        } else {
+            instructions.querySelector('p').textContent = `Please tap on at least ${totalAds} ads before continuing. (${adsClicked.size}/${totalAds} clicked)`;
+        }
+        
+        // Scroll to bottom to show button
+        setTimeout(() => {
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
+            });
+        }, 500);
     }
 }
 
-// Redirect to original URL
-function redirectToOriginal() {
-    // Clear session storage
-    sessionStorage.clear();
+// Handle ad check button click
+document.addEventListener('DOMContentLoaded', () => {
+    const adCheckBtn = document.getElementById('adCheckBtn');
     
-    if (originalUrl) {
-        window.location.href = originalUrl;
-    } else {
-        // Fallback if no URL
-        window.location.href = 'https://google.com';
+    if (adCheckBtn) {
+        adCheckBtn.addEventListener('click', () => {
+            if (isChecking) return;
+            
+            // Check if all ads have been clicked
+            if (adsClicked.size < totalAds) {
+                // Show warning if not all ads have been clicked
+                showNotification(`Please tap on at least ${totalAds} ads before continuing! (${adsClicked.size}/${totalAds} clicked)`);
+                
+                // Update instructions
+                const instructions = document.getElementById('instructions');
+                if (instructions) {
+                    instructions.querySelector('p').textContent = `Please tap on at least ${totalAds} ads before continuing. (${adsClicked.size}/${totalAds} clicked)`;
+                }
+            } else {
+                // All ads have been clicked, show loading for 3 seconds
+                isChecking = true;
+                adCheckBtn.disabled = true;
+                adCheckBtn.classList.add('checking');
+                adCheckBtn.innerHTML = `
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Checking...</span>
+                `;
+                
+                setTimeout(() => {
+                    unlockDownloadButton();
+                }, 3000);
+            }
+        });
+    }
+});
+
+// Unlock download button when ad check is complete
+function unlockDownloadButton() {
+    const downloadBtn = document.getElementById('downloadBtn');
+    const adCheckBtn = document.getElementById('adCheckBtn');
+    
+    if (downloadBtn && adCheckBtn) {
+        // Hide ad check button and show download button
+        adCheckBtn.style.display = 'none';
+        downloadBtn.style.display = 'flex';
+        downloadBtn.disabled = false;
+        downloadBtn.classList.remove('locked');
+        downloadBtn.classList.add('unlocked');
+        
+        // Different button text for the last page
+        if (adPageNumber === 5) {
+            downloadBtn.innerHTML = `
+                <i class="fas fa-download"></i>
+                <span>Final Download</span>
+            `;
+        } else {
+            downloadBtn.innerHTML = `
+                <i class="fas fa-unlock"></i>
+                <span>Continue to Next Page</span>
+            `;
+        }
     }
 }
+
+// Handle download button click
+document.addEventListener('DOMContentLoaded', () => {
+    const downloadBtn = document.getElementById('downloadBtn');
+    
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
+            if (downloadBtn.disabled) return;
+            
+            // Clear any running timers
+            if (countdownInterval) clearInterval(countdownInterval);
+            if (adClickDetectionInterval) clearInterval(adClickDetectionInterval);
+            
+            // Redirect based on current page
+            if (adPageNumber === 1) {
+                window.location.href = 'ad2.html';
+            } else if (adPageNumber === 2) {
+                window.location.href = 'ad3.html';
+            } else if (adPageNumber === 3) {
+                window.location.href = 'ad4.html';
+            } else if (adPageNumber === 4) {
+                window.location.href = 'ad5.html';
+            } else if (adPageNumber === 5) {
+                // Last page, redirect to original URL
+                window.location.href = originalUrl;
+            }
+        });
+    }
+});
 
 // Track ad view
 function trackAdView(pageNumber) {
-    if (!linkId) return;
+    // Get the short code from session storage
+    const shortCode = sessionStorage.getItem('shortCode') || '';
     
-    database.ref('links/' + linkId).once('value')
-        .then((snapshot) => {
-            const link = snapshot.val();
-            if (link) {
-                // Increment ad view count
-                const currentAdViews = link.adViews || {};
-                const pageViews = currentAdViews[`page${pageNumber}`] || 0;
+    if (shortCode) {
+        // Find the link in the database
+        database.ref('users').once('value')
+            .then((snapshot) => {
+                const users = snapshot.val() || {};
                 
-                database.ref('links/' + linkId).update({
-                    adViews: {
-                        ...currentAdViews,
-                        [`page${pageNumber}`]: pageViews + 1
+                for (const userId in users) {
+                    const userLinks = users[userId].links || {};
+                    
+                    for (const linkId in userLinks) {
+                        const link = userLinks[linkId];
+                        
+                        if (link.shortCode === shortCode) {
+                            // Increment ad view count
+                            const currentAdViews = link.adViews || {};
+                            const pageViews = currentAdViews[`page${pageNumber}`] || 0;
+                            
+                            database.ref('users/' + userId + '/links/' + linkId).update({
+                                adViews: {
+                                    ...currentAdViews,
+                                    [`page${pageNumber}`]: pageViews + 1
+                                }
+                            });
+                            
+                            return;
+                        }
                     }
-                });
-            }
-        })
-        .catch((error) => {
-            console.error('Error tracking ad view:', error);
-        });
+                }
+            })
+            .catch((error) => {
+                console.error('Error tracking ad view:', error);
+            });
+    }
 }
 
 // Track ad click
 function trackAdClick(pageNumber) {
-    if (!linkId) return;
+    // Get the short code from session storage
+    const shortCode = sessionStorage.getItem('shortCode') || '';
     
-    database.ref('links/' + linkId).once('value')
-        .then((snapshot) => {
-            const link = snapshot.val();
-            if (link) {
-                // Increment ad click count
-                const currentAdClicks = link.adClicks || {};
-                const pageClicks = currentAdClicks[`page${pageNumber}`] || 0;
+    if (shortCode) {
+        // Find the link in the database
+        database.ref('users').once('value')
+            .then((snapshot) => {
+                const users = snapshot.val() || {};
                 
-                database.ref('links/' + linkId).update({
-                    adClicks: {
-                        ...currentAdClicks,
-                        [`page${pageNumber}`]: pageClicks + 1
+                for (const userId in users) {
+                    const userLinks = users[userId].links || {};
+                    
+                    for (const linkId in userLinks) {
+                        const link = userLinks[linkId];
+                        
+                        if (link.shortCode === shortCode) {
+                            // Increment ad click count
+                            const currentAdClicks = link.adClicks || {};
+                            const pageClicks = currentAdClicks[`page${pageNumber}`] || 0;
+                            
+                            database.ref('users/' + userId + '/links/' + linkId).update({
+                                adClicks: {
+                                    ...currentAdClicks,
+                                    [`page${pageNumber}`]: pageClicks + 1
+                                }
+                            });
+                            
+                            return;
+                        }
                     }
-                });
-            }
-        })
-        .catch((error) => {
-            console.error('Error tracking ad click:', error);
-        });
-}
-
-// Track ad view when page loads
-if (targetUserId) {
-    trackAdView(currentPage);
-}
+                }
+            })
+            .catch((error) => {
+                console.error('Error tracking ad click:', error);
+            });
+    }
+        }
