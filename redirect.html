@@ -7,6 +7,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
@@ -15,23 +16,134 @@
       color: white;
       font-family: 'Poppins', sans-serif;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      overflow: hidden;
+      overflow-x: hidden;
       text-align: center;
     }
+    
     #loadingText {
       font-size: 1.2rem;
       animation: fadeBlink 1.5s infinite;
+      margin-bottom: 20px;
     }
+    
     @keyframes fadeBlink {
       50% { opacity: 0.6; }
+    }
+    
+    .redirect-container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 30px;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: none;
+    }
+    
+    .countdown {
+      font-size: 24px;
+      font-weight: bold;
+      color: #4facfe;
+      margin: 20px 0;
+    }
+    
+    .ad-container {
+      margin: 20px 0;
+      min-height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 15px;
+    }
+    
+    .skip-btn {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      margin-top: 15px;
+    }
+    
+    .skip-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(79, 172, 254, 0.3);
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 5px;
+      margin: 20px 0;
+      overflow: hidden;
+    }
+    
+    .progress {
+      height: 100%;
+      background: linear-gradient(90deg, #4facfe, #00f2fe);
+      width: 0%;
+      transition: width 1s linear;
+    }
+    
+    .popup-ad {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      z-index: 1000;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      max-width: 90%;
+      max-height: 90%;
+      overflow: auto;
+    }
+    
+    .popup-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #f44336;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <div id="loadingText">Connecting to server...</div>
-  <script src="redirect.js?v=5"></script>
+  
+  <div class="redirect-container" id="redirectContainer">
+    <h2>You will be redirected shortly</h2>
+    <div class="countdown">Redirecting in <span id="timer">10</span> seconds...</div>
+    <div class="progress-bar">
+      <div class="progress" id="progress"></div>
+    </div>
+    <div class="ad-container" id="adContainer">
+      <!-- Ad will be loaded here -->
+    </div>
+    <button class="skip-btn" id="skipBtn">Skip Ad</button>
+  </div>
+  
+  <script src="redirect.js?v=6"></script>
 </body>
 </html>
