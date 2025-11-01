@@ -32,28 +32,11 @@ let touchEndX = 0;
 let touchEndY = 0;
 let pageFocusLost = false;
 let adClickDetectionInterval;
-let uniqueUserId = ''; // New: Unique ID for each user
-
-// Generate or retrieve unique user ID
-function getOrCreateUserId() {
-    // Check if user ID exists in localStorage
-    let userId = localStorage.getItem('uniqueUserId');
-    
-    if (!userId) {
-        // Generate a new unique ID
-        userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('uniqueUserId', userId);
-    }
-    
-    return userId;
-}
+let userAdId = null; // Store user-specific ad ID
 
 // Initialize ad page
 function initAdPage(pageNumber) {
     adPageNumber = pageNumber;
-    
-    // Get or create unique user ID
-    uniqueUserId = getOrCreateUserId();
     
     // Reset variables for new page
     adsClicked.clear();
@@ -83,8 +66,18 @@ function initAdPage(pageNumber) {
         return;
     }
     
-    // Load ads from Firebase first
-    loadAdsFromFirebase(pageNumber);
+    // Get user-specific ad ID from Firebase first
+    getUserAdId()
+        .then(adId => {
+            userAdId = adId;
+            // Load ads from Firebase with user-specific ID
+            loadAdsFromFirebase(pageNumber, userAdId);
+        })
+        .catch(error => {
+            console.error('Error getting user ad ID:', error);
+            // Fallback to default ads if user-specific ID fails
+            loadAdsFromFirebase(pageNumber, null);
+        });
     
     // Start countdown
     startCountdown();
@@ -96,6 +89,47 @@ function initAdPage(pageNumber) {
     setTimeout(() => {
         setupAdClickDetection();
     }, 3000);
+}
+
+// Get user-specific ad ID from Firebase
+function getUserAdId() {
+    return new Promise((resolve, reject) => {
+        // Get the short code from session storage
+        const shortCode = sessionStorage.getItem('shortCode') || '';
+        
+        if (!shortCode) {
+            reject('No short code found');
+            return;
+        }
+        
+        // Find the link in the database to get the user ID
+        database.ref('users').once('value')
+            .then((snapshot) => {
+                const users = snapshot.val() || {};
+                
+                for (const userId in users) {
+                    const userLinks = users[userId].links || {};
+                    
+                    for (const linkId in userLinks) {
+                        const link = userLinks[linkId];
+                        
+                        if (link.shortCode === shortCode) {
+                            // Found the user, now get their ad ID
+                            const userAdId = users[userId].adId || null;
+                            resolve(userAdId);
+                            return;
+                        }
+                    }
+                }
+                
+                // If no matching link found, resolve with null (will use default ads)
+                resolve(null);
+            })
+            .catch((error) => {
+                console.error('Error finding user ad ID:', error);
+                reject(error);
+            });
+    });
 }
 
 // Reset progress bars to initial state
@@ -129,11 +163,28 @@ function updateAdCounter() {
     }
 }
 
-// Load ads from Firebase for the current page
-function loadAdsFromFirebase(pageNumber) {
-    database.ref('ads/config/ad' + pageNumber).once('value')
+// Load ads from Firebase for the current page with user-specific ad ID
+function loadAdsFromFirebase(pageNumber, userAdId) {
+    // Determine which ad configuration to use
+    let adConfigPath;
+    
+    if (userAdId) {
+        // Use user-specific ad configuration
+        adConfigPath = `userAds/${userAdId}/ad${pageNumber}`;
+    } else {
+        // Fallback to default ad configuration
+        adConfigPath = `ads/config/ad${pageNumber}`;
+    }
+    
+    database.ref(adConfigPath).once('value')
         .then((snapshot) => {
             const adConfig = snapshot.val() || {};
+            
+            // If user-specific ads don't exist, fall back to default
+            if (!Object.keys(adConfig).length && userAdId) {
+                console.log(`No user-specific ads found for ${userAdId}, using default ads`);
+                return loadAdsFromFirebase(pageNumber, null);
+            }
             
             // Load header ad
             if (adConfig.header) {
@@ -172,10 +223,16 @@ function loadAdsFromFirebase(pageNumber) {
         })
         .catch((error) => {
             console.error('Error loading ads from Firebase:', error);
-            // Hide loading animation even if there's an error
-            const loadingAnimation = document.querySelector('.loading-animation');
-            if (loadingAnimation) {
-                loadingAnimation.style.display = 'none';
+            // If user-specific ads fail, try default ads
+            if (userAdId) {
+                console.log('Error with user-specific ads, trying default ads');
+                loadAdsFromFirebase(pageNumber, null);
+            } else {
+                // Hide loading animation even if there's an error
+                const loadingAnimation = document.querySelector('.loading-animation');
+                if (loadingAnimation) {
+                    loadingAnimation.style.display = 'none';
+                }
             }
         });
 }
@@ -228,9 +285,6 @@ function setupAdClickDetection() {
         const adId = wrapper.getAttribute('data-ad-id');
         if (!adId) return;
         
-        // Create unique ad ID by combining ad ID with user ID
-        const uniqueAdId = `${adId}_${uniqueUserId}`;
-        
         // Add a visual indicator that the ad is clickable
         wrapper.style.cursor = 'pointer';
         wrapper.style.position = 'relative';
@@ -239,7 +293,7 @@ function setupAdClickDetection() {
         wrapper.style.border = '1px dashed rgba(52, 152, 219, 0.3)';
         
         // Add a "Tap me" indicator for unclicked ads
-        if (!adsClicked.has(uniqueAdId)) {
+        if (!adsClicked.has(adId)) {
             const indicator = document.createElement('div');
             indicator.className = 'ad-click-indicator';
             indicator.innerHTML = '<i class="fas fa-hand-pointer"></i> Tap me';
@@ -257,7 +311,7 @@ function setupAdClickDetection() {
         }
         
         // Initialize interaction tracking for this ad
-        adInteractions.set(uniqueAdId, {
+        adInteractions.set(adId, {
             entered: false,
             interacted: false,
             lastInteractionTime: 0,
@@ -307,16 +361,13 @@ function handleAdMouseEnter(e) {
     const adId = wrapper.getAttribute('data-ad-id');
     if (!adId) return;
     
-    // Create unique ad ID
-    const uniqueAdId = `${adId}_${uniqueUserId}`;
-    
-    const interaction = adInteractions.get(uniqueAdId);
+    const interaction = adInteractions.get(adId);
     if (!interaction) return;
     
     interaction.entered = true;
     interaction.hoverStartTime = Date.now();
     interaction.lastInteractionTime = Date.now();
-    lastInteractedAd = uniqueAdId;
+    lastInteractedAd = adId;
     lastInteractionTime = Date.now();
     
     // Add visual feedback
@@ -329,10 +380,7 @@ function handleAdMouseLeave(e) {
     const adId = wrapper.getAttribute('data-ad-id');
     if (!adId) return;
     
-    // Create unique ad ID
-    const uniqueAdId = `${adId}_${uniqueUserId}`;
-    
-    const interaction = adInteractions.get(uniqueAdId);
+    const interaction = adInteractions.get(adId);
     if (!interaction) return;
     
     interaction.entered = false;
@@ -353,10 +401,7 @@ function handleAdTouchStart(e) {
     const adId = wrapper.getAttribute('data-ad-id');
     if (!adId) return;
     
-    // Create unique ad ID
-    const uniqueAdId = `${adId}_${uniqueUserId}`;
-    
-    const interaction = adInteractions.get(uniqueAdId);
+    const interaction = adInteractions.get(adId);
     if (!interaction) return;
     
     // Record touch start time and position
@@ -366,7 +411,7 @@ function handleAdTouchStart(e) {
     
     interaction.touchStartTime = Date.now();
     interaction.lastInteractionTime = Date.now();
-    lastInteractedAd = uniqueAdId;
+    lastInteractedAd = adId;
     lastInteractionTime = Date.now();
     
     // Add visual feedback
@@ -386,10 +431,7 @@ function handleAdTouchEnd(e) {
     const adId = wrapper.getAttribute('data-ad-id');
     if (!adId) return;
     
-    // Create unique ad ID
-    const uniqueAdId = `${adId}_${uniqueUserId}`;
-    
-    const interaction = adInteractions.get(uniqueAdId);
+    const interaction = adInteractions.get(adId);
     if (!interaction) return;
     
     // Calculate touch time
@@ -412,7 +454,7 @@ function handleAdTouchEnd(e) {
     if (touchDuration < 500 && touchDistance < 10) {
         // Mark as potentially clicked
         interaction.interacted = true;
-        lastInteractedAd = uniqueAdId;
+        lastInteractedAd = adId;
         lastInteractionTime = Date.now();
     }
 }
@@ -423,16 +465,13 @@ function handleAdAreaClick(e) {
     const adId = wrapper.getAttribute('data-ad-id');
     if (!adId) return;
     
-    // Create unique ad ID
-    const uniqueAdId = `${adId}_${uniqueUserId}`;
-    
-    const interaction = adInteractions.get(uniqueAdId);
+    const interaction = adInteractions.get(adId);
     if (!interaction) return;
     
     // Mark as interacted
     interaction.interacted = true;
     interaction.lastInteractionTime = Date.now();
-    lastInteractedAd = uniqueAdId;
+    lastInteractedAd = adId;
     lastInteractionTime = Date.now();
     
     // Don't immediately mark as clicked - wait to see if user leaves the page
@@ -445,16 +484,13 @@ function handleAdRightClick(e) {
     const adId = wrapper.getAttribute('data-ad-id');
     if (!adId) return;
     
-    // Create unique ad ID
-    const uniqueAdId = `${adId}_${uniqueUserId}`;
-    
-    const interaction = adInteractions.get(uniqueAdId);
+    const interaction = adInteractions.get(adId);
     if (!interaction) return;
     
     // Mark as interacted
     interaction.interacted = true;
     interaction.lastInteractionTime = Date.now();
-    lastInteractedAd = uniqueAdId;
+    lastInteractedAd = adId;
     lastInteractionTime = Date.now();
 }
 
@@ -465,14 +501,11 @@ function handleDocumentClick(e) {
     if (wrapper) {
         const adId = wrapper.getAttribute('data-ad-id');
         if (adId) {
-            // Create unique ad ID
-            const uniqueAdId = `${adId}_${uniqueUserId}`;
-            
-            const interaction = adInteractions.get(uniqueAdId);
+            const interaction = adInteractions.get(adId);
             if (interaction) {
                 interaction.interacted = true;
                 interaction.lastInteractionTime = Date.now();
-                lastInteractedAd = uniqueAdId;
+                lastInteractedAd = adId;
                 lastInteractionTime = Date.now();
             }
         }
@@ -496,11 +529,11 @@ function handleMouseLeaveWindow(e) {
 // Check for ad interactions periodically
 function checkForAdInteractions() {
     // Check if any ad has been interacted with but not yet marked as clicked
-    adInteractions.forEach((interaction, uniqueAdId) => {
-        if (interaction.interacted && !adsClicked.has(uniqueAdId)) {
+    adInteractions.forEach((interaction, adId) => {
+        if (interaction.interacted && !adsClicked.has(adId)) {
             // If the user interacted with an ad more than 2 seconds ago, mark it as clicked
             if (Date.now() - interaction.lastInteractionTime > 2000) {
-                markAdAsClicked(uniqueAdId);
+                markAdAsClicked(adId);
             }
         }
     });
@@ -591,9 +624,9 @@ function restoreStateFromSessionStorage() {
     if (savedAdsClicked) {
         try {
             const savedAds = JSON.parse(savedAdsClicked);
-            savedAds.forEach(uniqueAdId => {
-                if (!adsClicked.has(uniqueAdId)) {
-                    markAdAsClicked(uniqueAdId, false); // Don't show notification for restored ads
+            savedAds.forEach(adId => {
+                if (!adsClicked.has(adId)) {
+                    markAdAsClicked(adId, false); // Don't show notification for restored ads
                 }
             });
         } catch (e) {
@@ -611,19 +644,16 @@ function restoreStateFromSessionStorage() {
 }
 
 // Mark ad as clicked
-function markAdAsClicked(uniqueAdId, showNotif = true) {
-    if (!uniqueAdId) return;
+function markAdAsClicked(adId, showNotif = true) {
+    if (!adId) return;
     
     // Check if this ad has already been clicked
-    if (adsClicked.has(uniqueAdId)) {
+    if (adsClicked.has(adId)) {
         return; // Don't show notification for duplicate clicks
     }
     
-    // Extract the original ad ID from the unique ID
-    const adId = uniqueAdId.split('_').slice(0, -1).join('_');
-    
     // Mark this ad as clicked
-    adsClicked.add(uniqueAdId);
+    adsClicked.add(adId);
     updateAdCounter();
     
     // Update the visual indicator for this ad
