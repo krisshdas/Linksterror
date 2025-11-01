@@ -34,6 +34,8 @@ auth.onAuthStateChanged((user) => {
       uid: user.uid
     };
     
+    console.log('Current user logged in:', window.currentUser);
+    
     // Initialize the dashboard with the logged-in user
     initializeDashboard();
   }
@@ -150,14 +152,18 @@ function initializeDashboard() {
     const expiry = timestamp + 30 * 24 * 60 * 60 * 1000; // 30 days
 
     // Save link with user's ID
-    await db.ref("links/" + linkId).set({
+    const linkData = {
       originalUrl,
       createdBy: window.currentUser.email,
-      createdById: window.currentUser.uid, // Add user ID for reference
+      createdById: window.currentUser.uid, // This is crucial for ad separation
       createdAt: timestamp,
       expiry,
       clicks: 0
-    });
+    };
+    
+    console.log('Creating link with data:', linkData);
+    
+    await db.ref("links/" + linkId).set(linkData);
 
     const shortUrl = `https://krisshdas.github.io/Linksterror/redirect.html?id=${linkId}`;
     shortenedLinkDiv.innerHTML = `
