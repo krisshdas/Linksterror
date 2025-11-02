@@ -1,37 +1,69 @@
+<!-- redirect.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
   <title>Redirecting...</title>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: white;
-      font-family: 'Poppins', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      overflow: hidden;
-      text-align: center;
-    }
-    #loadingText {
-      font-size: 1.2rem;
-      animation: fadeBlink 1.5s infinite;
-    }
-    @keyframes fadeBlink {
-      50% { opacity: 0.6; }
-    }
+    body { font-family: sans-serif; text-align:center; padding-top:40px; }
+    #ad-frame { width:90%; height:300px; border:none; margin:auto; display:block; }
   </style>
 </head>
 <body>
-  <div id="loadingText">Connecting to server...</div>
-  <script src="redirect.js?v=7"></script>
+  <h2>Your content will load shortly...</h2>
+  <iframe id="ad-frame"></iframe>
+  <p id="timer"></p>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBMSFIlfrXV9vPdpXUJm3HkaFVJwXeB0h8",
+      authDomain: "link-shortner-2898c.firebaseapp.com",
+      databaseURL: "https://link-shortner-2898c-default-rtdb.firebaseio.com",
+      projectId: "link-shortner-2898c",
+      storageBucket: "link-shortner-2898c.firebasestorage.app",
+      messagingSenderId: "283153832071",
+      appId: "1:283153832071:web:8704bb833305447d4f8022",
+      measurementId: "G-J3XWHEX759"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const id = new URLSearchParams(location.search).get("id");
+    const adFrame = document.getElementById("ad-frame");
+    const timer = document.getElementById("timer");
+
+    async function loadLink() {
+      if (!id) return (timer.textContent = "No ID provided");
+
+      const snap = await get(ref(db, `links/${id}`));
+      if (!snap.exists()) return (timer.textContent = "Link not found");
+
+      const data = snap.val();
+      const adCode = data.adConfig?.snippet || "";
+
+      // Load ad snippet safely in sandboxed iframe
+      const doc = adFrame.contentDocument;
+      doc.open();
+      doc.write(adCode || "<p>No ad configured</p>");
+      doc.close();
+
+      // countdown + redirect
+      let sec = 7;
+      const interval = setInterval(() => {
+        timer.textContent = `Redirecting in ${sec}s...`;
+        sec--;
+        if (sec < 0) {
+          clearInterval(interval);
+          location.href = data.target;
+        }
+      }, 1000);
+    }
+
+    loadLink();
+  </script>
 </body>
 </html>
