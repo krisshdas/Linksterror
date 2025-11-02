@@ -36,8 +36,10 @@
             </div>
         </div>
         
-        <!-- Header Ad -->
-        <div class="ad-header ad-wrapper" id="headerAd" data-ad-id="headerAd"></div>
+        <!-- Header Ad (728x90) -->
+        <div class="ad-header ad-wrapper" id="headerAd" data-ad-id="headerAd">
+            <!-- Ad will be loaded from Firebase -->
+        </div>
         
         <!-- Main Content -->
         <div class="ad-content">
@@ -45,6 +47,7 @@
                 <h2>Please check out our sponsors</h2>
                 <p>Tap on any advertisement to continue to your destination</p>
                 
+                <!-- Help Video Section -->
                 <div class="help-section">
                     <h3><i class="fas fa-video"></i> Having Trouble? Watch This Tutorial</h3>
                     <p>Learn how to complete the ad verification process in just 2 minutes</p>
@@ -59,13 +62,17 @@
                 </div>
                 
                 <!-- Pop Ad -->
-                <div class="pop-ad ad-wrapper" id="popAd" data-ad-id="popAd"></div>
+                <div class="pop-ad ad-wrapper" id="popAd" data-ad-id="popAd">
+                    <!-- Ad will be loaded from Firebase -->
+                </div>
                 
+                <!-- Ad Stats -->
                 <div class="ad-stats">
                     <span>Ads Tapped: <span id="adsViewed">0</span>/6</span>
                     <span>Time Remaining: <span id="timeRemaining">15</span>s</span>
                 </div>
                 
+                <!-- Additional Help Section -->
                 <div class="help-card">
                     <h4><i class="fas fa-info-circle"></i> Quick Instructions</h4>
                     <ol>
@@ -79,28 +86,143 @@
             </div>
             
             <div class="ad-left">
-                <div class="ad-banner high-value ad-wrapper" id="sideAd1" data-ad-id="sideAd1"></div>
-                <div class="ad-banner ad-wrapper" id="sideAd2" data-ad-id="sideAd2"></div>
+                <!-- Side Ad 1 (300x250) - Highest Value -->
+                <div class="ad-banner high-value ad-wrapper" id="sideAd1" data-ad-id="sideAd1">
+                    <!-- Ad will be loaded from Firebase -->
+                </div>
+                
+                <!-- Side Ad 2 (160x300) -->
+                <div class="ad-banner ad-wrapper" id="sideAd2" data-ad-id="sideAd2">
+                    <!-- Ad will be loaded from Firebase -->
+                </div>
             </div>
             
             <div class="ad-right">
-                <div class="ad-banner ad-wrapper" id="sideAd3" data-ad-id="sideAd3"></div>
-                <div class="ad-banner ad-wrapper" id="sideAd4" data-ad-id="sideAd4"></div>
+                <!-- Side Ad 3 (468x60) -->
+                <div class="ad-banner ad-wrapper" id="sideAd3" data-ad-id="sideAd3">
+                    <!-- Ad will be loaded from Firebase -->
+                </div>
+                
+                <!-- Side Ad 4 (320x50) -->
+                <div class="ad-banner ad-wrapper" id="sideAd4" data-ad-id="sideAd4">
+                    <!-- Ad will be loaded from Firebase -->
+                </div>
             </div>
         </div>
         
         <!-- Bottom Ad -->
-        <div class="ad-footer ad-wrapper" id="bottomAd" data-ad-id="bottomAd"></div>
+        <div class="ad-footer ad-wrapper" id="bottomAd" data-ad-id="bottomAd">
+            <!-- Ad will be loaded from Firebase -->
+        </div>
+        
+        <!-- Page Divider -->
+        <div class="page-divider">
+            <h3>Additional Advertisements</h3>
+        </div>
         
         <!-- Hardcoded Ads Section -->
-        <!-- (Your existing ads remain unchanged below this point) -->
-        <!-- ... -->
+        <div class="hardcoded-ads">
+            <h3 class="ad-section-title">More Offers From Our Partners</h3>
+            
+            <!-- Help Reminder -->
+            <div class="help-reminder">
+                <p><i class="fas fa-lightbulb"></i> <strong>Tip:</strong> If you're having trouble clicking ads, <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank">watch our tutorial video</a> for step-by-step guidance!</p>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 1: 728x90 -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd1">
+                    <div class="ad-label">728x90 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : 'a613a5730088d6b2192f8e5087590be5',
+                            'format' : 'iframe',
+                            'height' : 90,
+                            'width' : 728,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/a613a5730088d6b2192f8e5087590be5/invoke.js"></script>
+                </div>
+                
+                <!-- Ad 2: 300x250 -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd2">
+                    <div class="ad-label">300x250 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : 'f0fcf291e1d265a945dbd45c1674505d',
+                            'format' : 'iframe',
+                            'height' : 250,
+                            'width' : 300,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/f0fcf291e1d265a945dbd45c1674505d/invoke.js"></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 3: 320x50 -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd3">
+                    <div class="ad-label">320x50 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : 'a9cdfc2f050735d7c17d6d5650e26bfe',
+                            'format' : 'iframe',
+                            'height' : 50,
+                            'width' : 320,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/a9cdfc2f050735d7c17d6d5650e26bfe/invoke.js"></script>
+                </div>
+                
+                <!-- Ad 4: 468x60 -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd4">
+                    <div class="ad-label">468x60 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '0763125bdb9b7f5c9a782af3cf9091f6',
+                            'format' : 'iframe',
+                            'height' : 60,
+                            'width' : 468,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/0763125bdb9b7f5c9a782af3cf9091f6/invoke.js"></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 5: 160x300 -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd5">
+                    <div class="ad-label">160x300 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '42de855a41965e9fad85dcd0c22092f5',
+                            'format' : 'iframe',
+                            'height' : 300,
+                            'width' : 160,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/42de855a41965e9fad85dcd0c22092f5/invoke.js"></script>
+                </div>
+                
+                <!-- Ad 6: Container Ad -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd6">
+                    <div class="ad-label">Container Ad</div>
+                    <script async="async" data-cfasync="false" src="//pl27948945.effectivegatecpm.com/f26c57292f848e1a99e38572ea936821/invoke.js"></script>
+                    <div id="container-f26c57292f848e1a99e38572ea936821"></div>
+                </div>
+            </div>
+        </div>
         
         <!-- Ad Check Button -->
         <div class="ad-check-container">
             <div class="instructions" id="instructions" style="display: none;">
                 <p>Tap the "Check Ads" button below to verify you've viewed the advertisements</p>
-                <p><strong>Need help?</strong> <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank">Watch our tutorial video</a></p>
+                <p><strong>Need help?</strong> <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank">Watch our tutorial video</a> for step-by-step instructions!</p>
             </div>
             <button class="ad-check-btn" id="adCheckBtn" style="display: none;">
                 <i class="fas fa-search"></i>
@@ -116,6 +238,7 @@
             </button>
         </div>
         
+        <!-- Final Help Section -->
         <div class="final-help">
             <h3><i class="fas fa-question-circle"></i> Still Having Trouble?</h3>
             <p>We're here to help! Watch our complete video tutorial that shows you exactly how to complete this process:</p>
@@ -126,42 +249,11 @@
         </div>
     </div>
     
-    <!-- ✅ Firebase + custom ad loading -->
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
-    <script>
-      const firebaseConfig = {
-        apiKey: "AIzaSyBMSFIlfrXV9vPdpXUJm3HkaFVJwXeB0h8",
-        authDomain: "link-shortner-2898c.firebaseapp.com",
-        databaseURL: "https://link-shortner-2898c-default-rtdb.firebaseio.com",
-        projectId: "link-shortner-2898c",
-        storageBucket: "link-shortner-2898c.firebasestorage.app",
-        messagingSenderId: "283153832071",
-        appId: "1:283153832071:web:8704bb833305447d4f8022",
-        measurementId: "G-J3XWHEX759"
-      };
-      firebase.initializeApp(firebaseConfig);
-
-      const userId = sessionStorage.getItem("userId");
-      if (userId) {
-        const db = firebase.database();
-        db.ref(`users/${userId}/ads`).once("value").then(snapshot => {
-          const ads = snapshot.val();
-          if (!ads) return console.warn("No ads found for user", userId);
-
-          // Loop through placeholders (headerAd, sideAd1, etc.)
-          for (const adId in ads) {
-            const el = document.getElementById(adId);
-            if (el && ads[adId]) el.innerHTML = ads[adId]; // Inject ad HTML
-          }
-        }).catch(err => console.error("Error loading ads:", err));
-      } else {
-        console.warn("No userId found in sessionStorage.");
-      }
-    </script>
-
     <script src="ad-page.js"></script>
     <script>
+        // Initialize ad page
         initAdPage(1);
     </script>
 </body>
