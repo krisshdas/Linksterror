@@ -32,7 +32,6 @@ let touchEndX = 0;
 let touchEndY = 0;
 let pageFocusLost = false;
 let adClickDetectionInterval;
-let userAdConfig = null; // Store user's ad configuration
 
 // Initialize ad page
 function initAdPage(pageNumber) {
@@ -47,7 +46,6 @@ function initAdPage(pageNumber) {
     pageVisibilityHidden = false;
     lastInteractionTime = 0;
     pageFocusLost = false;
-    userAdConfig = null; // Reset user ad config
     
     // Clear any existing intervals
     if (adClickDetectionInterval) clearInterval(adClickDetectionInterval);
@@ -67,29 +65,8 @@ function initAdPage(pageNumber) {
         return;
     }
     
-    // Load user's ad configuration first, then load ads
-    loadUserAdConfig()
-        .then(() => {
-            // Load ads based on user configuration
-            loadAdsFromUserConfig(pageNumber);
-            
-            // Hide loading animation after ads are loaded
-            const loadingAnimation = document.querySelector('.loading-animation');
-            if (loadingAnimation) {
-                loadingAnimation.style.display = 'none';
-            }
-        })
-        .catch((error) => {
-            console.error('Error loading user ad config:', error);
-            // Fallback to default ads from Firebase
-            loadAdsFromFirebase(pageNumber);
-            
-            // Hide loading animation even if there's an error
-            const loadingAnimation = document.querySelector('.loading-animation');
-            if (loadingAnimation) {
-                loadingAnimation.style.display = 'none';
-            }
-        });
+    // Load ads from Firebase first
+    loadAdsFromFirebase(pageNumber);
     
     // Start countdown
     startCountdown();
@@ -103,85 +80,38 @@ function initAdPage(pageNumber) {
     }, 3000);
 }
 
-// Load user's ad configuration based on the short code
-function loadUserAdConfig() {
-    return new Promise((resolve, reject) => {
-        // Get the short code from session storage
-        const shortCode = sessionStorage.getItem('shortCode') || '';
-        
-        if (!shortCode) {
-            reject(new Error('No short code found'));
-            return;
+// Reset progress bars to initial state
+function resetProgressBars() {
+    const progressBar = document.getElementById('progressBar');
+    const mainProgressBar = document.getElementById('mainProgressBar');
+    
+    if (progressBar) {
+        progressBar.style.width = '100%';
+    }
+    
+    if (mainProgressBar) {
+        mainProgressBar.style.width = '100%';
+    }
+}
+
+// Update ad counter display
+function updateAdCounter() {
+    const adsViewedElement = document.getElementById('adsViewed');
+    if (adsViewedElement) {
+        adsViewedElement.textContent = adsClicked.size;
+    }
+    
+    // Update time remaining display
+    const timeRemainingElement = document.getElementById('timeRemaining');
+    if (timeRemainingElement) {
+        const countdownElement = document.getElementById('countdown');
+        if (countdownElement) {
+            timeRemainingElement.textContent = countdownElement.textContent;
         }
-        
-        // Find the link in the database
-        database.ref('users').once('value')
-            .then((snapshot) => {
-                const users = snapshot.val() || {};
-                
-                for (const userId in users) {
-                    const userLinks = users[userId].links || {};
-                    
-                    for (const linkId in userLinks) {
-                        const link = userLinks[linkId];
-                        
-                        if (link.shortCode === shortCode) {
-                            // Get the user's ad configuration
-                            userAdConfig = link.adConfig || users[userId].adConfig || null;
-                            resolve(userAdConfig);
-                            return;
-                        }
-                    }
-                }
-                
-                // If no link found with the short code
-                reject(new Error('Link not found'));
-            })
-            .catch((error) => {
-                reject(error);
-            });
-    });
-}
-
-// Load ads from user's configuration
-function loadAdsFromUserConfig(pageNumber) {
-    if (!userAdConfig) {
-        // If no user config, fallback to default ads
-        loadAdsFromFirebase(pageNumber);
-        return;
-    }
-    
-    // Load header ad
-    if (userAdConfig.adsterraBannerCode) {
-        executeAdScript('headerAd', userAdConfig.adsterraBannerCode);
-    }
-    
-    // Load side ads
-    if (userAdConfig.adsterraNativeCode) {
-        executeAdScript('sideAd1', userAdConfig.adsterraNativeCode);
-        executeAdScript('sideAd2', userAdConfig.adsterraNativeCode);
-        executeAdScript('sideAd3', userAdConfig.adsterraNativeCode);
-        executeAdScript('sideAd4', userAdConfig.adsterraNativeCode);
-    }
-    
-    // Load bottom ad
-    if (userAdConfig.adsterraBannerCode) {
-        executeAdScript('bottomAd', userAdConfig.adsterraBannerCode);
-    }
-    
-    // Load pop ad
-    if (userAdConfig.adsterraPopCode) {
-        executeAdScript('popAd', userAdConfig.adsterraPopCode);
-    }
-    
-    // If user has custom ad code, use it for some positions
-    if (userAdConfig.customAdCode) {
-        executeAdScript('sideAd1', userAdConfig.customAdCode);
-        executeAdScript('bottomAd', userAdConfig.customAdCode);
     }
 }
 
-// Load ads from Firebase for the current page (fallback)
+// Load ads from Firebase for the current page
 function loadAdsFromFirebase(pageNumber) {
     database.ref('ads/config/ad' + pageNumber).once('value')
         .then((snapshot) => {
@@ -215,9 +145,20 @@ function loadAdsFromFirebase(pageNumber) {
             if (adConfig.popup) {
                 executeAdScript('popAd', adConfig.popup);
             }
+            
+            // Hide loading animation after ads are loaded
+            const loadingAnimation = document.querySelector('.loading-animation');
+            if (loadingAnimation) {
+                loadingAnimation.style.display = 'none';
+            }
         })
         .catch((error) => {
             console.error('Error loading ads from Firebase:', error);
+            // Hide loading animation even if there's an error
+            const loadingAnimation = document.querySelector('.loading-animation');
+            if (loadingAnimation) {
+                loadingAnimation.style.display = 'none';
+            }
         });
 }
 
@@ -953,4 +894,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-                                      }
+            }
