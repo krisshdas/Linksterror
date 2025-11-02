@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ad Page 1 | Linksterror</title>
+  <title>Ad Page | Linksterror</title>
 
-  <!-- Optional styles -->
   <link rel="stylesheet" href="ads.css" />
 </head>
 <body>
@@ -26,11 +25,11 @@
 
   <p id="redirect-timer">Please wait, redirecting soon...</p>
 
-  <!-- ✅ Firebase libraries -->
+  <!-- ✅ Firebase Libraries -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-  <!-- ✅ Firebase configuration -->
+  <!-- ✅ Firebase Config -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBMSFIlfrXV9vPdpXUJm3HkaFVJwXeB0h8",
@@ -45,12 +44,25 @@
     firebase.initializeApp(firebaseConfig);
   </script>
 
-  <!-- 🧩 Paste this override code BEFORE ad-page.js -->
+  <!-- ✅ NEW: Extract UID & Target from URL (fallback) -->
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const uid = params.get("uid");
+    const target = params.get("target");
+
+    if (uid) sessionStorage.setItem("userId", uid);
+    if (target) sessionStorage.setItem("originalUrl", target);
+  </script>
+
+  <!-- ✅ Override ad-page.js Firebase path -->
   <script>
     const userId = sessionStorage.getItem("userId");
+
     if (userId) {
       const originalRef = firebase.database.Reference.prototype.child;
+
       firebase.database.Reference.prototype.child = function (path) {
+        // If code requests "ads/config/ad1", rewrite to user path
         if (path.startsWith("ads/config")) {
           const adPage = path.split("/").pop();
           console.log("Loading ads for user:", userId, "ad page:", adPage);
@@ -58,29 +70,34 @@
         }
         return originalRef.call(this, path);
       };
+    } else {
+      console.warn("⚠️ No userId found in sessionStorage — ads may not load.");
     }
   </script>
 
-  <!-- ✅ Now load your main ad logic -->
+  <!-- ✅ Load main ad logic -->
   <script src="ad-page.js"></script>
 
-  <!-- Optional redirect timer (example) -->
+  <!-- ✅ Redirect Timer -->
   <script>
-    const target = sessionStorage.getItem("originalUrl");
-    let seconds = 7;
+    const targetUrl = sessionStorage.getItem("originalUrl");
     const timerEl = document.getElementById("redirect-timer");
 
-    if (target) {
+    if (targetUrl) {
+      let seconds = 7;
+      timerEl.textContent = `Redirecting in ${seconds}s...`;
+
       const countdown = setInterval(() => {
-        timerEl.textContent = `Redirecting in ${seconds}s...`;
         seconds--;
-        if (seconds < 0) {
+        timerEl.textContent = `Redirecting in ${seconds}s...`;
+
+        if (seconds <= 0) {
           clearInterval(countdown);
-          window.location.href = target;
+          window.location.href = targetUrl;
         }
       }, 1000);
     } else {
-      timerEl.textContent = "No redirect target found.";
+      timerEl.textContent = "⚠️ No redirect target found.";
     }
   </script>
 </body>
