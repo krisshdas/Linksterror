@@ -1,3 +1,4 @@
+// ad-page.js
 // Initialize Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBMSFIlfrXV9vPdpXUJm3HkaFVJwXeB0h8",
@@ -823,30 +824,34 @@ function trackAdView(pageNumber) {
     
     if (shortCode) {
         // Find the link in the database
-        database.ref('users').once('value')
+        database.ref('links').once('value')
             .then((snapshot) => {
-                const users = snapshot.val() || {};
+                const links = snapshot.val() || {};
                 
-                for (const userId in users) {
-                    const userLinks = users[userId].links || {};
+                for (const linkId in links) {
+                    const link = links[linkId];
                     
-                    for (const linkId in userLinks) {
-                        const link = userLinks[linkId];
+                    if (linkId === shortCode) {
+                        // Increment ad view count
+                        const currentAdViews = link.adViews || {};
+                        const pageViews = currentAdViews[`page${pageNumber}`] || 0;
                         
-                        if (link.shortCode === shortCode) {
-                            // Increment ad view count
-                            const currentAdViews = link.adViews || {};
-                            const pageViews = currentAdViews[`page${pageNumber}`] || 0;
-                            
-                            database.ref('users/' + userId + '/links/' + linkId).update({
-                                adViews: {
-                                    ...currentAdViews,
-                                    [`page${pageNumber}`]: pageViews + 1
-                                }
-                            });
-                            
-                            return;
-                        }
+                        database.ref('links/' + linkId).update({
+                            adViews: {
+                                ...currentAdViews,
+                                [`page${pageNumber}`]: pageViews + 1
+                            }
+                        });
+                        
+                        // Also update in user's links
+                        database.ref('users/' + link.userId + '/links/' + linkId).update({
+                            adViews: {
+                                ...currentAdViews,
+                                [`page${pageNumber}`]: pageViews + 1
+                            }
+                        });
+                        
+                        return;
                     }
                 }
             })
@@ -863,30 +868,34 @@ function trackAdClick(pageNumber) {
     
     if (shortCode) {
         // Find the link in the database
-        database.ref('users').once('value')
+        database.ref('links').once('value')
             .then((snapshot) => {
-                const users = snapshot.val() || {};
+                const links = snapshot.val() || {};
                 
-                for (const userId in users) {
-                    const userLinks = users[userId].links || {};
+                for (const linkId in links) {
+                    const link = links[linkId];
                     
-                    for (const linkId in userLinks) {
-                        const link = userLinks[linkId];
+                    if (linkId === shortCode) {
+                        // Increment ad click count
+                        const currentAdClicks = link.adClicks || {};
+                        const pageClicks = currentAdClicks[`page${pageNumber}`] || 0;
                         
-                        if (link.shortCode === shortCode) {
-                            // Increment ad click count
-                            const currentAdClicks = link.adClicks || {};
-                            const pageClicks = currentAdClicks[`page${pageNumber}`] || 0;
-                            
-                            database.ref('users/' + userId + '/links/' + linkId).update({
-                                adClicks: {
-                                    ...currentAdClicks,
-                                    [`page${pageNumber}`]: pageClicks + 1
-                                }
-                            });
-                            
-                            return;
-                        }
+                        database.ref('links/' + linkId).update({
+                            adClicks: {
+                                ...currentAdClicks,
+                                [`page${pageNumber}`]: pageClicks + 1
+                            }
+                        });
+                        
+                        // Also update in user's links
+                        database.ref('users/' + link.userId + '/links/' + linkId).update({
+                            adClicks: {
+                                ...currentAdClicks,
+                                [`page${pageNumber}`]: pageClicks + 1
+                            }
+                        });
+                        
+                        return;
                     }
                 }
             })
@@ -894,4 +903,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-            }
+}
