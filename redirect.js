@@ -1,6 +1,6 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-  import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+  import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBMSFIlfrXV9vPdpXUJm3HkaFVJwXeB0h8",
@@ -16,36 +16,37 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // 🔍 Get link ID from URL
   const urlParams = new URLSearchParams(window.location.search);
   const linkId = urlParams.get("id");
 
   if (!linkId) {
     document.body.innerHTML = "<h3>No link ID provided!</h3>";
-    throw new Error("No link ID found in URL");
+    throw new Error("Missing link id");
   }
 
-  // 🔎 Load link info from Firebase
-  const globalRef = ref(db, `links/${linkId}`);
-  get(globalRef)
-    .then((snapshot) => {
-      if (snapshot.exists()) {
-        const linkData = snapshot.val();
+  const globalRef = ref(db, "links/" + linkId);
 
-        // ✅ Save user-specific data to sessionStorage
-        sessionStorage.setItem("userId", linkData.owner);
-        sessionStorage.setItem("originalUrl", linkData.originalUrl);
+  get(globalRef).then(snapshot => {
+    if (snapshot.exists()) {
+      const data = snapshot.val();
 
-        console.log("Redirecting to ad1.html for user:", linkData.owner);
-
-        // ✅ Redirect to ad page
-        window.location.href = "ad1.html";
-      } else {
-        document.body.innerHTML = "<h3>Invalid or expired link.</h3>";
+      if (!data.owner || !data.originalUrl) {
+        document.body.innerHTML = "<h3>Invalid link data.</h3>";
+        return;
       }
-    })
-    .catch((err) => {
-      console.error("Error fetching link:", err);
-      document.body.innerHTML = "<h3>Error loading link data.</h3>";
-    });
+
+      // 🔥 Save locally for ad1.html
+      sessionStorage.setItem("userId", data.owner);
+      sessionStorage.setItem("originalUrl", data.originalUrl);
+
+      // ✅ Safer: also include UID + URL in query string for fallback
+      const adPageUrl = `ad1.html?uid=${encodeURIComponent(data.owner)}&target=${encodeURIComponent(data.originalUrl)}`;
+      window.location.href = adPageUrl;
+    } else {
+      document.body.innerHTML = "<h3>Invalid or expired link.</h3>";
+    }
+  }).catch(err => {
+    console.error(err);
+    document.body.innerHTML = "<h3>Error fetching link.</h3>";
+  });
 </script>
