@@ -276,7 +276,7 @@ function executeAdScript(elementId, scriptContent) {
     });
 }
 
-// Set up ad click detection
+// Set up ad click detection (mobile-first)
 function setupAdClickDetection() {
     // Get all ad wrappers
     const wrappers = document.querySelectorAll('.ad-wrapper');
@@ -292,7 +292,7 @@ function setupAdClickDetection() {
         // Add a subtle border to indicate it's clickable
         wrapper.style.border = '1px dashed rgba(52, 152, 219, 0.3)';
         
-        // Add a "Tap me" indicator for unclicked ads
+        // Add a "Tap me" indicator for unclicked ads (mobile-friendly)
         if (!adsClicked.has(adId)) {
             const indicator = document.createElement('div');
             indicator.className = 'ad-click-indicator';
@@ -321,11 +321,7 @@ function setupAdClickDetection() {
             touchStartTime: null
         });
         
-        // Add event listeners for desktop
-        wrapper.addEventListener('mouseenter', handleAdMouseEnter);
-        wrapper.addEventListener('mouseleave', handleAdMouseLeave);
-        
-        // Add event listeners for mobile
+        // Add event listeners for mobile (primary)
         wrapper.addEventListener('touchstart', handleAdTouchStart, { passive: true });
         wrapper.addEventListener('touchend', handleAdTouchEnd, { passive: true });
         wrapper.addEventListener('touchmove', handleAdTouchMove, { passive: true });
@@ -335,6 +331,10 @@ function setupAdClickDetection() {
         
         // Monitor for right-clicks (which might indicate user interest)
         wrapper.addEventListener('contextmenu', handleAdRightClick);
+        
+        // Add event listeners for desktop (secondary)
+        wrapper.addEventListener('mouseenter', handleAdMouseEnter);
+        wrapper.addEventListener('mouseleave', handleAdMouseLeave);
     });
     
     // Add global event listeners to detect when user leaves the page
@@ -355,47 +355,7 @@ function setupAdClickDetection() {
     adClickDetectionInterval = setInterval(checkForAdInteractions, 1000);
 }
 
-// Handle mouse enter on ad
-function handleAdMouseEnter(e) {
-    const wrapper = e.currentTarget;
-    const adId = wrapper.getAttribute('data-ad-id');
-    if (!adId) return;
-    
-    const interaction = adInteractions.get(adId);
-    if (!interaction) return;
-    
-    interaction.entered = true;
-    interaction.hoverStartTime = Date.now();
-    interaction.lastInteractionTime = Date.now();
-    lastInteractedAd = adId;
-    lastInteractionTime = Date.now();
-    
-    // Add visual feedback
-    wrapper.style.backgroundColor = 'rgba(52, 152, 219, 0.1)';
-}
-
-// Handle mouse leave on ad
-function handleAdMouseLeave(e) {
-    const wrapper = e.currentTarget;
-    const adId = wrapper.getAttribute('data-ad-id');
-    if (!adId) return;
-    
-    const interaction = adInteractions.get(adId);
-    if (!interaction) return;
-    
-    interaction.entered = false;
-    
-    // Calculate hover time
-    if (interaction.hoverStartTime) {
-        interaction.hoverTime += Date.now() - interaction.hoverStartTime;
-        interaction.hoverStartTime = null;
-    }
-    
-    // Remove visual feedback
-    wrapper.style.backgroundColor = '';
-}
-
-// Handle touch start on ad (mobile)
+// Handle touch start on ad (mobile) - PRIMARY METHOD
 function handleAdTouchStart(e) {
     const wrapper = e.currentTarget;
     const adId = wrapper.getAttribute('data-ad-id');
@@ -414,7 +374,7 @@ function handleAdTouchStart(e) {
     lastInteractedAd = adId;
     lastInteractionTime = Date.now();
     
-    // Add visual feedback
+    // Add visual feedback (mobile-friendly)
     wrapper.style.backgroundColor = 'rgba(52, 152, 219, 0.1)';
 }
 
@@ -425,7 +385,7 @@ function handleAdTouchMove(e) {
     touchEndY = e.touches[0].clientY;
 }
 
-// Handle touch end on ad (mobile)
+// Handle touch end on ad (mobile) - PRIMARY METHOD
 function handleAdTouchEnd(e) {
     const wrapper = e.currentTarget;
     const adId = wrapper.getAttribute('data-ad-id');
@@ -457,6 +417,46 @@ function handleAdTouchEnd(e) {
         lastInteractedAd = adId;
         lastInteractionTime = Date.now();
     }
+}
+
+// Handle mouse enter on ad (desktop)
+function handleAdMouseEnter(e) {
+    const wrapper = e.currentTarget;
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    const interaction = adInteractions.get(adId);
+    if (!interaction) return;
+    
+    interaction.entered = true;
+    interaction.hoverStartTime = Date.now();
+    interaction.lastInteractionTime = Date.now();
+    lastInteractedAd = adId;
+    lastInteractionTime = Date.now();
+    
+    // Add visual feedback
+    wrapper.style.backgroundColor = 'rgba(52, 152, 219, 0.1)';
+}
+
+// Handle mouse leave on ad (desktop)
+function handleAdMouseLeave(e) {
+    const wrapper = e.currentTarget;
+    const adId = wrapper.getAttribute('data-ad-id');
+    if (!adId) return;
+    
+    const interaction = adInteractions.get(adId);
+    if (!interaction) return;
+    
+    interaction.entered = false;
+    
+    // Calculate hover time
+    if (interaction.hoverStartTime) {
+        interaction.hoverTime += Date.now() - interaction.hoverStartTime;
+        interaction.hoverStartTime = null;
+    }
+    
+    // Remove visual feedback
+    wrapper.style.backgroundColor = '';
 }
 
 // Handle ad area click
@@ -685,7 +685,7 @@ function markAdAsClicked(adId, showNotif = true) {
         wrapper.style.border = '1px solid rgba(46, 204, 113, 0.5)';
     }
     
-    // Show notification
+    // Show notification (mobile-friendly)
     if (showNotif) {
         showNotification(`Ad clicked! (${adsClicked.size}/${totalAds})`);
     }
@@ -709,7 +709,7 @@ function markAdAsClicked(adId, showNotif = true) {
     }
 }
 
-// Show notification
+// Show notification (mobile-friendly)
 function showNotification(message) {
     const notification = document.getElementById('notification');
     const notificationText = document.getElementById('notificationText');
@@ -788,7 +788,7 @@ function showAdCheckButton() {
             instructions.querySelector('p').textContent = `Please tap on at least ${totalAds} ads before continuing. (${adsClicked.size}/${totalAds} clicked)`;
         }
         
-        // Scroll to bottom to show button
+        // Scroll to bottom to show button (mobile-friendly)
         setTimeout(() => {
             window.scrollTo({
                 top: document.body.scrollHeight,
@@ -969,4 +969,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-        }
+}
