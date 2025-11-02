@@ -21,7 +21,6 @@ const linkId = urlParams.get('id');
 
 // Global variables
 let linkData = null;
-let userData = null;
 let userAdConfig = null;
 
 // Initialize the redirect page
@@ -66,13 +65,13 @@ function fetchUserData(userId) {
     database.ref('users/' + userId).once('value')
         .then((snapshot) => {
             if (snapshot.exists()) {
-                userData = snapshot.val();
+                const userData = snapshot.val();
                 
                 // Get user's ad configuration
                 userAdConfig = userData.adConfig || {};
                 
-                // Update ad configurations in Firebase with user's ad codes
-                updateAdConfigurations();
+                // Store ad configuration in session storage
+                sessionStorage.setItem('userAdConfig', JSON.stringify(userAdConfig));
                 
                 // Redirect to ad page after a short delay
                 setTimeout(() => {
@@ -86,36 +85,6 @@ function fetchUserData(userId) {
             console.error('Error fetching user data:', error);
             showError('Error loading user data. Please try again later.');
         });
-}
-
-// Update ad configurations in Firebase with user's ad codes
-function updateAdConfigurations() {
-    if (!userAdConfig) return;
-    
-    // Update ad configurations for all ad pages
-    for (let i = 1; i <= 5; i++) {
-        const adConfigRef = database.ref('ads/config/ad' + i);
-        
-        // Create ad configuration object
-        const adConfig = {
-            header: userAdConfig.header || '',
-            side1: userAdConfig.side1 || '',
-            side2: userAdConfig.side2 || '',
-            side3: userAdConfig.side3 || '',
-            side4: userAdConfig.side4 || '',
-            bottom: userAdConfig.bottom || '',
-            popup: userAdConfig.popup || ''
-        };
-        
-        // Update the ad configuration
-        adConfigRef.set(adConfig)
-            .then(() => {
-                console.log('Ad configuration for page ' + i + ' updated successfully');
-            })
-            .catch((error) => {
-                console.error('Error updating ad configuration for page ' + i + ':', error);
-            });
-    }
 }
 
 // Show error message
