@@ -1,61 +1,126 @@
 // redirect.js
-// Include this in redirect.html with:
-// <script type="module" src="./redirect.js"></script>
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
-
-// ✅ Your Firebase config
+// Initialize Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyBMSFIlfrXV9vPdpXUJm3HkaFVJwXeB0h8",
-  authDomain: "link-shortner-2898c.firebaseapp.com",
-  databaseURL: "https://link-shortner-2898c-default-rtdb.firebaseio.com",
-  projectId: "link-shortner-2898c",
-  storageBucket: "link-shortner-2898c.firebasestorage.app",
-  messagingSenderId: "283153832071",
-  appId: "1:283153832071:web:8704bb833305447d4f8022",
-  measurementId: "G-J3XWHEX759"
+    apiKey: "AIzaSyBMSFIlfrXV9vPdpXUJm3HkaFVJwXeB0h8",
+    authDomain: "link-shortner-2898c.firebaseapp.com",
+    databaseURL: "https://link-shortner-2898c-default-rtdb.firebaseio.com",
+    projectId: "link-shortner-2898c",
+    storageBucket: "link-shortner-2898c.firebasestorage.app",
+    messagingSenderId: "283153832071",
+    appId: "1:283153832071:web:8704bb833305447d4f8022",
+    measurementId: "G-J3XWHEX759"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
 
-// ✅ Get link ID from URL
-const params = new URLSearchParams(window.location.search);
-const linkId = params.get("id");
+// Get the link ID from URL parameters
+const urlParams = new URLSearchParams(window.location.search);
+const linkId = urlParams.get('id');
 
-// ✅ Handle missing ID
-if (!linkId) {
-  document.body.innerHTML = "<h3>No link ID provided in the URL.</h3>";
-  throw new Error("Missing ?id= parameter");
+// Global variables
+let linkData = null;
+let userData = null;
+let userAdConfig = null;
+
+// Initialize the redirect page
+document.addEventListener('DOMContentLoaded', () => {
+    if (linkId) {
+        // Show loading state
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('error-container').style.display = 'none';
+        
+        // Fetch link data
+        fetchLinkData();
+    } else {
+        showError('Invalid link. No ID provided.');
+    }
+});
+
+// Fetch link data from Firebase
+function fetchLinkData() {
+    database.ref('links/' + linkId).once('value')
+        .then((snapshot) => {
+            if (snapshot.exists()) {
+                linkData = snapshot.val();
+                
+                // Store the original URL in session storage
+                sessionStorage.setItem('originalUrl', linkData.originalUrl);
+                sessionStorage.setItem('shortCode', linkId);
+                
+                // Fetch user data to get ad configuration
+                fetchUserData(linkData.userId);
+            } else {
+                showError('Link not found or has been removed.');
+            }
+        })
+        .catch((error) => {
+            console.error('Error fetching link data:', error);
+            showError('Error loading link. Please try again later.');
+        });
 }
 
-// ✅ Load the link data from Firebase
-get(ref(db, "links/" + linkId))
-  .then(snapshot => {
-    if (!snapshot.exists()) {
-      document.body.innerHTML = "<h3>Invalid or expired link.</h3>";
-      return;
+// Fetch user data from Firebase
+function fetchUserData(userId) {
+    database.ref('users/' + userId).once('value')
+        .then((snapshot) => {
+            if (snapshot.exists()) {
+                userData = snapshot.val();
+                
+                // Get user's ad configuration
+                userAdConfig = userData.adConfig || {};
+                
+                // Update ad configurations in Firebase with user's ad codes
+                updateAdConfigurations();
+                
+                // Redirect to ad page after a short delay
+                setTimeout(() => {
+                    window.location.href = 'ad1.html';
+                }, 2000);
+            } else {
+                showError('User data not found.');
+            }
+        })
+        .catch((error) => {
+            console.error('Error fetching user data:', error);
+            showError('Error loading user data. Please try again later.');
+        });
+}
+
+// Update ad configurations in Firebase with user's ad codes
+function updateAdConfigurations() {
+    if (!userAdConfig) return;
+    
+    // Update ad configurations for all ad pages
+    for (let i = 1; i <= 5; i++) {
+        const adConfigRef = database.ref('ads/config/ad' + i);
+        
+        // Create ad configuration object
+        const adConfig = {
+            header: userAdConfig.header || '',
+            side1: userAdConfig.side1 || '',
+            side2: userAdConfig.side2 || '',
+            side3: userAdConfig.side3 || '',
+            side4: userAdConfig.side4 || '',
+            bottom: userAdConfig.bottom || '',
+            popup: userAdConfig.popup || ''
+        };
+        
+        // Update the ad configuration
+        adConfigRef.set(adConfig)
+            .then(() => {
+                console.log('Ad configuration for page ' + i + ' updated successfully');
+            })
+            .catch((error) => {
+                console.error('Error updating ad configuration for page ' + i + ':', error);
+            });
     }
+}
 
-    const data = snapshot.val();
-    const owner = data.owner || data.userId || data.uid;
-    const originalUrl = data.originalUrl || data.url || data.target;
-
-    if (!owner || !originalUrl) {
-      document.body.innerHTML = "<h3>Link data incomplete (missing owner or URL).</h3>";
-      console.error("Link data missing fields:", data);
-      return;
-    }
-
-    // ✅ Save info for ad1.html
-    sessionStorage.setItem("userId", owner);
-    sessionStorage.setItem("originalUrl", originalUrl);
-
-    // ✅ Redirect to ad page
-    window.location.href = "ad1.html";
-  })
-  .catch(err => {
-    console.error("Error loading link:", err);
-    document.body.innerHTML = "<h3>Error loading link data.</h3>";
-  });
+// Show error message
+function showError(message) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error-message').textContent = message;
+    document.getElementById('error-container').style.display = 'block';
+}
