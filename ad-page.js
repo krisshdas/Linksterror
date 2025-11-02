@@ -1,4 +1,3 @@
-// ad-page.js
 // Initialize Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBMSFIlfrXV9vPdpXUJm3HkaFVJwXeB0h8",
@@ -33,7 +32,6 @@ let touchEndX = 0;
 let touchEndY = 0;
 let pageFocusLost = false;
 let adClickDetectionInterval;
-let userAdConfig = null;
 
 // Initialize ad page
 function initAdPage(pageNumber) {
@@ -67,21 +65,8 @@ function initAdPage(pageNumber) {
         return;
     }
     
-    // Get user ad configuration from session storage
-    const userAdConfigStr = sessionStorage.getItem('userAdConfig');
-    if (userAdConfigStr) {
-        try {
-            userAdConfig = JSON.parse(userAdConfigStr);
-        } catch (e) {
-            console.error('Error parsing user ad config:', e);
-            userAdConfig = {};
-        }
-    } else {
-        userAdConfig = {};
-    }
-    
-    // Load ads from user configuration
-    loadUserAds();
+    // Load ads from Firebase first
+    loadAdsFromFirebase(pageNumber);
     
     // Start countdown
     startCountdown();
@@ -95,44 +80,86 @@ function initAdPage(pageNumber) {
     }, 3000);
 }
 
-// Load user's ads from configuration
-function loadUserAds() {
-    if (!userAdConfig) return;
+// Reset progress bars to initial state
+function resetProgressBars() {
+    const progressBar = document.getElementById('progressBar');
+    const mainProgressBar = document.getElementById('mainProgressBar');
     
-    // Load header ad
-    if (userAdConfig.header) {
-        executeAdScript('headerAd', userAdConfig.header);
-    }
-    
-    // Load side ads
-    if (userAdConfig.side1) {
-        executeAdScript('sideAd1', userAdConfig.side1);
-    }
-    if (userAdConfig.side2) {
-        executeAdScript('sideAd2', userAdConfig.side2);
-    }
-    if (userAdConfig.side3) {
-        executeAdScript('sideAd3', userAdConfig.side3);
-    }
-    if (userAdConfig.side4) {
-        executeAdScript('sideAd4', userAdConfig.side4);
+    if (progressBar) {
+        progressBar.style.width = '100%';
     }
     
-    // Load bottom ad
-    if (userAdConfig.bottom) {
-        executeAdScript('bottomAd', userAdConfig.bottom);
+    if (mainProgressBar) {
+        mainProgressBar.style.width = '100%';
+    }
+}
+
+// Update ad counter display
+function updateAdCounter() {
+    const adsViewedElement = document.getElementById('adsViewed');
+    if (adsViewedElement) {
+        adsViewedElement.textContent = adsClicked.size;
     }
     
-    // Load pop ad
-    if (userAdConfig.popup) {
-        executeAdScript('popAd', userAdConfig.popup);
+    // Update time remaining display
+    const timeRemainingElement = document.getElementById('timeRemaining');
+    if (timeRemainingElement) {
+        const countdownElement = document.getElementById('countdown');
+        if (countdownElement) {
+            timeRemainingElement.textContent = countdownElement.textContent;
+        }
     }
-    
-    // Hide loading animation after ads are loaded
-    const loadingAnimation = document.querySelector('.loading-animation');
-    if (loadingAnimation) {
-        loadingAnimation.style.display = 'none';
-    }
+}
+
+// Load ads from Firebase for the current page
+function loadAdsFromFirebase(pageNumber) {
+    database.ref('ads/config/ad' + pageNumber).once('value')
+        .then((snapshot) => {
+            const adConfig = snapshot.val() || {};
+            
+            // Load header ad
+            if (adConfig.header) {
+                executeAdScript('headerAd', adConfig.header);
+            }
+            
+            // Load side ads
+            if (adConfig.side1) {
+                executeAdScript('sideAd1', adConfig.side1);
+            }
+            if (adConfig.side2) {
+                executeAdScript('sideAd2', adConfig.side2);
+            }
+            if (adConfig.side3) {
+                executeAdScript('sideAd3', adConfig.side3);
+            }
+            if (adConfig.side4) {
+                executeAdScript('sideAd4', adConfig.side4);
+            }
+            
+            // Load bottom ad
+            if (adConfig.bottom) {
+                executeAdScript('bottomAd', adConfig.bottom);
+            }
+            
+            // Load pop ad
+            if (adConfig.popup) {
+                executeAdScript('popAd', adConfig.popup);
+            }
+            
+            // Hide loading animation after ads are loaded
+            const loadingAnimation = document.querySelector('.loading-animation');
+            if (loadingAnimation) {
+                loadingAnimation.style.display = 'none';
+            }
+        })
+        .catch((error) => {
+            console.error('Error loading ads from Firebase:', error);
+            // Hide loading animation even if there's an error
+            const loadingAnimation = document.querySelector('.loading-animation');
+            if (loadingAnimation) {
+                loadingAnimation.style.display = 'none';
+            }
+        });
 }
 
 // Execute ad script properly
@@ -796,34 +823,30 @@ function trackAdView(pageNumber) {
     
     if (shortCode) {
         // Find the link in the database
-        database.ref('links').once('value')
+        database.ref('users').once('value')
             .then((snapshot) => {
-                const links = snapshot.val() || {};
+                const users = snapshot.val() || {};
                 
-                for (const linkId in links) {
-                    const link = links[linkId];
+                for (const userId in users) {
+                    const userLinks = users[userId].links || {};
                     
-                    if (linkId === shortCode) {
-                        // Increment ad view count
-                        const currentAdViews = link.adViews || {};
-                        const pageViews = currentAdViews[`page${pageNumber}`] || 0;
+                    for (const linkId in userLinks) {
+                        const link = userLinks[linkId];
                         
-                        database.ref('links/' + linkId).update({
-                            adViews: {
-                                ...currentAdViews,
-                                [`page${pageNumber}`]: pageViews + 1
-                            }
-                        });
-                        
-                        // Also update in user's links
-                        database.ref('users/' + link.userId + '/links/' + linkId).update({
-                            adViews: {
-                                ...currentAdViews,
-                                [`page${pageNumber}`]: pageViews + 1
-                            }
-                        });
-                        
-                        return;
+                        if (link.shortCode === shortCode) {
+                            // Increment ad view count
+                            const currentAdViews = link.adViews || {};
+                            const pageViews = currentAdViews[`page${pageNumber}`] || 0;
+                            
+                            database.ref('users/' + userId + '/links/' + linkId).update({
+                                adViews: {
+                                    ...currentAdViews,
+                                    [`page${pageNumber}`]: pageViews + 1
+                                }
+                            });
+                            
+                            return;
+                        }
                     }
                 }
             })
@@ -840,34 +863,30 @@ function trackAdClick(pageNumber) {
     
     if (shortCode) {
         // Find the link in the database
-        database.ref('links').once('value')
+        database.ref('users').once('value')
             .then((snapshot) => {
-                const links = snapshot.val() || {};
+                const users = snapshot.val() || {};
                 
-                for (const linkId in links) {
-                    const link = links[linkId];
+                for (const userId in users) {
+                    const userLinks = users[userId].links || {};
                     
-                    if (linkId === shortCode) {
-                        // Increment ad click count
-                        const currentAdClicks = link.adClicks || {};
-                        const pageClicks = currentAdClicks[`page${pageNumber}`] || 0;
+                    for (const linkId in userLinks) {
+                        const link = userLinks[linkId];
                         
-                        database.ref('links/' + linkId).update({
-                            adClicks: {
-                                ...currentAdClicks,
-                                [`page${pageNumber}`]: pageClicks + 1
-                            }
-                        });
-                        
-                        // Also update in user's links
-                        database.ref('users/' + link.userId + '/links/' + linkId).update({
-                            adClicks: {
-                                ...currentAdClicks,
-                                [`page${pageNumber}`]: pageClicks + 1
-                            }
-                        });
-                        
-                        return;
+                        if (link.shortCode === shortCode) {
+                            // Increment ad click count
+                            const currentAdClicks = link.adClicks || {};
+                            const pageClicks = currentAdClicks[`page${pageNumber}`] || 0;
+                            
+                            database.ref('users/' + userId + '/links/' + linkId).update({
+                                adClicks: {
+                                    ...currentAdClicks,
+                                    [`page${pageNumber}`]: pageClicks + 1
+                                }
+                            });
+                            
+                            return;
+                        }
                     }
                 }
             })
@@ -875,35 +894,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-}
-
-// Reset progress bars to initial state
-function resetProgressBars() {
-    const progressBar = document.getElementById('progressBar');
-    const mainProgressBar = document.getElementById('mainProgressBar');
-    
-    if (progressBar) {
-        progressBar.style.width = '100%';
-    }
-    
-    if (mainProgressBar) {
-        mainProgressBar.style.width = '100%';
-    }
-}
-
-// Update ad counter display
-function updateAdCounter() {
-    const adsViewedElement = document.getElementById('adsViewed');
-    if (adsViewedElement) {
-        adsViewedElement.textContent = adsClicked.size;
-    }
-    
-    // Update time remaining display
-    const timeRemainingElement = document.getElementById('timeRemaining');
-    if (timeRemainingElement) {
-        const countdownElement = document.getElementById('countdown');
-        if (countdownElement) {
-            timeRemainingElement.textContent = countdownElement.textContent;
-        }
-    }
-}
+                }
