@@ -1,199 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Redirecting...</title>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background: #0d0d0f;
-      color: white;
-      font-family: system-ui, sans-serif;
-      text-align: center;
       margin: 0;
-      padding: 20px;
-    }
-    .loader-container {
+      padding: 0;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: white;
+      font-family: 'Poppins', sans-serif;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      gap: 20px;
+      height: 100vh;
+      overflow: hidden;
+      text-align: center;
     }
-    .loader {
-      width: 50px;
-      height: 50px;
-      border: 5px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      border-top-color: #4a6cf7;
-      animation: spin 1s ease-in-out infinite;
+    #loadingText {
+      font-size: 1.2rem;
+      animation: fadeBlink 1.5s infinite;
     }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    .error-message {
-      color: #ff5252;
-      max-width: 400px;
-      background: rgba(255, 82, 82, 0.1);
-      padding: 15px;
-      border-radius: 8px;
-      border-left: 4px solid #ff5252;
-    }
-    .success-message {
-      color: #4caf50;
-      max-width: 400px;
-      background: rgba(76, 175, 80, 0.1);
-      padding: 15px;
-      border-radius: 8px;
-      border-left: 4px solid #4caf50;
+    @keyframes fadeBlink {
+      50% { opacity: 0.6; }
     }
   </style>
 </head>
 <body>
-  <div class="loader-container">
-    <h2>Redirecting to Ad Page...</h2>
-    <div class="loader"></div>
-    <p>Please wait while we prepare your content</p>
-  </div>
-
-  <script>
-    // 🔥 Firebase setup
-    const firebaseConfig = {
-      apiKey: "AIzaSyBMSFIlfrXV9vPdpXUJm3HkaFVJwXeB0h8",
-      authDomain: "link-shortner-2898c.firebaseapp.com",
-      databaseURL: "https://link-shortner-2898c-default-rtdb.firebaseio.com",
-      projectId: "link-shortner-2898c",
-      storageBucket: "link-shortner-2898c.firebasestorage.app",
-      messagingSenderId: "283153832071",
-      appId: "1:283153832071:web:8704bb833305447d4f8022",
-      measurementId: "G-J3XWHEX759"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-
-    // 🎯 Get the link ID from query param
-    const urlParams = new URLSearchParams(window.location.search);
-    const shortCode = urlParams.get("id");
-
-    if (!shortCode) {
-      document.body.innerHTML = `
-        <div class="error-message">
-          <h2>❌ Invalid link.</h2>
-          <p>The link you followed is missing required parameters.</p>
-        </div>
-      `;
-      throw new Error("Missing id parameter");
-    }
-
-    // 🔍 First try to find the link in the shortCodes reference for efficiency
-    database.ref("shortCodes/" + shortCode).once("value")
-      .then(shortCodeSnapshot => {
-        if (shortCodeSnapshot.exists()) {
-          // Found the short code reference, now get the actual link
-          const { userId, linkId } = shortCodeSnapshot.val();
-          return database.ref(`users/${userId}/links/${linkId}`).once("value")
-            .then(linkSnapshot => {
-              if (linkSnapshot.exists()) {
-                const link = linkSnapshot.val();
-                
-                // 💾 Increment click count
-                const clicksRef = database.ref(`users/${userId}/links/${linkId}/totalClicks`);
-                clicksRef.transaction(count => (count || 0) + 1);
-                
-                // Store link data in sessionStorage for ad pages to use
-                sessionStorage.setItem('currentLink', JSON.stringify({
-                  userId,
-                  linkId,
-                  shortCode: link.shortCode,
-                  longUrl: link.longUrl,
-                  ads: link.ads
-                }));
-                
-                // 🔗 Redirect to ad1.html with the same shortCode
-                document.body.innerHTML = `
-                  <div class="success-message">
-                    <h2>✅ Link found!</h2>
-                    <p>Redirecting to ad page...</p>
-                  </div>
-                `;
-                
-                setTimeout(() => {
-                  window.location.href = `ad1.html?link=${shortCode}`;
-                }, 1000);
-              } else {
-                throw new Error("Link data not found");
-              }
-            });
-        } else {
-          // Fallback to searching through all users (less efficient)
-          return database.ref("users").once("value")
-            .then(snapshot => {
-              const users = snapshot.val();
-              let found = false;
-
-              for (const userId in users) {
-                const links = users[userId].links || {};
-                for (const linkId in links) {
-                  const link = links[linkId];
-                  if (link.shortCode === shortCode) {
-                    found = true;
-                    
-                    // 💾 Increment click count
-                    const clicksRef = database.ref(`users/${userId}/links/${linkId}/totalClicks`);
-                    clicksRef.transaction(count => (count || 0) + 1);
-                    
-                    // Store link data in sessionStorage for ad pages to use
-                    sessionStorage.setItem('currentLink', JSON.stringify({
-                      userId,
-                      linkId,
-                      shortCode: link.shortCode,
-                      longUrl: link.longUrl,
-                      ads: link.ads
-                    }));
-                    
-                    // 🔗 Redirect to ad1.html with the same shortCode
-                    document.body.innerHTML = `
-                      <div class="success-message">
-                        <h2>✅ Link found!</h2>
-                        <p>Redirecting to ad page...</p>
-                      </div>
-                    `;
-                    
-                    setTimeout(() => {
-                      window.location.href = `ad1.html?link=${shortCode}`;
-                    }, 1000);
-                    
-                    break;
-                  }
-                }
-                if (found) break;
-              }
-
-              if (!found) {
-                document.body.innerHTML = `
-                  <div class="error-message">
-                    <h2>❌ Link not found.</h2>
-                    <p>The link you followed may have expired or been removed.</p>
-                  </div>
-                `;
-              }
-            });
-        }
-      })
-      .catch(err => {
-        console.error("Error fetching data:", err);
-        document.body.innerHTML = `
-          <div class="error-message">
-            <h2>⚠️ Error loading link.</h2>
-            <p>${err.message}</p>
-          </div>
-        `;
-      });
-  </script>
+  <div id="loadingText">Connecting to server...</div>
+  <script src="redirect.js?v=5"></script>
 </body>
 </html>
+  
