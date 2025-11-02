@@ -32,7 +32,7 @@ let touchEndX = 0;
 let touchEndY = 0;
 let pageFocusLost = false;
 let adClickDetectionInterval;
-let userAdId = null; // Store user-specific ad ID
+let currentUserId = null; // Store the specific user ID who created the link
 
 // Initialize ad page
 function initAdPage(pageNumber) {
@@ -47,6 +47,7 @@ function initAdPage(pageNumber) {
     pageVisibilityHidden = false;
     lastInteractionTime = 0;
     pageFocusLost = false;
+    currentUserId = null; // Reset user ID for new page
     
     // Clear any existing intervals
     if (adClickDetectionInterval) clearInterval(adClickDetectionInterval);
@@ -66,16 +67,16 @@ function initAdPage(pageNumber) {
         return;
     }
     
-    // Get user-specific ad ID from Firebase first
-    getUserAdId()
-        .then(adId => {
-            userAdId = adId;
-            // Load ads from Firebase with user-specific ID
-            loadAdsFromFirebase(pageNumber, userAdId);
+    // Get the specific user ID who created this short link
+    getUserIdForShortCode()
+        .then(userId => {
+            currentUserId = userId;
+            // Load ads from Firebase for this specific user
+            loadAdsFromFirebase(pageNumber, currentUserId);
         })
         .catch(error => {
-            console.error('Error getting user ad ID:', error);
-            // Fallback to default ads if user-specific ID fails
+            console.error('Error getting user ID for short code:', error);
+            // Fallback to default ads if user ID fails
             loadAdsFromFirebase(pageNumber, null);
         });
     
@@ -91,8 +92,8 @@ function initAdPage(pageNumber) {
     }, 3000);
 }
 
-// Get user-specific ad ID from Firebase
-function getUserAdId() {
+// Get the specific user ID who created this short code
+function getUserIdForShortCode() {
     return new Promise((resolve, reject) => {
         // Get the short code from session storage
         const shortCode = sessionStorage.getItem('shortCode') || '';
@@ -102,7 +103,7 @@ function getUserAdId() {
             return;
         }
         
-        // Find the link in the database to get the user ID
+        // Find the specific user who created this short code
         database.ref('users').once('value')
             .then((snapshot) => {
                 const users = snapshot.val() || {};
@@ -114,19 +115,19 @@ function getUserAdId() {
                         const link = userLinks[linkId];
                         
                         if (link.shortCode === shortCode) {
-                            // Found the user, now get their ad ID
-                            const userAdId = users[userId].adId || null;
-                            resolve(userAdId);
+                            // Found the specific user who created this short code
+                            console.log(`Found user ${userId} for short code ${shortCode}`);
+                            resolve(userId);
                             return;
                         }
                     }
                 }
                 
-                // If no matching link found, resolve with null (will use default ads)
-                resolve(null);
+                // If no matching link found, reject
+                reject('No user found for this short code');
             })
             .catch((error) => {
-                console.error('Error finding user ad ID:', error);
+                console.error('Error finding user for short code:', error);
                 reject(error);
             });
     });
@@ -163,17 +164,19 @@ function updateAdCounter() {
     }
 }
 
-// Load ads from Firebase for the current page with user-specific ad ID
-function loadAdsFromFirebase(pageNumber, userAdId) {
+// Load ads from Firebase for the current page for this specific user
+function loadAdsFromFirebase(pageNumber, userId) {
     // Determine which ad configuration to use
     let adConfigPath;
     
-    if (userAdId) {
-        // Use user-specific ad configuration
-        adConfigPath = `userAds/${userAdId}/ad${pageNumber}`;
+    if (userId) {
+        // Use this specific user's ad configuration
+        adConfigPath = `users/${userId}/ads/ad${pageNumber}`;
+        console.log(`Loading ads for user ${userId} from path: ${adConfigPath}`);
     } else {
         // Fallback to default ad configuration
         adConfigPath = `ads/config/ad${pageNumber}`;
+        console.log(`Loading default ads from path: ${adConfigPath}`);
     }
     
     database.ref(adConfigPath).once('value')
@@ -181,10 +184,12 @@ function loadAdsFromFirebase(pageNumber, userAdId) {
             const adConfig = snapshot.val() || {};
             
             // If user-specific ads don't exist, fall back to default
-            if (!Object.keys(adConfig).length && userAdId) {
-                console.log(`No user-specific ads found for ${userAdId}, using default ads`);
+            if (!Object.keys(adConfig).length && userId) {
+                console.log(`No ads found for user ${userId}, using default ads`);
                 return loadAdsFromFirebase(pageNumber, null);
             }
+            
+            console.log(`Loaded ad config:`, adConfig);
             
             // Load header ad
             if (adConfig.header) {
@@ -224,7 +229,7 @@ function loadAdsFromFirebase(pageNumber, userAdId) {
         .catch((error) => {
             console.error('Error loading ads from Firebase:', error);
             // If user-specific ads fail, try default ads
-            if (userAdId) {
+            if (userId) {
                 console.log('Error with user-specific ads, trying default ads');
                 loadAdsFromFirebase(pageNumber, null);
             } else {
@@ -896,32 +901,28 @@ function trackAdView(pageNumber) {
     // Get the short code from session storage
     const shortCode = sessionStorage.getItem('shortCode') || '';
     
-    if (shortCode) {
-        // Find the link in the database
-        database.ref('users').once('value')
+    if (shortCode && currentUserId) {
+        // Find the specific link in the database
+        database.ref('users/' + currentUserId + '/links').once('value')
             .then((snapshot) => {
-                const users = snapshot.val() || {};
+                const userLinks = snapshot.val() || {};
                 
-                for (const userId in users) {
-                    const userLinks = users[userId].links || {};
+                for (const linkId in userLinks) {
+                    const link = userLinks[linkId];
                     
-                    for (const linkId in userLinks) {
-                        const link = userLinks[linkId];
+                    if (link.shortCode === shortCode) {
+                        // Increment ad view count
+                        const currentAdViews = link.adViews || {};
+                        const pageViews = currentAdViews[`page${pageNumber}`] || 0;
                         
-                        if (link.shortCode === shortCode) {
-                            // Increment ad view count
-                            const currentAdViews = link.adViews || {};
-                            const pageViews = currentAdViews[`page${pageNumber}`] || 0;
-                            
-                            database.ref('users/' + userId + '/links/' + linkId).update({
-                                adViews: {
-                                    ...currentAdViews,
-                                    [`page${pageNumber}`]: pageViews + 1
-                                }
-                            });
-                            
-                            return;
-                        }
+                        database.ref('users/' + currentUserId + '/links/' + linkId).update({
+                            adViews: {
+                                ...currentAdViews,
+                                [`page${pageNumber}`]: pageViews + 1
+                            }
+                        });
+                        
+                        return;
                     }
                 }
             })
@@ -936,32 +937,28 @@ function trackAdClick(pageNumber) {
     // Get the short code from session storage
     const shortCode = sessionStorage.getItem('shortCode') || '';
     
-    if (shortCode) {
-        // Find the link in the database
-        database.ref('users').once('value')
+    if (shortCode && currentUserId) {
+        // Find the specific link in the database
+        database.ref('users/' + currentUserId + '/links').once('value')
             .then((snapshot) => {
-                const users = snapshot.val() || {};
+                const userLinks = snapshot.val() || {};
                 
-                for (const userId in users) {
-                    const userLinks = users[userId].links || {};
+                for (const linkId in userLinks) {
+                    const link = userLinks[linkId];
                     
-                    for (const linkId in userLinks) {
-                        const link = userLinks[linkId];
+                    if (link.shortCode === shortCode) {
+                        // Increment ad click count
+                        const currentAdClicks = link.adClicks || {};
+                        const pageClicks = currentAdClicks[`page${pageNumber}`] || 0;
                         
-                        if (link.shortCode === shortCode) {
-                            // Increment ad click count
-                            const currentAdClicks = link.adClicks || {};
-                            const pageClicks = currentAdClicks[`page${pageNumber}`] || 0;
-                            
-                            database.ref('users/' + userId + '/links/' + linkId).update({
-                                adClicks: {
-                                    ...currentAdClicks,
-                                    [`page${pageNumber}`]: pageClicks + 1
-                                }
-                            });
-                            
-                            return;
-                        }
+                        database.ref('users/' + currentUserId + '/links/' + linkId).update({
+                            adClicks: {
+                                ...currentAdClicks,
+                                [`page${pageNumber}`]: pageClicks + 1
+                            }
+                        });
+                        
+                        return;
                     }
                 }
             })
