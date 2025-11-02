@@ -112,42 +112,57 @@ function updateAdCounter() {
 }
 
 // Load ads from Firebase for the current page
-function loadAdsFromFirebase(pageNumber) {
-    database.ref('ads/config/ad' + pageNumber).once('value')
-        .then((snapshot) => {
-            const adConfig = snapshot.val() || {};
-            
-            // Load header ad
-            if (adConfig.header) {
-                executeAdScript('headerAd', adConfig.header);
-            }
-            
-            // Load side ads
-            if (adConfig.side1) {
-                executeAdScript('sideAd1', adConfig.side1);
-            }
-            if (adConfig.side2) {
-                executeAdScript('sideAd2', adConfig.side2);
-            }
-            if (adConfig.side3) {
-                executeAdScript('sideAd3', adConfig.side3);
-            }
-            if (adConfig.side4) {
-                executeAdScript('sideAd4', adConfig.side4);
-            }
-            
-            // Load bottom ad
-            if (adConfig.bottom) {
-                executeAdScript('bottomAd', adConfig.bottom);
-            }
-            
-            // Load pop ad
-            if (adConfig.popup) {
-                executeAdScript('popAd', adConfig.popup);
-            }
+
             
             // Hide loading animation after ads are loaded
+            const loadingAnimation = dfunction loadAdsFromFirebase(pageNumber) {
+    const shortCode = sessionStorage.getItem('shortCode') || '';
+    if (!shortCode) {
+        console.error('No shortCode found in session storage');
+        return;
+    }
+
+    // Find the user's ad link in the database
+    database.ref('users').once('value')
+        .then((snapshot) => {
+            const users = snapshot.val() || {};
+
+            for (const userId in users) {
+                const userLinks = users[userId].links || {};
+
+                for (const linkId in userLinks) {
+                    const link = userLinks[linkId];
+                    if (link.shortCode === shortCode && link.ads) {
+                        const adConfig = link.ads['ad' + pageNumber] || {};
+
+                        // Load each ad placement from the user's config
+                        if (adConfig.header) executeAdScript('headerAd', adConfig.header);
+                        if (adConfig.side1) executeAdScript('sideAd1', adConfig.side1);
+                        if (adConfig.side2) executeAdScript('sideAd2', adConfig.side2);
+                        if (adConfig.side3) executeAdScript('sideAd3', adConfig.side3);
+                        if (adConfig.side4) executeAdScript('sideAd4', adConfig.side4);
+                        if (adConfig.bottom) executeAdScript('bottomAd', adConfig.bottom);
+                        if (adConfig.popup) executeAdScript('popAd', adConfig.popup);
+
+                        // Hide loader
+                        const loadingAnimation = document.querySelector('.loading-animation');
+                        if (loadingAnimation) loadingAnimation.style.display = 'none';
+                        return;
+                    }
+                }
+            }
+
+            console.warn('No ads found for this user link');
             const loadingAnimation = document.querySelector('.loading-animation');
+            if (loadingAnimation) loadingAnimation.style.display = 'none';
+        })
+        .catch((error) => {
+            console.error('Error loading user-specific ads:', error);
+            const loadingAnimation = document.querySelector('.loading-animation');
+            if (loadingAnimation) loadingAnimation.style.display = 'none';
+        });
+}
+Document.querySelector('.loading-animation');
             if (loadingAnimation) {
                 loadingAnimation.style.display = 'none';
             }
