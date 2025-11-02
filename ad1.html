@@ -1,104 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ad Page | Linksterror</title>
-
-  <link rel="stylesheet" href="ads.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Advertisement - Page 1</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="ad-page.css">
 </head>
 <body>
-  <div id="ad-container">
-    <h2>Sponsored Ads</h2>
-
-    <div id="header-ad"></div>
-
-    <div id="side-ads">
-      <div id="side1"></div>
-      <div id="side2"></div>
-      <div id="side3"></div>
-      <div id="side4"></div>
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-bar-fixed" id="mainProgressBar"></div>
     </div>
-
-    <div id="bottom-ad"></div>
-  </div>
-
-  <p id="redirect-timer">Please wait, redirecting soon...</p>
-
-  <!-- ✅ Firebase Libraries -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
-  <!-- ✅ Firebase Config -->
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBMSFIlfrXV9vPdpXUJm3HkaFVJwXeB0h8",
-      authDomain: "link-shortner-2898c.firebaseapp.com",
-      databaseURL: "https://link-shortner-2898c-default-rtdb.firebaseio.com",
-      projectId: "link-shortner-2898c",
-      storageBucket: "link-shortner-2898c.firebasestorage.app",
-      messagingSenderId: "283153832071",
-      appId: "1:283153832071:web:8704bb833305447d4f8022",
-      measurementId: "G-J3XWHEX759"
-    };
-    firebase.initializeApp(firebaseConfig);
-  </script>
-
-  <!-- ✅ NEW: Extract UID & Target from URL (fallback) -->
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const uid = params.get("uid");
-    const target = params.get("target");
-
-    if (uid) sessionStorage.setItem("userId", uid);
-    if (target) sessionStorage.setItem("originalUrl", target);
-  </script>
-
-  <!-- ✅ Override ad-page.js Firebase path -->
-  <script>
-    const userId = sessionStorage.getItem("userId");
-
-    if (userId) {
-      const originalRef = firebase.database.Reference.prototype.child;
-
-      firebase.database.Reference.prototype.child = function (path) {
-        // If code requests "ads/config/ad1", rewrite to user path
-        if (path.startsWith("ads/config")) {
-          const adPage = path.split("/").pop();
-          console.log("Loading ads for user:", userId, "ad page:", adPage);
-          return firebase.database().ref(`users/${userId}/ads/${adPage}`);
-        }
-        return originalRef.call(this, path);
+    
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <span id="notificationText">Ad viewed successfully!</span>
+    </div>
+    
+    <!-- Floating Help Button -->
+    <div class="help-button" onclick="window.open('https://www.youtube.com/watch?v=YOUR_VIDEO_ID', '_blank')">
+        <i class="fas fa-question-circle"></i>
+        <span>Need Help?</span>
+    </div>
+    
+    <div class="ad-container">
+        <!-- Cooldown Timer -->
+        <div class="cooldown-bar">
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="timer">
+                <i class="fas fa-clock"></i>
+                <span id="countdown">15</span>s
+            </div>
+        </div>
+        
+        <!-- Header Ad -->
+        <div class="ad-header ad-wrapper" id="headerAd" data-ad-id="headerAd"></div>
+        
+        <!-- Main Content -->
+        <div class="ad-content">
+            <div class="ad-center">
+                <h2>Please check out our sponsors</h2>
+                <p>Tap on any advertisement to continue to your destination</p>
+                
+                <div class="help-section">
+                    <h3><i class="fas fa-video"></i> Having Trouble? Watch This Tutorial</h3>
+                    <p>Learn how to complete the ad verification process in just 2 minutes</p>
+                    <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank" class="video-link">
+                        <i class="fab fa-youtube"></i>
+                        Watch Tutorial Video
+                    </a>
+                </div>
+                
+                <div class="loading-animation">
+                    <div class="loader"></div>
+                </div>
+                
+                <!-- Pop Ad -->
+                <div class="pop-ad ad-wrapper" id="popAd" data-ad-id="popAd"></div>
+                
+                <div class="ad-stats">
+                    <span>Ads Tapped: <span id="adsViewed">0</span>/6</span>
+                    <span>Time Remaining: <span id="timeRemaining">15</span>s</span>
+                </div>
+                
+                <div class="help-card">
+                    <h4><i class="fas fa-info-circle"></i> Quick Instructions</h4>
+                    <ol>
+                        <li>Wait for the timer to complete (15 seconds)</li>
+                        <li>Tap on at least 6 advertisements</li>
+                        <li>Click "Check Ads" button</li>
+                        <li>Click "Continue to Next Page"</li>
+                    </ol>
+                    <p><strong>Still stuck?</strong> <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank">Watch our video tutorial</a></p>
+                </div>
+            </div>
+            
+            <div class="ad-left">
+                <div class="ad-banner high-value ad-wrapper" id="sideAd1" data-ad-id="sideAd1"></div>
+                <div class="ad-banner ad-wrapper" id="sideAd2" data-ad-id="sideAd2"></div>
+            </div>
+            
+            <div class="ad-right">
+                <div class="ad-banner ad-wrapper" id="sideAd3" data-ad-id="sideAd3"></div>
+                <div class="ad-banner ad-wrapper" id="sideAd4" data-ad-id="sideAd4"></div>
+            </div>
+        </div>
+        
+        <!-- Bottom Ad -->
+        <div class="ad-footer ad-wrapper" id="bottomAd" data-ad-id="bottomAd"></div>
+        
+        <!-- Hardcoded Ads Section -->
+        <!-- (Your existing ads remain unchanged below this point) -->
+        <!-- ... -->
+        
+        <!-- Ad Check Button -->
+        <div class="ad-check-container">
+            <div class="instructions" id="instructions" style="display: none;">
+                <p>Tap the "Check Ads" button below to verify you've viewed the advertisements</p>
+                <p><strong>Need help?</strong> <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank">Watch our tutorial video</a></p>
+            </div>
+            <button class="ad-check-btn" id="adCheckBtn" style="display: none;">
+                <i class="fas fa-search"></i>
+                <span>Check Ads</span>
+            </button>
+        </div>
+        
+        <!-- Download Button -->
+        <div class="download-container">
+            <button class="download-btn locked" id="downloadBtn" disabled>
+                <i class="fas fa-lock"></i>
+                <span>Download</span>
+            </button>
+        </div>
+        
+        <div class="final-help">
+            <h3><i class="fas fa-question-circle"></i> Still Having Trouble?</h3>
+            <p>We're here to help! Watch our complete video tutorial that shows you exactly how to complete this process:</p>
+            <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank" class="video-link large">
+                <i class="fab fa-youtube"></i>
+                Watch Complete Tutorial
+            </a>
+        </div>
+    </div>
+    
+    <!-- ✅ Firebase + custom ad loading -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyBMSFIlfrXV9vPdpXUJm3HkaFVJwXeB0h8",
+        authDomain: "link-shortner-2898c.firebaseapp.com",
+        databaseURL: "https://link-shortner-2898c-default-rtdb.firebaseio.com",
+        projectId: "link-shortner-2898c",
+        storageBucket: "link-shortner-2898c.firebasestorage.app",
+        messagingSenderId: "283153832071",
+        appId: "1:283153832071:web:8704bb833305447d4f8022",
+        measurementId: "G-J3XWHEX759"
       };
-    } else {
-      console.warn("⚠️ No userId found in sessionStorage — ads may not load.");
-    }
-  </script>
+      firebase.initializeApp(firebaseConfig);
 
-  <!-- ✅ Load main ad logic -->
-  <script src="ad-page.js"></script>
+      const userId = sessionStorage.getItem("userId");
+      if (userId) {
+        const db = firebase.database();
+        db.ref(`users/${userId}/ads`).once("value").then(snapshot => {
+          const ads = snapshot.val();
+          if (!ads) return console.warn("No ads found for user", userId);
 
-  <!-- ✅ Redirect Timer -->
-  <script>
-    const targetUrl = sessionStorage.getItem("originalUrl");
-    const timerEl = document.getElementById("redirect-timer");
+          // Loop through placeholders (headerAd, sideAd1, etc.)
+          for (const adId in ads) {
+            const el = document.getElementById(adId);
+            if (el && ads[adId]) el.innerHTML = ads[adId]; // Inject ad HTML
+          }
+        }).catch(err => console.error("Error loading ads:", err));
+      } else {
+        console.warn("No userId found in sessionStorage.");
+      }
+    </script>
 
-    if (targetUrl) {
-      let seconds = 7;
-      timerEl.textContent = `Redirecting in ${seconds}s...`;
-
-      const countdown = setInterval(() => {
-        seconds--;
-        timerEl.textContent = `Redirecting in ${seconds}s...`;
-
-        if (seconds <= 0) {
-          clearInterval(countdown);
-          window.location.href = targetUrl;
-        }
-      }, 1000);
-    } else {
-      timerEl.textContent = "⚠️ No redirect target found.";
-    }
-  </script>
+    <script src="ad-page.js"></script>
+    <script>
+        initAdPage(1);
+    </script>
 </body>
 </html>
