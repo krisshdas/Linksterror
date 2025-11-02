@@ -1,69 +1,84 @@
-<!-- redirect.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Redirecting...</title>
-  <style>
-    body { font-family: sans-serif; text-align:center; padding-top:40px; }
-    #ad-frame { width:90%; height:300px; border:none; margin:auto; display:block; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting...</title>
+    <link rel="stylesheet" href="ads.css">
+    <style>
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-container {
+            display: none;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            margin: 50px auto;
+            text-align: center;
+        }
+        
+        .error-container h2 {
+            color: #e74c3c;
+            margin-bottom: 15px;
+        }
+        
+        .error-container p {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        
+        .error-container a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        .error-container a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-  <h2>Your content will load shortly...</h2>
-  <iframe id="ad-frame"></iframe>
-  <p id="timer"></p>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBMSFIlfrXV9vPdpXUJm3HkaFVJwXeB0h8",
-      authDomain: "link-shortner-2898c.firebaseapp.com",
-      databaseURL: "https://link-shortner-2898c-default-rtdb.firebaseio.com",
-      projectId: "link-shortner-2898c",
-      storageBucket: "link-shortner-2898c.firebasestorage.app",
-      messagingSenderId: "283153832071",
-      appId: "1:283153832071:web:8704bb833305447d4f8022",
-      measurementId: "G-J3XWHEX759"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    const id = new URLSearchParams(location.search).get("id");
-    const adFrame = document.getElementById("ad-frame");
-    const timer = document.getElementById("timer");
-
-    async function loadLink() {
-      if (!id) return (timer.textContent = "No ID provided");
-
-      const snap = await get(ref(db, `links/${id}`));
-      if (!snap.exists()) return (timer.textContent = "Link not found");
-
-      const data = snap.val();
-      const adCode = data.adConfig?.snippet || "";
-
-      // Load ad snippet safely in sandboxed iframe
-      const doc = adFrame.contentDocument;
-      doc.open();
-      doc.write(adCode || "<p>No ad configured</p>");
-      doc.close();
-
-      // countdown + redirect
-      let sec = 7;
-      const interval = setInterval(() => {
-        timer.textContent = `Redirecting in ${sec}s...`;
-        sec--;
-        if (sec < 0) {
-          clearInterval(interval);
-          location.href = data.target;
-        }
-      }, 1000);
-    }
-
-    loadLink();
-  </script>
+    <div id="loading" class="loading-container">
+        <div class="spinner"></div>
+        <h2>Preparing your link...</h2>
+        <p>Please wait while we set up your personalized experience.</p>
+    </div>
+    
+    <div id="error-container" class="error-container">
+        <h2><i class="fas fa-exclamation-triangle"></i> Error</h2>
+        <p id="error-message">An error occurred while processing your link.</p>
+        <a href="index.html">Return to Home</a>
+    </div>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    
+    <!-- Redirect Script -->
+    <script src="redirect.js"></script>
 </body>
 </html>
