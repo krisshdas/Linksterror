@@ -46,17 +46,19 @@ if (!linkId) {
 
         loadingText.textContent = "Loading advertisement page...";
 
-        // 🔁 Replace body content with iframe to keep origin same
-        setTimeout(() => {
-          document.body.innerHTML = `
-            <iframe 
-              src="${adPageUrl}" 
-              style="border:none;width:100%;height:100vh;display:block;"
-              allowfullscreen
-            ></iframe>
-          `;
-          document.title = "Advertisement | Linksterror";
-        }, 1500);
+        // 🔁 Open ad page in same tab, but ensure final MediaFire link opens in a new window
+setTimeout(() => {
+  // Open the ad page normally (no iframe)
+  window.location.href = adPageUrl;
+
+  // Optional: ensure any final redirect (MediaFire) opens in a new tab
+  window.open = function (url) {
+    const win = window.open(url, '_blank'); // open new tab/window
+    if (win) {
+      win.focus();
+    }
+  };
+}, 1500);
       } else {
         loadingText.textContent = "Invalid or expired short link.";
       }
