@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advertisement - Page 4</title>
-    <link rel="stylesheet" href="ad-page.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Advertisement - Page 1</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="ad-page.css">
 </head>
 <body>
     <!-- Progress Bar -->
@@ -16,6 +16,12 @@
     <!-- Notification -->
     <div class="notification" id="notification">
         <span id="notificationText">Ad viewed successfully!</span>
+    </div>
+    
+    <!-- Floating Help Button -->
+    <div class="help-button" onclick="window.open('https://www.youtube.com/watch?v=YOUR_VIDEO_ID', '_blank')">
+        <i class="fas fa-question-circle"></i>
+        <span>Need Help?</span>
     </div>
     
     <div class="ad-container">
@@ -31,7 +37,7 @@
         </div>
         
         <!-- Header Ad (728x90) -->
-        <div class="ad-header" id="headerAd">
+        <div class="ad-header ad-wrapper" id="headerAd" data-ad-id="headerAd">
             <!-- Ad will be loaded from Firebase -->
         </div>
         
@@ -39,50 +45,73 @@
         <div class="ad-content">
             <div class="ad-center">
                 <h2>Please check out our sponsors</h2>
-                <p>Click on any advertisement to continue to your destination</p>
+                <p>Tap on any advertisement to continue to your destination</p>
+                
+                <!-- Help Video Section -->
+                <div class="help-section">
+                    <h3><i class="fas fa-video"></i> Having Trouble? Watch This Tutorial</h3>
+                    <p>Learn how to complete the ad verification process in just 2 minutes</p>
+                    <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank" class="video-link">
+                        <i class="fab fa-youtube"></i>
+                        Watch Tutorial Video
+                    </a>
+                </div>
+                
                 <div class="loading-animation">
                     <div class="loader"></div>
                 </div>
                 
                 <!-- Pop Ad -->
-                <div class="pop-ad" id="popAd">
+                <div class="pop-ad ad-wrapper" id="popAd" data-ad-id="popAd">
                     <!-- Ad will be loaded from Firebase -->
                 </div>
                 
                 <!-- Ad Stats -->
                 <div class="ad-stats">
-                    <span>Ads Processed: <span id="adsViewed">0</span>/6</span>
+                    <span>Ads Tapped: <span id="adsViewed">0</span>/6</span>
                     <span>Time Remaining: <span id="timeRemaining">15</span>s</span>
+                </div>
+                
+                <!-- Additional Help Section -->
+                <div class="help-card">
+                    <h4><i class="fas fa-info-circle"></i> Quick Instructions</h4>
+                    <ol>
+                        <li>Wait for the timer to complete (15 seconds)</li>
+                        <li>Tap on at least 6 advertisements</li>
+                        <li>Click "Check Ads" button</li>
+                        <li>Click "Continue to Next Page"</li>
+                    </ol>
+                    <p><strong>Still stuck?</strong> <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank">Watch our video tutorial</a></p>
                 </div>
             </div>
             
             <div class="ad-left">
                 <!-- Side Ad 1 (300x250) - Highest Value -->
-                <div class="ad-banner high-value" id="sideAd1">
+                <div class="ad-banner high-value ad-wrapper" id="sideAd1" data-ad-id="sideAd1">
                     <!-- Ad will be loaded from Firebase -->
                 </div>
                 
                 <!-- Side Ad 2 (160x300) -->
-                <div class="ad-banner" id="sideAd2">
+                <div class="ad-banner ad-wrapper" id="sideAd2" data-ad-id="sideAd2">
                     <!-- Ad will be loaded from Firebase -->
                 </div>
             </div>
             
             <div class="ad-right">
                 <!-- Side Ad 3 (468x60) -->
-                <div class="ad-banner" id="sideAd3">
+                <div class="ad-banner ad-wrapper" id="sideAd3" data-ad-id="sideAd3">
                     <!-- Ad will be loaded from Firebase -->
                 </div>
                 
                 <!-- Side Ad 4 (320x50) -->
-                <div class="ad-banner" id="sideAd4">
+                <div class="ad-banner ad-wrapper" id="sideAd4" data-ad-id="sideAd4">
                     <!-- Ad will be loaded from Firebase -->
                 </div>
             </div>
         </div>
         
         <!-- Bottom Ad -->
-        <div class="ad-footer" id="bottomAd">
+        <div class="ad-footer ad-wrapper" id="bottomAd" data-ad-id="bottomAd">
             <!-- Ad will be loaded from Firebase -->
         </div>
         
@@ -95,9 +124,14 @@
         <div class="hardcoded-ads">
             <h3 class="ad-section-title">More Offers From Our Partners</h3>
             
+            <!-- Help Reminder -->
+            <div class="help-reminder">
+                <p><i class="fas fa-lightbulb"></i> <strong>Tip:</strong> If you're having trouble clicking ads, <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank">watch our tutorial video</a> for step-by-step guidance!</p>
+            </div>
+            
             <div class="hardcoded-ad-container">
                 <!-- Ad 1: 728x90 -->
-                <div class="hardcoded-ad">
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd1">
                     <div class="ad-label">728x90 Banner</div>
                     <script type="text/javascript">
                         atOptions = {
@@ -112,7 +146,7 @@
                 </div>
                 
                 <!-- Ad 2: 300x250 -->
-                <div class="hardcoded-ad">
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd2">
                     <div class="ad-label">300x250 Banner</div>
                     <script type="text/javascript">
                         atOptions = {
@@ -129,7 +163,7 @@
             
             <div class="hardcoded-ad-container">
                 <!-- Ad 3: 320x50 -->
-                <div class="hardcoded-ad">
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd3">
                     <div class="ad-label">320x50 Banner</div>
                     <script type="text/javascript">
                         atOptions = {
@@ -144,7 +178,7 @@
                 </div>
                 
                 <!-- Ad 4: 468x60 -->
-                <div class="hardcoded-ad">
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd4">
                     <div class="ad-label">468x60 Banner</div>
                     <script type="text/javascript">
                         atOptions = {
@@ -161,7 +195,7 @@
             
             <div class="hardcoded-ad-container">
                 <!-- Ad 5: 160x300 -->
-                <div class="hardcoded-ad">
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd5">
                     <div class="ad-label">160x300 Banner</div>
                     <script type="text/javascript">
                         atOptions = {
@@ -176,34 +210,21 @@
                 </div>
                 
                 <!-- Ad 6: Container Ad -->
-                <div class="hardcoded-ad">
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd6">
                     <div class="ad-label">Container Ad</div>
                     <script async="async" data-cfasync="false" src="//pl27948945.effectivegatecpm.com/f26c57292f848e1a99e38572ea936821/invoke.js"></script>
                     <div id="container-f26c57292f848e1a99e38572ea936821"></div>
-                </div>
-            </div>
-            
-            <div class="hardcoded-ad-container">
-                <!-- Ad 7: JS Ad 1 -->
-                <div class="hardcoded-ad">
-                    <div class="ad-label">JavaScript Ad 1</div>
-                    <script type='text/javascript' src='//pl27948950.effectivegatecpm.com/35/be/75/35be75afe8ab12dd29a7d8208b3e9100.js'></script>
-                </div>
-                
-                <!-- Ad 8: JS Ad 2 -->
-                <div class="hardcoded-ad">
-                    <div class="ad-label">JavaScript Ad 2</div>
-                    <script type='text/javascript' src='//pl27948942.effectivegatecpm.com/15/1c/ad/151cad0ed76c7dabc9c1971a00af5235.js'></script>
                 </div>
             </div>
         </div>
         
         <!-- Ad Check Button -->
         <div class="ad-check-container">
-            <div class="instructions" id="instructions">
-                <p>Click the "Check Ads" button below to verify you've viewed the advertisements</p>
+            <div class="instructions" id="instructions" style="display: none;">
+                <p>Tap the "Check Ads" button below to verify you've viewed the advertisements</p>
+                <p><strong>Need help?</strong> <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank">Watch our tutorial video</a> for step-by-step instructions!</p>
             </div>
-            <button class="ad-check-btn" id="adCheckBtn">
+            <button class="ad-check-btn" id="adCheckBtn" style="display: none;">
                 <i class="fas fa-search"></i>
                 <span>Check Ads</span>
             </button>
@@ -215,6 +236,16 @@
                 <i class="fas fa-lock"></i>
                 <span>Download</span>
             </button>
+        </div>
+        
+        <!-- Final Help Section -->
+        <div class="final-help">
+            <h3><i class="fas fa-question-circle"></i> Still Having Trouble?</h3>
+            <p>We're here to help! Watch our complete video tutorial that shows you exactly how to complete this process:</p>
+            <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank" class="video-link large">
+                <i class="fab fa-youtube"></i>
+                Watch Complete Tutorial
+            </a>
         </div>
     </div>
     
