@@ -113,47 +113,38 @@ function updateAdCounter() {
 
 // Load ads from Firebase for the current page
 function loadAdsFromFirebase(pageNumber) {
-    // Show loading indicators for all ad containers
-    const adContainers = document.querySelectorAll('.ad-wrapper');
-    adContainers.forEach(container => {
-        if (!container.querySelector('.ad-loading')) {
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'ad-loading';
-            loadingDiv.textContent = 'Loading ad...';
-            container.appendChild(loadingDiv);
-        }
-    });
-    
     database.ref('ads/config/ad' + pageNumber).once('value')
         .then((snapshot) => {
             const adConfig = snapshot.val() || {};
             
-            // Process each ad type
-            const adTypes = [
-                { id: 'headerAd', configKey: 'header' },
-                { id: 'sideAd1', configKey: 'side1' },
-                { id: 'sideAd2', configKey: 'side2' },
-                { id: 'sideAd3', configKey: 'side3' },
-                { id: 'sideAd4', configKey: 'side4' },
-                { id: 'bottomAd', configKey: 'bottom' },
-                { id: 'popAd', configKey: 'popup' }
-            ];
+            // Load header ad
+            if (adConfig.header) {
+                executeAdScript('headerAd', adConfig.header);
+            }
             
-            // Load each ad if configuration exists
-            adTypes.forEach(adType => {
-                if (adConfig[adType.configKey]) {
-                    executeAdScript(adType.id, adConfig[adType.configKey]);
-                } else {
-                    // If no ad config, remove loading indicator
-                    const container = document.getElementById(adType.id);
-                    if (container) {
-                        const loadingDiv = container.querySelector('.ad-loading');
-                        if (loadingDiv) {
-                            loadingDiv.remove();
-                        }
-                    }
-                }
-            });
+            // Load side ads
+            if (adConfig.side1) {
+                executeAdScript('sideAd1', adConfig.side1);
+            }
+            if (adConfig.side2) {
+                executeAdScript('sideAd2', adConfig.side2);
+            }
+            if (adConfig.side3) {
+                executeAdScript('sideAd3', adConfig.side3);
+            }
+            if (adConfig.side4) {
+                executeAdScript('sideAd4', adConfig.side4);
+            }
+            
+            // Load bottom ad
+            if (adConfig.bottom) {
+                executeAdScript('bottomAd', adConfig.bottom);
+            }
+            
+            // Load pop ad
+            if (adConfig.popup) {
+                executeAdScript('popAd', adConfig.popup);
+            }
             
             // Hide loading animation after ads are loaded
             const loadingAnimation = document.querySelector('.loading-animation');
@@ -163,12 +154,7 @@ function loadAdsFromFirebase(pageNumber) {
         })
         .catch((error) => {
             console.error('Error loading ads from Firebase:', error);
-            
-            // Hide loading indicators even if there's an error
-            const loadingDivs = document.querySelectorAll('.ad-loading');
-            loadingDivs.forEach(div => div.remove());
-            
-            // Hide loading animation
+            // Hide loading animation even if there's an error
             const loadingAnimation = document.querySelector('.loading-animation');
             if (loadingAnimation) {
                 loadingAnimation.style.display = 'none';
@@ -184,12 +170,14 @@ function executeAdScript(elementId, scriptContent) {
     // Clear the element first
     element.innerHTML = '';
     
-    // Create a temporary div to parse the content
+    // Create a temporary div to parse the script
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = scriptContent;
     
-    // Extract and execute script tags
+    // Find all script tags in the content
     const scripts = tempDiv.querySelectorAll('script');
+    
+    // Extract and execute each script
     scripts.forEach(script => {
         const newScript = document.createElement('script');
         
@@ -209,24 +197,6 @@ function executeAdScript(elementId, scriptContent) {
     Array.from(tempDiv.childNodes).forEach(node => {
         if (node.nodeType !== Node.ELEMENT_NODE || node.tagName !== 'SCRIPT') {
             element.appendChild(node.cloneNode(true));
-        }
-    });
-    
-    // Add click tracking to the ad container
-    element.addEventListener('click', function() {
-        const adId = this.getAttribute('data-ad-id');
-        if (adId && !adsClicked.has(adId)) {
-            markAdAsClicked(adId);
-        }
-    });
-    
-    // Add error handling for failed ads
-    element.addEventListener('error', function() {
-        console.error(`Ad ${elementId} failed to load`);
-        // Remove loading indicator if it exists
-        const loadingDiv = element.querySelector('.ad-loading');
-        if (loadingDiv) {
-            loadingDiv.remove();
         }
     });
 }
@@ -924,21 +894,4 @@ function trackAdClick(pageNumber) {
                 console.error('Error tracking ad click:', error);
             });
     }
-}
-
-// Replace YouTube video links with the provided one
-document.addEventListener('DOMContentLoaded', () => {
-    const youtubeLinks = document.querySelectorAll('a[href*="www.youtube.com/watch?v=YOUR_VIDEO_ID"]');
-    youtubeLinks.forEach(link => {
-        link.href = 'https://youtu.be/UerjaqYPYtg?si=rr9vn570MNXQQChE';
-    });
-    
-    // Also check for onclick handlers that might contain the fake video link
-    const elementsWithOnclick = document.querySelectorAll('[onclick*="www.youtube.com/watch?v=YOUR_VIDEO_ID"]');
-    elementsWithOnclick.forEach(element => {
-        element.setAttribute('onclick', element.getAttribute('onclick').replace(
-            'www.youtube.com/watch?v=YOUR_VIDEO_ID',
-            'youtu.be/UerjaqYPYtg?si=rr9vn570MNXQQChE'
-        ));
-    });
-});
+        }
