@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Advertisement - Page 1</title>
+    <title>Advertisement - Page 4</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="ad-page.css">
 </head>
@@ -19,7 +19,7 @@
     </div>
     
     <!-- Floating Help Button -->
-    <div class="help-button" onclick="window.open('https://www.youtube.com/watch?v=YOUR_VIDEO_ID', '_blank')">
+    <div class="help-button" onclick="window.open('https://youtu.be/UerjaqYPYtg?si=rr9vn570MNXQQChE', '_blank')">
         <i class="fas fa-question-circle"></i>
         <span>Need Help?</span>
     </div>
@@ -36,11 +36,6 @@
             </div>
         </div>
         
-        <!-- Header Ad (728x90) -->
-        <div class="ad-header ad-wrapper" id="headerAd" data-ad-id="headerAd">
-            <!-- Ad will be loaded from Firebase -->
-        </div>
-        
         <!-- Main Content -->
         <div class="ad-content">
             <div class="ad-center">
@@ -51,7 +46,7 @@
                 <div class="help-section">
                     <h3><i class="fas fa-video"></i> Having Trouble? Watch This Tutorial</h3>
                     <p>Learn how to complete the ad verification process in just 2 minutes</p>
-                    <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank" class="video-link">
+                    <a href="https://youtu.be/UerjaqYPYtg?si=rr9vn570MNXQQChE" target="_blank" class="video-link">
                         <i class="fab fa-youtube"></i>
                         Watch Tutorial Video
                     </a>
@@ -59,11 +54,6 @@
                 
                 <div class="loading-animation">
                     <div class="loader"></div>
-                </div>
-                
-                <!-- Pop Ad -->
-                <div class="pop-ad ad-wrapper" id="popAd" data-ad-id="popAd">
-                    <!-- Ad will be loaded from Firebase -->
                 </div>
                 
                 <!-- Ad Stats -->
@@ -81,38 +71,9 @@
                         <li>Click "Check Ads" button</li>
                         <li>Click "Continue to Next Page"</li>
                     </ol>
-                    <p><strong>Still stuck?</strong> <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank">Watch our video tutorial</a></p>
+                    <p><strong>Still stuck?</strong> <a href="https://youtu.be/UerjaqYPYtg?si=rr9vn570MNXQQChE" target="_blank">Watch our video tutorial</a></p>
                 </div>
             </div>
-            
-            <div class="ad-left">
-                <!-- Side Ad 1 (300x250) - Highest Value -->
-                <div class="ad-banner high-value ad-wrapper" id="sideAd1" data-ad-id="sideAd1">
-                    <!-- Ad will be loaded from Firebase -->
-                </div>
-                
-                <!-- Side Ad 2 (160x300) -->
-                <div class="ad-banner ad-wrapper" id="sideAd2" data-ad-id="sideAd2">
-                    <!-- Ad will be loaded from Firebase -->
-                </div>
-            </div>
-            
-            <div class="ad-right">
-                <!-- Side Ad 3 (468x60) -->
-                <div class="ad-banner ad-wrapper" id="sideAd3" data-ad-id="sideAd3">
-                    <!-- Ad will be loaded from Firebase -->
-                </div>
-                
-                <!-- Side Ad 4 (320x50) -->
-                <div class="ad-banner ad-wrapper" id="sideAd4" data-ad-id="sideAd4">
-                    <!-- Ad will be loaded from Firebase -->
-                </div>
-            </div>
-        </div>
-        
-        <!-- Bottom Ad -->
-        <div class="ad-footer ad-wrapper" id="bottomAd" data-ad-id="bottomAd">
-            <!-- Ad will be loaded from Firebase -->
         </div>
         
         <!-- Page Divider -->
@@ -120,18 +81,127 @@
             <h3>Additional Advertisements</h3>
         </div>
         
-        <!-- Hardcoded Ads Section -->
+        <!-- Hardcoded Ads Section - Repeated 4 Times -->
         <div class="hardcoded-ads">
             <h3 class="ad-section-title">More Offers From Our Partners</h3>
             
             <!-- Help Reminder -->
             <div class="help-reminder">
-                <p><i class="fas fa-lightbulb"></i> <strong>Tip:</strong> If you're having trouble clicking ads, <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank">watch our tutorial video</a> for step-by-step guidance!</p>
+                <p><i class="fas fa-lightbulb"></i> <strong>Tip:</strong> If you're having trouble clicking ads, <a href="https://youtu.be/UerjaqYPYtg?si=rr9vn570MNXQQChE" target="_blank">watch our tutorial video</a> for step-by-step guidance!</p>
+            </div>
+            
+            <!-- First Set of Ads -->
+            <div class="hardcoded-ad-container">
+                <!-- Ad 1: Container Ad -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd1">
+                    <div class="ad-label">Container Ad</div>
+                    <script async="async" data-cfasync="false" src="//pl27948945.effectivegatecpm.com/f26c57292f848e1a99e38572ea936821/invoke.js"></script>
+                    <div id="container-f26c57292f848e1a99e38572ea936821"></div>
+                </div>
+                
+                <!-- Ad 2: 320x50 Banner -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd2">
+                    <div class="ad-label">320x50 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : 'a9cdfc2f050735d7c17d6d5650e26bfe',
+                            'format' : 'iframe',
+                            'height' : 50,
+                            'width' : 320,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/a9cdfc2f050735d7c17d6d5650e26bfe/invoke.js"></script>
+                </div>
             </div>
             
             <div class="hardcoded-ad-container">
-                <!-- Ad 1: 728x90 -->
-                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd1">
+                <!-- Ad 3: JS Ad 1 -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd3">
+                    <div class="ad-label">JS Ad 1</div>
+                    <script type='text/javascript' src='//pl27948950.effectivegatecpm.com/35/be/75/35be75afe8ab12dd29a7d8208b3e9100.js'></script>
+                </div>
+                
+                <!-- Ad 4: JS Ad 2 -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd4">
+                    <div class="ad-label">JS Ad 2</div>
+                    <script type='text/javascript' src='//pl27948942.effectivegatecpm.com/15/1c/ad/151cad0ed76c7dabc9c1971a00af5235.js'></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 5: 468x60 Banner -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd5">
+                    <div class="ad-label">468x60 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '0763125bdb9b7f5c9a782af3cf9091f6',
+                            'format' : 'iframe',
+                            'height' : 60,
+                            'width' : 468,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/0763125bdb9b7f5c9a782af3cf9091f6/invoke.js"></script>
+                </div>
+                
+                <!-- Ad 6: Another JS Ad 2 -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd6">
+                    <div class="ad-label">Another JS Ad 2</div>
+                    <script type='text/javascript' src='//pl27948942.effectivegatecpm.com/15/1c/ad/151cad0ed76c7dabc9c1971a00af5235.js'></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 7: Another 468x60 Banner -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd7">
+                    <div class="ad-label">Another 468x60 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '0763125bdb9b7f5c9a782af3cf9091f6',
+                            'format' : 'iframe',
+                            'height' : 60,
+                            'width' : 468,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/0763125bdb9b7f5c9a782af3cf9091f6/invoke.js"></script>
+                </div>
+                
+                <!-- Ad 8: 160x300 Banner -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd8">
+                    <div class="ad-label">160x300 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '42de855a41965e9fad85dcd0c22092f5',
+                            'format' : 'iframe',
+                            'height' : 300,
+                            'width' : 160,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/42de855a41965e9fad85dcd0c22092f5/invoke.js"></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 9: 160x600 Banner -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd9">
+                    <div class="ad-label">160x600 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '3c3894cdd0d8232d88cdc06ba3ffa87b',
+                            'format' : 'iframe',
+                            'height' : 600,
+                            'width' : 160,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/3c3894cdd0d8232d88cdc06ba3ffa87b/invoke.js"></script>
+                </div>
+                
+                <!-- Ad 10: 728x90 Banner -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd10">
                     <div class="ad-label">728x90 Banner</div>
                     <script type="text/javascript">
                         atOptions = {
@@ -144,9 +214,11 @@
                     </script>
                     <script type="text/javascript" src="//www.highperformanceformat.com/a613a5730088d6b2192f8e5087590be5/invoke.js"></script>
                 </div>
-                
-                <!-- Ad 2: 300x250 -->
-                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd2">
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 11: 300x250 Banner -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd11">
                     <div class="ad-label">300x250 Banner</div>
                     <script type="text/javascript">
                         atOptions = {
@@ -161,9 +233,21 @@
                 </div>
             </div>
             
+            <!-- Second Set of Ads (Repeat) -->
+            <div class="page-divider">
+                <h3>More Advertisements</h3>
+            </div>
+            
             <div class="hardcoded-ad-container">
-                <!-- Ad 3: 320x50 -->
-                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd3">
+                <!-- Ad 12: Container Ad (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd12">
+                    <div class="ad-label">Container Ad</div>
+                    <script async="async" data-cfasync="false" src="//pl27948945.effectivegatecpm.com/f26c57292f848e1a99e38572ea936821/invoke.js"></script>
+                    <div id="container-f26c57292f848e1a99e38572ea936821-2"></div>
+                </div>
+                
+                <!-- Ad 13: 320x50 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd13">
                     <div class="ad-label">320x50 Banner</div>
                     <script type="text/javascript">
                         atOptions = {
@@ -176,9 +260,25 @@
                     </script>
                     <script type="text/javascript" src="//www.highperformanceformat.com/a9cdfc2f050735d7c17d6d5650e26bfe/invoke.js"></script>
                 </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 14: JS Ad 1 (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd14">
+                    <div class="ad-label">JS Ad 1</div>
+                    <script type='text/javascript' src='//pl27948950.effectivegatecpm.com/35/be/75/35be75afe8ab12dd29a7d8208b3e9100.js'></script>
+                </div>
                 
-                <!-- Ad 4: 468x60 -->
-                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd4">
+                <!-- Ad 15: JS Ad 2 (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd15">
+                    <div class="ad-label">JS Ad 2</div>
+                    <script type='text/javascript' src='//pl27948942.effectivegatecpm.com/15/1c/ad/151cad0ed76c7dabc9c1971a00af5235.js'></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 16: 468x60 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd16">
                     <div class="ad-label">468x60 Banner</div>
                     <script type="text/javascript">
                         atOptions = {
@@ -191,11 +291,32 @@
                     </script>
                     <script type="text/javascript" src="//www.highperformanceformat.com/0763125bdb9b7f5c9a782af3cf9091f6/invoke.js"></script>
                 </div>
+                
+                <!-- Ad 17: Another JS Ad 2 (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd17">
+                    <div class="ad-label">Another JS Ad 2</div>
+                    <script type='text/javascript' src='//pl27948942.effectivegatecpm.com/15/1c/ad/151cad0ed76c7dabc9c1971a00af5235.js'></script>
+                </div>
             </div>
             
             <div class="hardcoded-ad-container">
-                <!-- Ad 5: 160x300 -->
-                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd5">
+                <!-- Ad 18: Another 468x60 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd18">
+                    <div class="ad-label">Another 468x60 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '0763125bdb9b7f5c9a782af3cf9091f6',
+                            'format' : 'iframe',
+                            'height' : 60,
+                            'width' : 468,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/0763125bdb9b7f5c9a782af3cf9091f6/invoke.js"></script>
+                </div>
+                
+                <!-- Ad 19: 160x300 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd19">
                     <div class="ad-label">160x300 Banner</div>
                     <script type="text/javascript">
                         atOptions = {
@@ -208,12 +329,348 @@
                     </script>
                     <script type="text/javascript" src="//www.highperformanceformat.com/42de855a41965e9fad85dcd0c22092f5/invoke.js"></script>
                 </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 20: 160x600 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd20">
+                    <div class="ad-label">160x600 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '3c3894cdd0d8232d88cdc06ba3ffa87b',
+                            'format' : 'iframe',
+                            'height' : 600,
+                            'width' : 160,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/3c3894cdd0d8232d88cdc06ba3ffa87b/invoke.js"></script>
+                </div>
                 
-                <!-- Ad 6: Container Ad -->
-                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd6">
+                <!-- Ad 21: 728x90 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd21">
+                    <div class="ad-label">728x90 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : 'a613a5730088d6b2192f8e5087590be5',
+                            'format' : 'iframe',
+                            'height' : 90,
+                            'width' : 728,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/a613a5730088d6b2192f8e5087590be5/invoke.js"></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 22: 300x250 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd22">
+                    <div class="ad-label">300x250 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : 'f0fcf291e1d265a945dbd45c1674505d',
+                            'format' : 'iframe',
+                            'height' : 250,
+                            'width' : 300,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/f0fcf291e1d265a945dbd45c1674505d/invoke.js"></script>
+                </div>
+            </div>
+            
+            <!-- Third Set of Ads (Repeat) -->
+            <div class="page-divider">
+                <h3>More Advertisements</h3>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 23: Container Ad (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd23">
                     <div class="ad-label">Container Ad</div>
                     <script async="async" data-cfasync="false" src="//pl27948945.effectivegatecpm.com/f26c57292f848e1a99e38572ea936821/invoke.js"></script>
-                    <div id="container-f26c57292f848e1a99e38572ea936821"></div>
+                    <div id="container-f26c57292f848e1a99e38572ea936821-3"></div>
+                </div>
+                
+                <!-- Ad 24: 320x50 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd24">
+                    <div class="ad-label">320x50 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : 'a9cdfc2f050735d7c17d6d5650e26bfe',
+                            'format' : 'iframe',
+                            'height' : 50,
+                            'width' : 320,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/a9cdfc2f050735d7c17d6d5650e26bfe/invoke.js"></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 25: JS Ad 1 (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd25">
+                    <div class="ad-label">JS Ad 1</div>
+                    <script type='text/javascript' src='//pl27948950.effectivegatecpm.com/35/be/75/35be75afe8ab12dd29a7d8208b3e9100.js'></script>
+                </div>
+                
+                <!-- Ad 26: JS Ad 2 (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd26">
+                    <div class="ad-label">JS Ad 2</div>
+                    <script type='text/javascript' src='//pl27948942.effectivegatecpm.com/15/1c/ad/151cad0ed76c7dabc9c1971a00af5235.js'></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 27: 468x60 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd27">
+                    <div class="ad-label">468x60 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '0763125bdb9b7f5c9a782af3cf9091f6',
+                            'format' : 'iframe',
+                            'height' : 60,
+                            'width' : 468,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/0763125bdb9b7f5c9a782af3cf9091f6/invoke.js"></script>
+                </div>
+                
+                <!-- Ad 28: Another JS Ad 2 (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd28">
+                    <div class="ad-label">Another JS Ad 2</div>
+                    <script type='text/javascript' src='//pl27948942.effectivegatecpm.com/15/1c/ad/151cad0ed76c7dabc9c1971a00af5235.js'></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 29: Another 468x60 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd29">
+                    <div class="ad-label">Another 468x60 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '0763125bdb9b7f5c9a782af3cf9091f6',
+                            'format' : 'iframe',
+                            'height' : 60,
+                            'width' : 468,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/0763125bdb9b7f5c9a782af3cf9091f6/invoke.js"></script>
+                </div>
+                
+                <!-- Ad 30: 160x300 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd30">
+                    <div class="ad-label">160x300 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '42de855a41965e9fad85dcd0c22092f5',
+                            'format' : 'iframe',
+                            'height' : 300,
+                            'width' : 160,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/42de855a41965e9fad85dcd0c22092f5/invoke.js"></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 31: 160x600 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd31">
+                    <div class="ad-label">160x600 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '3c3894cdd0d8232d88cdc06ba3ffa87b',
+                            'format' : 'iframe',
+                            'height' : 600,
+                            'width' : 160,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/3c3894cdd0d8232d88cdc06ba3ffa87b/invoke.js"></script>
+                </div>
+                
+                <!-- Ad 32: 728x90 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd32">
+                    <div class="ad-label">728x90 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : 'a613a5730088d6b2192f8e5087590be5',
+                            'format' : 'iframe',
+                            'height' : 90,
+                            'width' : 728,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/a613a5730088d6b2192f8e5087590be5/invoke.js"></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 33: 300x250 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd33">
+                    <div class="ad-label">300x250 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : 'f0fcf291e1d265a945dbd45c1674505d',
+                            'format' : 'iframe',
+                            'height' : 250,
+                            'width' : 300,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/f0fcf291e1d265a945dbd45c1674505d/invoke.js"></script>
+                </div>
+            </div>
+            
+            <!-- Fourth Set of Ads (Repeat) -->
+            <div class="page-divider">
+                <h3>More Advertisements</h3>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 34: Container Ad (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd34">
+                    <div class="ad-label">Container Ad</div>
+                    <script async="async" data-cfasync="false" src="//pl27948945.effectivegatecpm.com/f26c57292f848e1a99e38572ea936821/invoke.js"></script>
+                    <div id="container-f26c57292f848e1a99e38572ea936821-4"></div>
+                </div>
+                
+                <!-- Ad 35: 320x50 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd35">
+                    <div class="ad-label">320x50 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : 'a9cdfc2f050735d7c17d6d5650e26bfe',
+                            'format' : 'iframe',
+                            'height' : 50,
+                            'width' : 320,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/a9cdfc2f050735d7c17d6d5650e26bfe/invoke.js"></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 36: JS Ad 1 (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd36">
+                    <div class="ad-label">JS Ad 1</div>
+                    <script type='text/javascript' src='//pl27948950.effectivegatecpm.com/35/be/75/35be75afe8ab12dd29a7d8208b3e9100.js'></script>
+                </div>
+                
+                <!-- Ad 37: JS Ad 2 (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd37">
+                    <div class="ad-label">JS Ad 2</div>
+                    <script type='text/javascript' src='//pl27948942.effectivegatecpm.com/15/1c/ad/151cad0ed76c7dabc9c1971a00af5235.js'></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 38: 468x60 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd38">
+                    <div class="ad-label">468x60 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '0763125bdb9b7f5c9a782af3cf9091f6',
+                            'format' : 'iframe',
+                            'height' : 60,
+                            'width' : 468,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/0763125bdb9b7f5c9a782af3cf9091f6/invoke.js"></script>
+                </div>
+                
+                <!-- Ad 39: Another JS Ad 2 (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd39">
+                    <div class="ad-label">Another JS Ad 2</div>
+                    <script type='text/javascript' src='//pl27948942.effectivegatecpm.com/15/1c/ad/151cad0ed76c7dabc9c1971a00af5235.js'></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 40: Another 468x60 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd40">
+                    <div class="ad-label">Another 468x60 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '0763125bdb9b7f5c9a782af3cf9091f6',
+                            'format' : 'iframe',
+                            'height' : 60,
+                            'width' : 468,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/0763125bdb9b7f5c9a782af3cf9091f6/invoke.js"></script>
+                </div>
+                
+                <!-- Ad 41: 160x300 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd41">
+                    <div class="ad-label">160x300 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '42de855a41965e9fad85dcd0c22092f5',
+                            'format' : 'iframe',
+                            'height' : 300,
+                            'width' : 160,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/42de855a41965e9fad85dcd0c22092f5/invoke.js"></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 42: 160x600 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd42">
+                    <div class="ad-label">160x600 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '3c3894cdd0d8232d88cdc06ba3ffa87b',
+                            'format' : 'iframe',
+                            'height' : 600,
+                            'width' : 160,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/3c3894cdd0d8232d88cdc06ba3ffa87b/invoke.js"></script>
+                </div>
+                
+                <!-- Ad 43: 728x90 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd43">
+                    <div class="ad-label">728x90 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : 'a613a5730088d6b2192f8e5087590be5',
+                            'format' : 'iframe',
+                            'height' : 90,
+                            'width' : 728,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/a613a5730088d6b2192f8e5087590be5/invoke.js"></script>
+                </div>
+            </div>
+            
+            <div class="hardcoded-ad-container">
+                <!-- Ad 44: 300x250 Banner (Repeat) -->
+                <div class="hardcoded-ad ad-wrapper" data-ad-id="hardcodedAd44">
+                    <div class="ad-label">300x250 Banner</div>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : 'f0fcf291e1d265a945dbd45c1674505d',
+                            'format' : 'iframe',
+                            'height' : 250,
+                            'width' : 300,
+                            'params' : {}
+                        };
+                    </script>
+                    <script type="text/javascript" src="//www.highperformanceformat.com/f0fcf291e1d265a945dbd45c1674505d/invoke.js"></script>
                 </div>
             </div>
         </div>
@@ -222,7 +679,7 @@
         <div class="ad-check-container">
             <div class="instructions" id="instructions" style="display: none;">
                 <p>Tap the "Check Ads" button below to verify you've viewed the advertisements</p>
-                <p><strong>Need help?</strong> <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank">Watch our tutorial video</a> for step-by-step instructions!</p>
+                <p><strong>Need help?</strong> <a href="https://youtu.be/UerjaqYPYtg?si=rr9vn570MNXQQChE" target="_blank">Watch our tutorial video</a> for step-by-step instructions!</p>
             </div>
             <button class="ad-check-btn" id="adCheckBtn" style="display: none;">
                 <i class="fas fa-search"></i>
@@ -242,7 +699,7 @@
         <div class="final-help">
             <h3><i class="fas fa-question-circle"></i> Still Having Trouble?</h3>
             <p>We're here to help! Watch our complete video tutorial that shows you exactly how to complete this process:</p>
-            <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank" class="video-link large">
+            <a href="https://youtu.be/UerjaqYPYtg?si=rr9vn570MNXQQChE" target="_blank" class="video-link large">
                 <i class="fab fa-youtube"></i>
                 Watch Complete Tutorial
             </a>
