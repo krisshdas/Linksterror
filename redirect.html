@@ -1,140 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting...</title>
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f5f5f5;
-        }
-        .redirect-container {
-            text-align: center;
-            padding: 20px;
-            border-radius: 10px;
-            background-color: white;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-        }
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .error-message {
-            color: #e74c3c;
-            margin-top: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecting...</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: white;
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      text-align: center;
+    }
+    #loadingText {
+      font-size: 1.2rem;
+      animation: fadeBlink 1.5s infinite;
+    }
+    @keyframes fadeBlink {
+      50% { opacity: 0.6; }
+    }
+  </style>
 </head>
 <body>
-    <div class="redirect-container">
-        <div class="spinner"></div>
-        <h2>Redirecting...</h2>
-        <p>Please wait while we prepare your content.</p>
-        <div id="errorMessage" class="error-message" style="display: none;"></div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
-    <script>
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBMSFIlfrXV9vPdpXUJm3HkaFVJwXeB0h8",
-            authDomain: "link-shortner-2898c.firebaseapp.com",
-            databaseURL: "https://link-shortner-2898c-default-rtdb.firebaseio.com",
-            projectId: "link-shortner-2898c",
-            storageBucket: "link-shortner-2898c.firebasestorage.app",
-            messagingSenderId: "283153832071",
-            appId: "1:283153832071:web:8704bb833305447d4f8022",
-            measurementId: "G-J3XWHEX759"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-
-        // Get the link ID from the URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const linkId = urlParams.get('id');
-
-        if (!linkId) {
-            showError('Invalid link. No ID provided.');
-            return;
-        }
-
-        // Find the link in the database
-        database.ref('links/' + linkId).once('value')
-            .then((snapshot) => {
-                if (!snapshot.exists()) {
-                    showError('Link not found or has been deleted.');
-                    return;
-                }
-
-                const linkData = snapshot.val();
-                const userId = linkData.userId;
-
-                if (!userId) {
-                    showError('Link owner information is missing.');
-                    return;
-                }
-
-                // Get the full link details from the user's data
-                return database.ref(`users/${userId}/links/${linkId}`).once('value');
-            })
-            .then((snapshot) => {
-                if (!snapshot) return; // Error already shown in previous step
-
-                if (!snapshot.exists()) {
-                    showError('Link details not found.');
-                    return;
-                }
-
-                const linkData = snapshot.val();
-                const now = Date.now();
-
-                // Check if link has expired
-                if (linkData.expiry < now) {
-                    showError('This link has expired.');
-                    return;
-                }
-
-                // Increment click count
-                database.ref(`users/${linkData.userId}/links/${linkId}`).update({
-                    clicks: (linkData.clicks || 0) + 1
-                });
-
-                // Store necessary data in session storage for the ad pages
-                sessionStorage.setItem('originalUrl', linkData.originalUrl);
-                sessionStorage.setItem('linkOwnerId', linkData.userId);
-                sessionStorage.setItem('shortCode', linkId);
-
-                // Redirect to the first ad page
-                window.location.href = 'ad1.html';
-            })
-            .catch((error) => {
-                console.error('Error processing link:', error);
-                showError('An error occurred while processing your request.');
-            });
-
-        function showError(message) {
-            document.getElementById('errorMessage').textContent = message;
-            document.getElementById('errorMessage').style.display = 'block';
-            document.querySelector('.spinner').style.display = 'none';
-            document.querySelector('h2').textContent = 'Error';
-        }
-    </script>
+  <div id="loadingText">Connecting to server...</div>
+  <script src="redirect.js?v=5"></script>
 </body>
 </html>
+  
