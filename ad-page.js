@@ -33,6 +33,7 @@ let touchEndY = 0;
 let pageFocusLost = false;
 let adClickDetectionInterval;
 let clickDetectionTimeout;
+let windowFocused = true;
 
 // Initialize ad page
 function initAdPage(pageNumber) {
@@ -47,6 +48,7 @@ function initAdPage(pageNumber) {
     pageVisibilityHidden = false;
     lastInteractionTime = 0;
     pageFocusLost = false;
+    windowFocused = true;
     
     // Clear any existing intervals
     if (adClickDetectionInterval) clearInterval(adClickDetectionInterval);
@@ -198,8 +200,8 @@ function setupAdClickDetection() {
         wrapper.addEventListener('mouseleave', handleAdMouseLeave);
         
         // Add event listeners for mobile - improved touch detection
-        wrapper.addEventListener('touchstart', handleAdTouchStart, { passive: false });
-        wrapper.addEventListener('touchend', handleAdTouchEnd, { passive: false });
+        wrapper.addEventListener('touchstart', handleAdTouchStart, { passive: true });
+        wrapper.addEventListener('touchend', handleAdTouchEnd, { passive: true });
         wrapper.addEventListener('touchmove', handleAdTouchMove, { passive: true });
         
         // Monitor for clicks on the ad area
@@ -208,70 +210,32 @@ function setupAdClickDetection() {
         // Monitor for right-clicks (which might indicate user interest)
         wrapper.addEventListener('contextmenu', handleAdRightClick);
         
-        // Monitor for iframe interactions
-        const iframes = wrapper.querySelectorAll('iframe');
-        iframes.forEach(iframe => {
-            try {
-                // Try to detect clicks on iframes
-                iframe.addEventListener('load', () => {
-                    // Create a transparent overlay to detect clicks
-                    const overlay = document.createElement('div');
-                    overlay.style.position = 'absolute';
-                    overlay.style.top = '0';
-                    overlay.style.left = '0';
-                    overlay.style.width = '100%';
-                    overlay.style.height = '100%';
-                    overlay.style.zIndex = '999';
-                    overlay.style.backgroundColor = 'transparent';
-                    
-                    // Position overlay relative to the iframe
-                    const rect = iframe.getBoundingClientRect();
-                    const wrapperRect = wrapper.getBoundingClientRect();
-                    overlay.style.top = (rect.top - wrapperRect.top) + 'px';
-                    overlay.style.left = (rect.left - wrapperRect.left) + 'px';
-                    overlay.style.width = rect.width + 'px';
-                    overlay.style.height = rect.height + 'px';
-                    
-                    wrapper.appendChild(overlay);
-                    
-                    // Add click detection to the overlay
-                    overlay.addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        const adId = wrapper.getAttribute('data-ad-id');
-                        if (adId) {
-                            handleAdTouchStart({
-                                currentTarget: wrapper,
-                                touches: [{
-                                    clientX: e.touches[0].clientX,
-                                    clientY: e.touches[0].clientY
-                                }]
-                            });
-                        }
-                    }, { passive: false });
-                    
-                    overlay.addEventListener('touchend', (e) => {
-                        e.preventDefault();
-                        const adId = wrapper.getAttribute('data-ad-id');
-                        if (adId) {
-                            handleAdTouchEnd({
-                                currentTarget: wrapper,
-                                changedTouches: [{
-                                    clientX: e.changedTouches[0].clientX,
-                                    clientY: e.changedTouches[0].clientY
-                                }]
-                            });
-                        }
-                    }, { passive: false });
-                });
-            } catch (e) {
-                console.error('Error setting up iframe detection:', e);
-            }
+        // Add click detection for any clickable elements within the ad
+        const clickableElements = wrapper.querySelectorAll('a, button, iframe');
+        clickableElements.forEach(element => {
+            element.addEventListener('click', function(e) {
+                // For iframes, we can't directly detect clicks, so we'll use other methods
+                if (element.tagName === 'IFRAME') {
+                    // Record that the user interacted with this ad
+                    const interaction = adInteractions.get(adId);
+                    if (interaction) {
+                        interaction.interacted = true;
+                        interaction.lastInteractionTime = Date.now();
+                        lastInteractedAd = adId;
+                        lastInteractionTime = Date.now();
+                    }
+                } else {
+                    // For non-iframe elements, mark as clicked immediately
+                    markAdAsClicked(adId);
+                }
+            });
         });
     });
     
     // Add global event listeners to detect when user leaves the page
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('focus', handleWindowFocus);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
     // Monitor for page navigation changes
@@ -333,9 +297,6 @@ function handleAdTouchStart(e) {
     const adId = wrapper.getAttribute('data-ad-id');
     if (!adId) return;
     
-    // Prevent default to avoid scrolling while touching an ad
-    e.preventDefault();
-    
     const interaction = adInteractions.get(adId);
     if (!interaction) return;
     
@@ -394,9 +355,6 @@ function handleAdTouchEnd(e) {
     const adId = wrapper.getAttribute('data-ad-id');
     if (!adId) return;
     
-    // Prevent default to avoid clicking through to the page
-    e.preventDefault();
-    
     const interaction = adInteractions.get(adId);
     if (!interaction) return;
     
@@ -432,12 +390,13 @@ function handleAdTouchEnd(e) {
         // Add visual feedback
         wrapper.style.backgroundColor = 'rgba(46, 204, 113, 0.2)';
         
-        // Mark as clicked immediately for better mobile experience
+        // For mobile, we'll wait to see if the window loses focus (indicating an ad was clicked)
         setTimeout(() => {
-            if (lastInteractedAd === adId) {
+            if (lastInteractedAd === adId && windowFocused) {
+                // If window is still focused after a short delay, mark as clicked
                 markAdAsClicked(adId);
             }
-        }, 500);
+        }, 1000);
     }
 }
 
@@ -459,7 +418,7 @@ function handleAdAreaClick(e) {
     // Add visual feedback
     wrapper.style.backgroundColor = 'rgba(46, 204, 113, 0.2)';
     
-    // Mark as clicked immediately for better mobile experience
+    // Mark as clicked immediately for non-iframe ads
     setTimeout(() => {
         if (lastInteractedAd === adId) {
             markAdAsClicked(adId);
@@ -500,7 +459,7 @@ function handleDocumentClick(e) {
                 // Add visual feedback
                 wrapper.style.backgroundColor = 'rgba(46, 204, 113, 0.2)';
                 
-                // Mark as clicked immediately for better mobile experience
+                // Mark as clicked immediately for non-iframe ads
                 setTimeout(() => {
                     if (lastInteractedAd === adId) {
                         markAdAsClicked(adId);
@@ -521,6 +480,20 @@ function handleMouseLeaveWindow(e) {
                 // Mark the ad as clicked
                 markAdAsClicked(lastInteractedAd);
             }
+        }
+    }
+}
+
+// Handle window focus event
+function handleWindowFocus() {
+    windowFocused = true;
+    
+    // Check if we need to mark an ad as clicked after returning to the page
+    if (lastInteractedAd && !adsClicked.has(lastInteractedAd)) {
+        const interaction = adInteractions.get(lastInteractedAd);
+        if (interaction && interaction.interacted) {
+            // Mark the ad as clicked
+            markAdAsClicked(lastInteractedAd);
         }
     }
 }
@@ -556,6 +529,7 @@ function handleBeforeUnload(e) {
 
 // Handle window blur event
 function handleWindowBlur() {
+    windowFocused = false;
     pageFocusLost = true;
     
     // If the window loses focus after interacting with an ad
